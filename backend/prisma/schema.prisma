@@ -14,3 +14,124 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+model Puskesmas {
+  id String @id @default(uuid()) @db.Uuid
+  name String @db.VarChar()
+  address String @db.VarChar()
+  area String @db.VarChar()
+
+  posyandu Posyandu[]
+
+  @@map("puskesmas")
+}
+
+model Posyandu {
+  id String @id @default(uuid()) @db.Uuid
+  puskesmas_id String @db.Uuid
+
+  name String @db.VarChar()
+  area String @db.VarChar()
+  address String @db.VarChar()
+
+  user User[]
+  patient Patient[]
+  schedule Schedule[]
+  puskesmas Puskesmas @relation(fields: [puskesmas_id], references: [id], onDelete: Cascade)
+
+  @@map("posyandu")
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  posyandu_id String @db.Uuid
+
+  name String @db.VarChar()
+  email String @db.VarChar()
+  password String @db.VarChar()
+  role String @db.VarChar()
+  phone String @db.VarChar()
+  created_at DateTime @default(now()) @db.Timestamp()
+
+  schedule Schedule[]
+  examination Examination[]
+  posyandu Posyandu @relation(fields: [posyandu_id], references: [id], onDelete: Cascade)
+
+  @@map("users")
+}
+
+model Patient {
+  id String @id @default(uuid()) @db.Uuid
+  posyandu_id String @db.Uuid
+
+  nik String @db.VarChar(16) @unique
+  nik_parent String? @db.VarChar(16) @unique
+  name String @db.VarChar()
+  birth_date DateTime @db.Date
+  gender String @db.VarChar()
+  mother_name String @db.VarChar()
+  father_name String? @db.VarChar()
+  address String @db.VarChar()
+  phone_parent String @db.VarChar()
+  created_at DateTime @default(now()) @db.Timestamp() 
+
+  examination Examination[]
+  posyandu Posyandu @relation(fields: [posyandu_id], references: [id], onDelete: Cascade)
+
+  @@map("patients")
+}
+
+model Examination {
+  id String @id @default(uuid()) @db.Uuid
+  patient_id String @db.Uuid
+  kader_id String @db.Uuid
+
+  exam_date DateTime @db.Date
+  weight Float 
+  height Float
+  head_circum_reference Float
+  arm_circum_reference Float
+  notes String 
+  created_at DateTime @default(now()) @db.Timestamp()
+
+  stunting_result StuntingResult?
+  patient Patient @relation(fields: [patient_id], references: [id], onDelete: Cascade)
+  kader User @relation(fields: [kader_id], references: [id])
+
+  @@map("examinations")
+}
+
+model StuntingResult {
+  id String @id @default(uuid()) @db.Uuid
+  examination_id String @db.Uuid @unique
+
+  age_months Int @db.SmallInt
+  weight_for_age_zscore Float
+  height_for_age_zscore Float
+  weight_for_height_zscore Float
+  stunting_status String @db.VarChar()
+  wasting_status String @db.VarChar()
+  underweight_status String @db.VarChar()
+
+  examination Examination @relation(fields: [examination_id], references: [id], onDelete: Cascade)
+
+  @@map("stunting_results")
+}
+
+model Schedule {
+  id String @id @default(uuid()) @db.Uuid
+  posyandu_id String @db.Uuid
+  created_by String @db.Uuid
+
+  scheduled_date DateTime @db.Date
+  time_start DateTime @db.Timestamp()
+  time_end DateTime @db.Timestamp()
+  status String @db.VarChar()
+  created_at DateTime @default(now()) @db.Timestamp()
+  updated_at DateTime @updatedAt @db.Timestamp()
+
+  posyandu Posyandu @relation(fields: [posyandu_id], references: [id], onDelete: Cascade)
+  kader User @relation(fields: [created_by], references: [id], onDelete: Cascade)
+
+  @@map("schedules")
+}

@@ -1,28 +1,41 @@
 {
-  "dependencies": {
-    "@types/express": "^5.0.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "zod": "^4.4.3"
-  },
-  "name": "sipandu",
+  "name": "SIPANDU",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "devDependencies": {
-    "@types/node": "^26.0.0",
-    "prisma": "^6.19.3",
-    "typescript": "^6.0.3"
-  },
+  "description": "Sistem Informasi Posyandu",
+  "main": "index.ts",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
+    "pg": "^8.22.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
+    "@types/node": "^26.0.0",
+    "@types/pg": "^8.20.0",
+    "prisma": "^6.19.3",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "allowScripts": {
+    "bcrypt@6.0.0": true,
+    "esbuild@0.28.1": true,
     "@prisma/engines@6.19.3": true,
     "prisma@6.19.3": true
   }

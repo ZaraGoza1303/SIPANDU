@@ -1,20 +1,19 @@
 import connectDB from './src/databases/db.js';
-import 'dotenv/config'
 import express from 'express';
 import multer from 'multer';
 import authRouter from './src/routes/auth.js';
 import patientRouter from './src/routes/patient.js';
+import dotenv from 'dotenv';
 
 const app = express();
 const upload = multer();
+dotenv.config();
 
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-app.use(upload.none());
 
 const initRouter = () => {
     app.use('/api/auth', authRouter);
-    app.use('/api/pasien', patientRouter)
+    app.use('/api/pasien', upload.single('picture'), patientRouter)
 }
 
 const startApp = async () => {

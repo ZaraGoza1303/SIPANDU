@@ -4,13 +4,15 @@ import { PatientService } from "../services/patient_service.js";
 import { PatientController } from "../controllers/patient_controller.js";
 import { verifyJWTToken } from "../middleware/jwt.js";
 import { PrismaClient } from "../generated/prisma/client.js";
+import { Supabase } from "../services/supabase.js";
 
 const patientRouter = Router();
 
 const db = new PrismaClient();
+const supabase = new Supabase();
 const patientRepo = new PatientRepository(db);
 const patientService = new PatientService(patientRepo);
-const patientController = new PatientController(patientService);
+const patientController = new PatientController(patientService, supabase);
 
 patientRouter.use(verifyJWTToken);
 patientRouter.get('/all', (req, res) => patientController.getAll(req, res));

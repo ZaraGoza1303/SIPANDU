@@ -19,7 +19,7 @@ export class AuthController {
             }
 
             const response = await this.authService.login(validate.data);
-            return res.status(200).json(sendSuccessfullResponse("Successfully Login!"))
+            return res.status(200).json(sendSuccessfullResponse(response, "Successfully Login"))
         } catch (err: any) {
             return res.status(400).json(sendErrorResponse("Login Failed", err.message))
         }

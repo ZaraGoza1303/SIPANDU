@@ -13,6 +13,7 @@ export type LoginUserData = {
     id: string;
     email: string;
     role: string;
+    password: string;
 }
 
 export type LoginReq = z.infer<typeof LoginSchema>;

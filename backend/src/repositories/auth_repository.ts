@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import type { LoginReq, LoginUserData } from "../dto/auth.js";
 import { PrismaClient } from "../generated/prisma/client.js";
 import type { IAuthRepository } from "./auth_repository.interface.js";
@@ -10,7 +9,7 @@ export class AuthRepository implements IAuthRepository {
         this.db = db;
     }
 
-    async login(req: LoginReq): Promise<LoginUserData> {
+    async login(req: LoginReq): Promise<LoginUserData | null> {
         const existsUser = await this.db.user.findFirst({
             where: {email: req.email},
             select: {
@@ -21,16 +20,8 @@ export class AuthRepository implements IAuthRepository {
             }
         });
 
-        if(!existsUser) {
-            throw new Error("Wrong email or password!")
-        }
-
-        const isMatched = await bcrypt.compare(req.password, existsUser.password);
-        if(!isMatched) {
-            throw new Error("Wrong email or password!")
-        }
-
         return existsUser;
     }
+
     
 }

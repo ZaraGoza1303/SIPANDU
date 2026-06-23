@@ -16,6 +16,7 @@ export class AuthRepository implements IAuthRepository {
             select: {
                 id: true,
                 email: true,
+                role: true,
                 password: true,
             }
         });

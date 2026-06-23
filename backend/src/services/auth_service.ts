@@ -13,7 +13,7 @@ export class AuthService implements IAauthService {
     async login(req: LoginReq): Promise<LoginRes> {
         const existsUser = await this.authRepo.login(req);
 
-        const jwtToken = await generateJWTToken({ id: existsUser?.id, email: existsUser.email });
+        const jwtToken = await generateJWTToken({ id: existsUser?.id, email: existsUser.email, role: existsUser.role });
         const res: LoginRes = {
             jwt_token: jwtToken
         }

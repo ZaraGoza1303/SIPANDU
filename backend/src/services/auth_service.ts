@@ -2,6 +2,7 @@ import type { LoginReq, LoginRes } from "../dto/auth.js";
 import type { IAuthRepository } from "../repositories/auth_repository.interface.js";
 import { generateJWTToken } from "../utils/jwt.js";
 import type { IAauthService } from "./auth_service.interface.js";
+import bcrypt from 'bcrypt';
 
 export class AuthService implements IAauthService {
     private authRepo: IAuthRepository

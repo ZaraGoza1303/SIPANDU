@@ -11,6 +11,7 @@ export type LoginRes = {
 
 export type LoginUserData = {
     id: string;
+    posyandu_id: string;
     email: string;
     role: string;
     password: string;

@@ -8,4 +8,10 @@ export type BaseResponse<T> = {
 export type PaginatedResponse<T> =  {
     items: T[];
     next_cursor: string | null | undefined;
+    meta?: {
+        total_items: number;
+        current_page: number;
+        limit: number;
+        total_pages: number;
+    };
 }

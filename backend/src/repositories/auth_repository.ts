@@ -14,6 +14,7 @@ export class AuthRepository implements IAuthRepository {
             where: {email: req.email},
             select: {
                 id: true,
+                posyandu_id: true,
                 email: true,
                 role: true,
                 password: true,

@@ -65,7 +65,8 @@ model Patient {
   posyandu_id String @db.Uuid
 
   nik String @db.VarChar(16) @unique
-  nik_parent String? @db.VarChar(16) @unique
+  picture String? @db.VarChar()
+  nik_parent String? @db.VarChar(16)
   name String @db.VarChar()
   birth_date DateTime @db.Date
   gender String @db.VarChar()
@@ -89,8 +90,8 @@ model Examination {
   exam_date DateTime @db.Date
   weight Float 
   height Float
-  head_circum_reference Float
-  arm_circum_reference Float
+  head_circumference Float
+  arm_circumference Float
   notes String 
   created_at DateTime @default(now()) @db.Timestamp()
 

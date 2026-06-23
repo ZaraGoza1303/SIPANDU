@@ -11,7 +11,7 @@ export const verifyJWTToken = (req: Request, res: Response, next: NextFunction) 
     if (!secret) throw new Error("JWT_APP env is not defined");
 
     try {
-        const decoded = jwt.verify(token, secret) as {id: string, email: string, role: string}
+        const decoded = jwt.verify(token, secret) as {id: string, email: string, role: string, posyandu_id: string}
         req.user = decoded;
         next();
     } catch (err) {

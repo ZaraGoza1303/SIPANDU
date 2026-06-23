@@ -3,6 +3,7 @@ import 'dotenv/config'
 import express from 'express';
 import multer from 'multer';
 import authRouter from './src/routes/auth.js';
+import patientRouter from './src/routes/patient.js';
 
 const app = express();
 const upload = multer();
@@ -13,6 +14,7 @@ app.use(upload.none());
 
 const initRouter = () => {
     app.use('/api/auth', authRouter);
+    app.use('/api/pasien', patientRouter)
 }
 
 const startApp = async () => {

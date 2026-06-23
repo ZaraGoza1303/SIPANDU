@@ -35,6 +35,25 @@ export class PatientController {
         }
     }
 
+    async getAllTodayPatients(req: Request, res: Response){
+        try{
+            const posyandu_id = req.user?.role as string;
+            const page = parseInt(String(req.query.page), 10) || 1;
+            const limit = parseInt(String(req.query.limit), 10) || 10;
+            const search = req.query.search ? String(req.query.search) : null;
+
+            const patients = await this.patientService.getAllTodayPatients(posyandu_id, page, limit, search);
+            return res.status(200).json(sendSuccessfullResponse(patients, "Berhasil menampilkan data pasien"))
+            
+        } catch(err: any){
+            if(err instanceof AppError){
+                return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
+            }
+
+            return res.status(500).json(sendErrorResponse("Gagal mengambil data pasien hari ini", err.message))
+        }
+    }
+
     async getByID(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;

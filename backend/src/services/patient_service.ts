@@ -1,4 +1,4 @@
-import type { CreatePatientReq, UpdatePatientReq } from "../dto/patient.js";
+import type { CreatePatientReq, TodayPatientItem, UpdatePatientReq } from "../dto/patient.js";
 import type { PaginatedResponse } from "../dto/response.js";
 import type { Patient } from "../generated/prisma/client.js";
 import type { PatientCreateInput, PatientUpdateInput } from "../generated/prisma/models.js";
@@ -16,6 +16,37 @@ export class PatientService implements IPatientService {
     checkPosyanduID(posyandu_id: string): void {
         if(!posyandu_id) {
             throw new AppError("Forbidden", 403)
+        }
+    }
+
+    async getAllTodayPatients(posyandu_id: string, page: number, limit: number, search?: string | null): Promise<PaginatedResponse<TodayPatientItem>> {
+        this.checkPosyanduID(posyandu_id);
+
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const tomorrow = new Date();
+            tomorrow.setHours(23, 59, 59, 999);
+            
+            const isScheduleExists = await this.patientRepo.checkScheduleExam(posyandu_id, today, tomorrow);
+            if (!isScheduleExists){
+                return { 
+                    items: [],
+                    next_cursor: null,
+                    meta: {
+                        total_items: 0,
+                        current_page: 0,
+                        limit: 0,
+                        total_pages: 0,
+                    }
+                }
+            }
+
+            const todayPatients = await this.patientRepo.getAllTodayPatients(posyandu_id, page, limit, today, tomorrow, search);
+            return todayPatients;
+        } catch(err){
+            handlePrismaError(err)
         }
     }
 

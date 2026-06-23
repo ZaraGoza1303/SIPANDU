@@ -16,5 +16,18 @@ export const CreatePatientSchema = z.object({
 export const UpdatePatientSchema = CreatePatientSchema.partial().extend({
 });
 
+export interface TodayPatientItem {
+    id: string;
+    nik: string;
+    name: string;
+    birth_date: Date;
+    gender: string;
+    mother_name: string;
+    phone_parent: string;
+    examination: {
+        id: string;
+    }[];
+}
+
 export type CreatePatientReq = z.infer<typeof CreatePatientSchema>;
 export type UpdatePatientReq = z.infer<typeof UpdatePatientSchema>;

@@ -1,4 +1,4 @@
-import type { CreatePatientReq, UpdatePatientReq } from "../dto/patient.js";
+import type { CreatePatientReq, TodayPatientItem, UpdatePatientReq } from "../dto/patient.js";
 import type { PaginatedResponse } from "../dto/response.js";
 import type { Patient } from "../generated/prisma/client.js";
 
@@ -10,4 +10,5 @@ export interface IPatientService {
     deletePatient(posyandu_id: string, patient_id: string): Promise<void>;
 
     checkPosyanduID(posyandu_id: string): void
+    getAllTodayPatients(posyandu_id: string, page: number, limit: number, search?: string | null): Promise<PaginatedResponse<TodayPatientItem>>
 }

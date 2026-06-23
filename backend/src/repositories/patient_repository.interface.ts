@@ -8,4 +8,7 @@ export interface IPatientRepository {
     insertPatient(newPatient: PatientCreateInput): Promise<void>;
     updatePatient(posyandu_id: string, patient_id: string, newPatient: PatientUpdateInput): Promise<void>;
     deletePatient(posyandu_id: string, patient_id: string): Promise<void>;
+
+    checkScheduleExam(posyandu_id: string, today: Date, tomorrow: Date): Promise<Boolean>
+    getAllTodayPatients(posyandu_id: string, page: number, limit: number, today: Date, tomorrow: Date, search?: string | null): Promise<PaginatedResponse<TodayPatientItem>>
 }

@@ -16,6 +16,7 @@ const patientController = new PatientController(patientService, supabase);
 
 patientRouter.use(verifyJWTToken);
 patientRouter.get('/all', (req, res) => patientController.getAll(req, res));
+patientRouter.get('/all-today-patients', (req, res) => patientController.getAllTodayPatients(req, res));
 patientRouter.get('/detail', (req, res) => patientController.getByID(req, res));
 patientRouter.post('/add', (req, res) => patientController.addPatient(req, res));
 patientRouter.patch('/update', (req, res) => patientController.updatePatient(req, res));

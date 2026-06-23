@@ -11,10 +11,20 @@ export const verifyJWTToken = (req: Request, res: Response, next: NextFunction) 
     if (!secret) throw new Error("JWT_APP env is not defined");
 
     try {
-        const decoded = jwt.verify(token, secret) as {id: string, email: string}
+        const decoded = jwt.verify(token, secret) as {id: string, email: string, role: string}
         req.user = decoded;
         next();
     } catch (err) {
         return res.status(403).json(sendErrorResponse("token not valid"))
+    }
+}
+
+export const authorizeRole = (allowedRoles: string) => {
+    return(req: Request, res: Response, next: NextFunction) => {
+        if(!req.user || !allowedRoles.includes(req.user.role)){
+            return res.status(403).json(sendErrorResponse("Forbidden"));
+        }
+        
+        next();
     }
 }

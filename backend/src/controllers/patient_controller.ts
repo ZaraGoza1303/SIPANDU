@@ -18,12 +18,12 @@ export class PatientController {
 
     async getAll(req: Request, res: Response){
         try {
-           const posyandu_id = req.user?.role as string;
-
+            const posyandu_id = req.user?.role as string;
             const page = parseInt(String(req.query.page), 10) || 1;
             const limit = parseInt(String(req.query.limit), 10) || 10;
+            const search = req.query.search ? String(req.query.search) : null;
 
-            const patients = await this.patientService.getAll(posyandu_id, page, limit);
+            const patients = await this.patientService.getAll(posyandu_id, page, limit, search);
             return res.status(200).json(sendSuccessfullResponse(patients, "Berhasil menampilkan data pasien"))
 
         } catch (err: any) {

@@ -11,13 +11,20 @@ export class PatientRepository implements IPatientRepository {
         this.db = db;
     }
 
-    async getAll(posyandu_id: string, page: number, limit: number): Promise<PaginatedResponse<Patient>> {
+    async getAll(posyandu_id: string, page: number, limit: number, search?: string | null): Promise<PaginatedResponse<Patient>> {
         const offset = (page - 1) * limit;
+        const search_filter: any = search ? {
+            OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { nik: { contains: search, mode: 'insensitive' } },
+            ]
+        } : {};
 
         const[patients, total_patients] = await Promise.all([
             this.db.patient.findMany({
                 where: {
-                    posyandu_id: posyandu_id
+                    posyandu_id: posyandu_id,
+                    ...search_filter,
                 },
                 skip: offset,
                 take: limit,
@@ -25,7 +32,8 @@ export class PatientRepository implements IPatientRepository {
             }),
             this.db.patient.count({
                 where: {
-                    posyandu_id: posyandu_id
+                    posyandu_id: posyandu_id,
+                    ...search_filter,
                 }
             })
         ])

@@ -19,10 +19,10 @@ export class PatientService implements IPatientService {
         }
     }
 
-    async getAll(posyandu_id: string, page: number, limit: number): Promise<PaginatedResponse<Patient>> {
+    async getAll(posyandu_id: string, page: number, limit: number, search?: string | null): Promise<PaginatedResponse<Patient>> {
         this.checkPosyanduID(posyandu_id);
 
-        const patients = await this.patientRepo.getAll(posyandu_id, page, limit)
+        const patients = await this.patientRepo.getAll(posyandu_id, page, limit, search)
         return patients;
     }
 

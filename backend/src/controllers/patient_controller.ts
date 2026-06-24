@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import type { IPatientService } from "../services/patient_service.interface.js";
 import { sendErrorResponse, sendSuccessfullResponse } from "../utils/response.js";
 import { AppError } from "../utils/error.js";
-import { CreatePatientSchema, UpdatePatientSchema } from "../dto/patient.js";
+import { CreatePatientExaminationSchema, CreatePatientSchema, UpdatePatientExamReqSchema, UpdatePatientSchema } from "../dto/patient.js";
 import { fileTypeFromBuffer } from "file-type";
 import type { ISupabase } from "../services/supabase.interface.js";
 import { getFileNameFromUrl, getFilePathWithFolder } from "../utils/format_url.js";
@@ -24,7 +24,7 @@ export class PatientController {
             const search = req.query.search ? String(req.query.search) : null;
 
             const patients = await this.patientService.getAll(posyandu_id, page, limit, search);
-            return res.status(200).json(sendSuccessfullResponse(patients, "Berhasil menampilkan data pasien"))
+            return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patients))
 
         } catch (err: any) {
             if(err instanceof AppError){
@@ -43,7 +43,7 @@ export class PatientController {
             const search = req.query.search ? String(req.query.search) : null;
 
             const patients = await this.patientService.getAllTodayPatients(posyandu_id, page, limit, search);
-            return res.status(200).json(sendSuccessfullResponse(patients, "Berhasil menampilkan data pasien"))
+            return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patients))
             
         } catch(err: any){
             if(err instanceof AppError){
@@ -60,7 +60,7 @@ export class PatientController {
             const patient_id = req.query.patient_id as string;
 
             const patient = await this.patientService.getByID(posyandu_id, patient_id);
-            return res.status(200).json(sendSuccessfullResponse(patient, "Berhasil menampilkan data pasien"))
+            return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patient))
 
         } catch (err:any) {
             if(err instanceof AppError){
@@ -117,6 +117,30 @@ export class PatientController {
         }
     }
 
+    async addPatientExamination(req: Request, res: Response) {
+        try {
+            if(!req.body){
+                return res.status(400).json(sendErrorResponse("Request body empty"))
+            };
+
+            const validate = CreatePatientExaminationSchema.safeParse(req.body);
+            if(!validate.success){
+                const formatedErr = validate.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
+            }
+
+            const result = await this.patientService.addPatientExamination(validate.data);
+            return res.status(201).json(sendSuccessfullResponse("Pemeriksaan berhasil ditambahkan", result))
+
+        } catch(err: any){
+            if(err instanceof AppError){
+                return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
+            }
+
+            return res.status(500).json(sendErrorResponse("Gagal menambahkan data pasien", err.message))
+        }
+    }
+
     async updatePatient(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
@@ -164,6 +188,33 @@ export class PatientController {
 
             await this.patientService.updatePatient(posyandu_id, patient_id, updatedData);
             return res.status(200).json(sendSuccessfullResponse("Data Patient berhasil diupdate"))
+
+        } catch (err: any) {
+            if(err instanceof AppError){
+                return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
+            }
+
+            return res.status(500).json(sendErrorResponse("Gagal mengubah data pasien", err.message))
+        }
+    }
+
+    async updatePatientExamination(req: Request, res: Response) {
+        try {
+            const exam_id = req.query.exam_id as string;
+
+            if(!req.body){
+                return res.status(400).json(sendErrorResponse("Request body empty"))
+            };
+
+
+            const validate = UpdatePatientExamReqSchema.safeParse(req.body);
+            if(!validate.success){
+                const formatedErr = validate.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
+            }
+
+            const result = await this.patientService.updatePatientExamination(exam_id, validate.data);
+            return res.status(200).json(sendSuccessfullResponse("Data pemeriksaan berhasil diupdate", result))
 
         } catch (err: any) {
             if(err instanceof AppError){

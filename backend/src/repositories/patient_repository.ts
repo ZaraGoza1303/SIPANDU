@@ -1,9 +1,9 @@
 import type { IPatientRepository } from "./patient_repository.interface.js";
-import type { Patient, PrismaClient } from "../generated/prisma/client.js";
-import type { PatientCreateInput, PatientUpdateInput } from "../generated/prisma/models.js";
+import type { Examination, Patient, Prisma, PrismaClient, StuntingResult } from "../generated/prisma/client.js";
+import type { ExaminationCreateInput, ExaminationUpdateInput, PatientCreateInput, PatientUpdateInput, StuntingResultCreateInput, StuntingResultUpdateInput } from "../generated/prisma/models.js";
 import type { PaginatedResponse } from "../dto/response.js";
 import { AppError } from "../utils/error.js";
-import type { TodayPatientItem } from "../dto/patient.js";
+import type { ExaminationWithPatient, PatientBirthAndGenderOnly, TodayPatientItem } from "../dto/patient.js";
 
 export class PatientRepository implements IPatientRepository {
     private db: PrismaClient;
@@ -125,6 +125,33 @@ export class PatientRepository implements IPatientRepository {
         return patient
     }
 
+    async getExamByID(exam_id: string): Promise<ExaminationWithPatient | null> {
+        const exam = await this.db.examination.findUnique({
+            where: {
+                id: exam_id
+            },
+            include: {
+                patient: true
+            }
+        })
+
+        return exam;
+    }
+
+     async getPatientBirthAndGenderOnly(patient_id: string): Promise<PatientBirthAndGenderOnly | null> {
+        const patient = await this.db.patient.findUnique({
+            where: {
+                id: patient_id
+            }, 
+            select: {
+                gender: true,
+                birth_date: true,
+            }
+        })
+
+        return patient;
+    }
+
     async insertPatient(newPatient: PatientCreateInput): Promise<void> {
         await this.db.patient.create({
             data: newPatient
@@ -170,5 +197,49 @@ export class PatientRepository implements IPatientRepository {
         })
 
         return isScheduleExists > 0;
+    }
+
+    async insertExamination(newExam: ExaminationCreateInput, tx?: Prisma.TransactionClient): Promise<Examination> {
+        const client = tx || this.db
+        const result = await client.examination.create({
+            data: newExam
+        })
+
+        return result;
+    }
+
+    async insertStuntingResult(newStuntingResult: StuntingResultCreateInput, tx?: Prisma.TransactionClient): Promise<StuntingResult> {
+        const client = tx || this.db
+        const result = await client.stuntingResult.create({
+            data: newStuntingResult
+        })
+
+        return result;
+    }
+        
+    async updateExamination(exam_id: string, newExamination: ExaminationUpdateInput, tx?: Prisma.TransactionClient): Promise<void> {
+        const client = tx || this.db
+
+        await client.examination.update({
+            where: {
+                id: exam_id,
+            },
+
+            data: newExamination
+        })
+    }
+
+    async updateStuntingResult(exam_id: string, newStuntingResult: StuntingResultUpdateInput, tx?: Prisma.TransactionClient): Promise<StuntingResult> {
+        const client = tx || this.db
+
+        const result = await client.stuntingResult.update({
+            where: {
+                id: exam_id,
+            },
+
+            data: newStuntingResult
+        })
+
+        return result
     }
 }

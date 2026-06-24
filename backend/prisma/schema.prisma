@@ -85,7 +85,7 @@ model Patient {
 model Examination {
   id String @id @default(uuid()) @db.Uuid
   patient_id String @db.Uuid
-  kader_id String @db.Uuid
+  user_id String @db.Uuid
 
   exam_date DateTime @db.Date
   weight Float 
@@ -97,7 +97,7 @@ model Examination {
 
   stunting_result StuntingResult?
   patient Patient @relation(fields: [patient_id], references: [id], onDelete: Cascade)
-  kader User @relation(fields: [kader_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
 
   @@map("examinations")
 }

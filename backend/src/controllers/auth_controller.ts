@@ -12,6 +12,10 @@ export class AuthController {
 
     async login(req: Request, res: Response) {
         try {
+            if(!req.body){
+                return res.status(400).json(sendErrorResponse("Request body empty"))
+            };
+
             const validate = LoginSchema.safeParse(req.body);
             if(!validate.success){
                 const formattedErr = validate.error.flatten().fieldErrors;
@@ -19,7 +23,7 @@ export class AuthController {
             }
 
             const response = await this.authService.login(validate.data);
-            return res.status(200).json(sendSuccessfullResponse(response, "Successfully Login"))
+            return res.status(200).json(sendSuccessfullResponse("Successfully Login", response))
         } catch (err: any) {
             return res.status(400).json(sendErrorResponse("Login Failed", err.message))
         }

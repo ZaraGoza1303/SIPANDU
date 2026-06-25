@@ -1,4 +1,4 @@
-import type { ExaminationWithPatient, PatientBirthAndGenderOnly, TodayPatientItem } from "../dto/patient.js";
+import type { ExaminationWithPatient, TodayPatientItem } from "../dto/patient.js";
 import type { PaginatedResponse } from "../dto/response.js";
 import type { Examination, Patient, Prisma, StuntingResult } from "../generated/prisma/client.js"
 import type { ExaminationCreateInput, ExaminationUpdateInput, PatientCreateInput, PatientUpdateInput, ScheduleCreateInput, StuntingResultCreateInput, StuntingResultUpdateInput } from "../generated/prisma/models.js"
@@ -12,5 +12,4 @@ export interface IPatientsRepository {
     deletePatient(posyandu_id: string, patient_id: string): Promise<void>;
 
     getAllTodayPatients(posyandu_id: string, page: number, limit: number, today: Date, tomorrow: Date, search?: string | null): Promise<PaginatedResponse<TodayPatientItem>>
-    getPatientBirthAndGenderOnly(patient_id: string): Promise<PatientBirthAndGenderOnly | null>;
 }

@@ -2,7 +2,7 @@ import type { CreateExamScheduleReq, CreatePatientExamReq, UpdatePatientExamReqS
 import type { StuntingResult } from "../generated/prisma/client.js";
 
 export interface IExaminationsService {
-    addPatientExamination(newExamination: CreatePatientExamReq): Promise<StuntingResult>;
+    addPatientExamination(posyandu_id: string, newExamination: CreatePatientExamReq): Promise<StuntingResult>;
     addExamSchedule(posyandu_id: string, user_id: string, newSchedule: CreateExamScheduleReq): Promise<void>;
-    updatePatientExamination(exam_id: string, newExamination: UpdatePatientExamReqSchema): Promise<StuntingResult>; 
+    updatePatientExamination(posyandu_id: string, exam_id: string, newExamination: UpdatePatientExamReqSchema): Promise<StuntingResult>; 
 }

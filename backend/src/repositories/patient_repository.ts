@@ -3,7 +3,7 @@ import type { Patient, PrismaClient } from "../generated/prisma/client.js";
 import type { PatientCreateInput, PatientUpdateInput } from "../generated/prisma/models.js";
 import type { PaginatedResponse } from "../dto/response.js";
 import { AppError } from "../utils/error.js";
-import type { PatientBirthAndGenderOnly, TodayPatientItem } from "../dto/patient.js";
+import type { TodayPatientItem } from "../dto/patient.js";
 
 export class PatientsRepository implements IPatientsRepository {
     private db: PrismaClient;
@@ -123,20 +123,6 @@ export class PatientsRepository implements IPatientsRepository {
         })
 
         return patient
-    }
-
-     async getPatientBirthAndGenderOnly(patient_id: string): Promise<PatientBirthAndGenderOnly | null> {
-        const patient = await this.db.patient.findUnique({
-            where: {
-                id: patient_id
-            }, 
-            select: {
-                gender: true,
-                birth_date: true,
-            }
-        })
-
-        return patient;
     }
 
     async insertPatient(newPatient: PatientCreateInput): Promise<void> {

@@ -3,6 +3,7 @@ import { PatientsRepository } from "../repositories/patient_repository.js";
 import { PatientService } from "../services/patient_service.js";
 import { PatientController } from "../controllers/patient_controller.js";
 import { verifyJWTToken } from "../middleware/jwt.js";
+import { verifyPosyanduAccess } from "../middleware/verifyPosyandu.js";
 import { PrismaClient } from "../generated/prisma/client.js";
 import { Supabase } from "../services/supabase.js";
 import { ExaminationsRepository } from "../repositories/examinations_repository.js";
@@ -27,6 +28,7 @@ const patientService = new PatientService(patientsRepo, examinationsRepo);
 const patientController = new PatientController(supabase, patientService, examinationsService);
 
 patientRouter.use(verifyJWTToken);
+patientRouter.use(verifyPosyanduAccess);
 patientRouter.get('/all', (req, res) => patientController.getAll(req, res));
 patientRouter.get('/all-today-patients', (req, res) => patientController.getAllTodayPatients(req, res));
 patientRouter.get('/detail', (req, res) => patientController.getByID(req, res));

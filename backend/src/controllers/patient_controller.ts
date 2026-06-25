@@ -24,7 +24,7 @@ export class PatientController {
 
     async getAll(req: Request, res: Response){
         try {
-            const posyandu_id = req.user?.role as string;
+            const posyandu_id = req.user?.posyandu_id as string;
             const page = parseInt(String(req.query.page), 10) || 1;
             const limit = parseInt(String(req.query.limit), 10) || 10;
             const search = req.query.search ? String(req.query.search) : null;
@@ -43,7 +43,7 @@ export class PatientController {
 
     async getAllTodayPatients(req: Request, res: Response){
         try{
-            const posyandu_id = req.user?.role as string;
+            const posyandu_id = req.user?.posyandu_id as string;
             const page = parseInt(String(req.query.page), 10) || 1;
             const limit = parseInt(String(req.query.limit), 10) || 10;
             const search = req.query.search ? String(req.query.search) : null;
@@ -118,6 +118,8 @@ export class PatientController {
 
     async addPatientExamination(req: Request, res: Response) {
         try {
+            const posyandu_id = req.user?.posyandu_id as string;
+
             if(!req.body){
                 return res.status(400).json(sendErrorResponse("Request body empty"))
             };
@@ -128,7 +130,7 @@ export class PatientController {
                 return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
             }
 
-            const result = await this.examinationsService.addPatientExamination(validate.data);
+            const result = await this.examinationsService.addPatientExamination(posyandu_id, validate.data);
             return res.status(201).json(sendSuccessfullResponse("Pemeriksaan berhasil ditambahkan", result))
 
         } catch(err: any){
@@ -220,6 +222,7 @@ export class PatientController {
 
     async updatePatientExamination(req: Request, res: Response) {
         try {
+            const posyandu_id = req.user?.posyandu_id as string;
             const exam_id = req.query.exam_id as string;
 
             if(!req.body){
@@ -233,7 +236,7 @@ export class PatientController {
                 return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
             }
 
-            const result = await this.examinationsService.updatePatientExamination(exam_id, validate.data);
+            const result = await this.examinationsService.updatePatientExamination(posyandu_id, exam_id, validate.data);
             return res.status(200).json(sendSuccessfullResponse("Data pemeriksaan berhasil diupdate", result))
 
         } catch (err: any) {

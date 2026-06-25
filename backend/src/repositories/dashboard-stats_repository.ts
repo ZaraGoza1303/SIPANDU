@@ -1,5 +1,6 @@
+import type { AgeGroupCount } from "../dto/dashboard_stats.js";
 import { PrismaClient, StuntingStatus } from "../generated/prisma/client.js";
-import type { AgeGroupCount, IDashboardStatsRepository } from "./dashboard-stats.interface.js";
+import type { IDashboardStatsRepository } from "./dashboard-stats.interface.js";
 
 export class DashboardStatsRepository implements IDashboardStatsRepository {
     private db: PrismaClient;

@@ -28,10 +28,10 @@ export class ExaminationsService implements IExaminationsService {
         this.examinationsRepo = examinationsRepo;
     }
 
-    async addPatientExamination(newExamination: CreatePatientExamReq): Promise<StuntingResult> {
+    async addPatientExamination(posyandu_id: string, newExamination: CreatePatientExamReq): Promise<StuntingResult> {
         try {
-            const patientInfo = await this.patientsRepo.getPatientBirthAndGenderOnly(newExamination.patient_id);
-            if (!patientInfo) throw new Error("Pasien tidak ditemukan");
+            const patientInfo = await this.patientsRepo.getByID(posyandu_id, newExamination.patient_id);
+            if (!patientInfo) throw new AppError("Pasien tidak ditemukan", 404);
 
             const ageMonths = calculateAgeMonths(patientInfo.birth_date)
             const zScoreResult = calculateZScoreWHO(
@@ -111,10 +111,14 @@ export class ExaminationsService implements IExaminationsService {
         }
     }
     
-    async updatePatientExamination(exam_id: string, newExamination: UpdatePatientExamReqSchema): Promise<StuntingResult> {
+    async updatePatientExamination(posyandu_id: string, exam_id: string, newExamination: UpdatePatientExamReqSchema): Promise<StuntingResult> {
         try {
             const existingExam = await this.examinationsRepo.getExamByID(exam_id);
-            if (!existingExam) throw new Error("Data pemeriksaan tidak ditemukan");
+            if (!existingExam) throw new AppError("Data pemeriksaan tidak ditemukan", 404);
+
+            if (existingExam.patient.posyandu_id !== posyandu_id) {
+                throw new AppError("Forbidden", 403);
+            }
 
             const examDate = newExamination.exam_date ?? existingExam.exam_date;
             const weight = newExamination.weight ?? existingExam.weight;

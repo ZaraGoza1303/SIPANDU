@@ -21,11 +21,6 @@ interface UmurParams {
   wfh: LMSParams;
 }
 
-let stuntingStatus = "Normal";
-let wastingStatus = "Gizi Baik (Normal)";
-let underweightStatus = "Berat Badan Normal";
-
-
 function zScoreLMS(X: number, L: number, M: number, S: number): number {
   if (L === 0) {
     return Math.log(X / M) / S;
@@ -47,7 +42,11 @@ export function calculateZScoreWHO(weight: number, height: number, age_months: n
     const wfa = zScoreLMS(weight, acuan.wfa.L, acuan.wfa.M, acuan.wfa.S);
     const hfa = zScoreLMS(height, acuan.hfa.L, acuan.hfa.M, acuan.hfa.S);
     const wfh = zScoreLMS(weight, acuan.wfh.L, acuan.wfh.M, acuan.wfh.S);
- 
+
+    let stuntingStatus = "Normal";
+    let wastingStatus = "Gizi Baik (Normal)";
+    let underweightStatus = "Berat Badan Normal";
+
     if (hfa < -3) stuntingStatus = "Severely Stunting (Sangat Pendek)";
     else if (hfa < -2) stuntingStatus = "Stunting (Pendek)";
     else if (hfa > 3) stuntingStatus = "Tinggi";

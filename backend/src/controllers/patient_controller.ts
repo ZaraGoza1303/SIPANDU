@@ -3,9 +3,9 @@ import type { IPatientService } from "../services/patient_service.interface.js";
 import { sendErrorResponse, sendSuccessfullResponse } from "../utils/response.js";
 import { AppError } from "../utils/error.js";
 import { CreateExamScheduleSchema, CreatePatientExaminationSchema, CreatePatientSchema, UpdatePatientExamReqSchema, UpdatePatientSchema } from "../dto/patient.js";
-import { fileTypeFromBuffer } from "file-type";
 import type { ISupabase } from "../services/supabase.interface.js";
 import { getFileNameFromUrl, getFilePathWithFolder } from "../utils/format_url.js";
+import { validateImageFile } from "../utils/validateFile.js";
 import type { IExaminationsService } from "../services/examinations.interface.js";
 
 export class PatientController {
@@ -82,19 +82,12 @@ export class PatientController {
             let pictureUrl: string | null = null;
             
             if (req.file) {
-                const maxSize = 1 * 1024 * 1024;
-                if(req.file.size > maxSize) {
-                    return res.status(400).json(sendErrorResponse("Ukuran gambar maksimal adalah 2MB"));
+                const validation = await validateImageFile(req.file);
+                if (!validation.ok) {
+                    return res.status(400).json(sendErrorResponse(validation.message));
                 }
 
-                const detectedType = await fileTypeFromBuffer(req.file.buffer);
-                const allowedExtension = ['jpg', 'jpeg', 'png'];
-
-                if(!detectedType || !allowedExtension.includes(detectedType.ext)){
-                    return res.status(400).json(sendErrorResponse("Format gambar harus JPEG, JPG, atau PNG asli!"));
-                }
-
-                const url = await this.supabase.uploadFile(req.file.buffer, req.file.mimetype, detectedType.ext)
+                const url = await this.supabase.uploadFile(req.file.buffer, req.file.mimetype, validation.ext!)
                 pictureUrl = url;
             }
 
@@ -182,16 +175,9 @@ export class PatientController {
             let pictureUrl: string | undefined;
 
             if (req.file) {
-                const maxSize = 1 * 1024 * 1024;
-                if(req.file.size > maxSize) {
-                    return res.status(400).json(sendErrorResponse("Ukuran gambar maksimal adalah 2MB"));
-                }
-
-                const detectedType = await fileTypeFromBuffer(req.file.buffer);
-                const allowedExtension = ['jpg', 'jpeg', 'png'];
-
-                if(!detectedType || !allowedExtension.includes(detectedType.ext)){
-                    return res.status(400).json(sendErrorResponse("Format gambar harus JPEG, JPG, atau PNG asli!"));
+                const validation = await validateImageFile(req.file);
+                if (!validation.ok) {
+                    return res.status(400).json(sendErrorResponse(validation.message));
                 }
 
                 const currentPatient = await this.patientService.getByID(posyandu_id, patient_id)
@@ -204,7 +190,7 @@ export class PatientController {
                 pictureUrl = await this.supabase.uploadFile(
                     req.file.buffer,
                     req.file.mimetype,
-                    detectedType.ext,
+                    validation.ext!,
                     oldPictureName,
                 )
             }

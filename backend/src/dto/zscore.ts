@@ -1,12 +1,13 @@
 import whoData from "../../standar-who.json" with {type: "json"}
+import { StuntingStatus, WastingStatus, UnderweightStatus } from "../generated/prisma/client.js";
 
 interface ZScoreOutput {
   wfa: number;
   hfa: number;
   wfh: number;
-  stuntingStatus: string;
-  wastingStatus: string;
-  underweightStatus: string;
+  stuntingStatus: StuntingStatus;
+  wastingStatus: WastingStatus;
+  underweightStatus: UnderweightStatus;
 }
 
 interface LMSParams {
@@ -43,20 +44,20 @@ export function calculateZScoreWHO(weight: number, height: number, age_months: n
     const hfa = zScoreLMS(height, acuan.hfa.L, acuan.hfa.M, acuan.hfa.S);
     const wfh = zScoreLMS(weight, acuan.wfh.L, acuan.wfh.M, acuan.wfh.S);
 
-    let stuntingStatus = "Normal";
-    let wastingStatus = "Gizi Baik (Normal)";
-    let underweightStatus = "Berat Badan Normal";
+    let stuntingStatus: StuntingStatus = StuntingStatus.Normal;
+    let wastingStatus: WastingStatus = WastingStatus.GiziBaikNormal;
+    let underweightStatus: UnderweightStatus = UnderweightStatus.BeratBadanNormal;
 
-    if (hfa < -3) stuntingStatus = "Severely Stunting (Sangat Pendek)";
-    else if (hfa < -2) stuntingStatus = "Stunting (Pendek)";
-    else if (hfa > 3) stuntingStatus = "Tinggi";
+    if (hfa < -3) stuntingStatus = StuntingStatus.SeverelyStunted;
+    else if (hfa < -2) stuntingStatus = StuntingStatus.Stunted;
+    else if (hfa > 3) stuntingStatus = StuntingStatus.High;
 
-    if (wfh < -3) wastingStatus = "Gizi Buruk (Severely Wasted)";
-    else if (wfh < -2) wastingStatus = "Gizi Kurang (Wasted)";
-    else if (wfh > 1) wastingStatus = "Berisiko Gizi Lebih";
+    if (wfh < -3) wastingStatus = WastingStatus.GiziBurukSeverelyWasted;
+    else if (wfh < -2) wastingStatus = WastingStatus.GiziKurangWasted;
+    else if (wfh > 1) wastingStatus = WastingStatus.BerisikoGiziLebih;
 
-    if (wfa < -3) underweightStatus = "Berat Badan Sangat Kurang";
-    else if (wfa < -2) underweightStatus = "Berat Badan Kurang";
+    if (wfa < -3) underweightStatus = UnderweightStatus.BeratBadanSangatKurang;
+    else if (wfa < -2) underweightStatus = UnderweightStatus.BeratBadanKurang;
 
     const res: ZScoreOutput = {
         wfa: Math.round(wfa * 100) / 100,

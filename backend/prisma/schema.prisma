@@ -1,4 +1,25 @@
 // This is your Prisma schema file,
+
+enum StuntingStatus {
+  Normal
+  Stunted
+  SeverelyStunted
+  High
+}
+
+enum WastingStatus {
+  GiziBaikNormal
+  GiziKurangWasted
+  GiziBurukSeverelyWasted
+  BerisikoGiziLebih
+}
+
+enum UnderweightStatus {
+  BeratBadanNormal
+  BeratBadanKurang
+  BeratBadanSangatKurang
+}
+
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
@@ -110,9 +131,9 @@ model StuntingResult {
   weight_for_age_zscore Float
   height_for_age_zscore Float
   weight_for_height_zscore Float
-  stunting_status String @db.VarChar()
-  wasting_status String @db.VarChar()
-  underweight_status String @db.VarChar()
+  stunting_status StuntingStatus
+  wasting_status WastingStatus
+  underweight_status UnderweightStatus
 
   examination Examination @relation(fields: [examination_id], references: [id], onDelete: Cascade)
 

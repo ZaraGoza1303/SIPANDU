@@ -1,9 +1,9 @@
 import type { ExaminationWithPatient } from "../dto/patient.js";
 import type { Examination, Prisma, PrismaClient } from "../generated/prisma/client.js";
 import type { ExaminationCreateInput, ExaminationUpdateInput } from "../generated/prisma/models.js";
-import type { IExaminationRepository } from "./examinations.interface.js";
+import type { IExaminationsRepository } from "./examinations.interface.js";
 
-export class ExaminationsRepository implements IExaminationRepository {
+export class ExaminationsRepository implements IExaminationsRepository {
     private db: PrismaClient;
 
     constructor(db: PrismaClient) {

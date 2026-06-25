@@ -1,4 +1,4 @@
-import type { CreatePatientExamReq, CreatePatientReq, TodayPatientItem, UpdatePatientExamReqSchema, UpdatePatientReq } from "../dto/patient.js";
+import type { CreateExamScheduleReq, CreatePatientExamReq, CreatePatientReq, TodayPatientItem, UpdatePatientExamReqSchema, UpdatePatientReq } from "../dto/patient.js";
 import type { PaginatedResponse } from "../dto/response.js";
 import type { Patient, StuntingResult } from "../generated/prisma/client.js";
 
@@ -12,6 +12,7 @@ export interface IPatientService {
 
     //examination
     addPatientExamination(newExamination: CreatePatientExamReq): Promise<StuntingResult>;
+    addExamSchedule(posyandu_id: string, user_id: string, newSchedule: CreateExamScheduleReq): Promise<void>;
     updatePatientExamination(exam_id: string, newExamination: UpdatePatientExamReqSchema): Promise<StuntingResult>;
 
     checkPosyanduID(posyandu_id: string): void

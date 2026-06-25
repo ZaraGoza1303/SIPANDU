@@ -1,8 +1,8 @@
-import type { CreatePatientExamReq, CreatePatientReq, TodayPatientItem, UpdatePatientExamReqSchema, UpdatePatientReq } from "../dto/patient.js";
+import type { CreateExamScheduleReq, CreatePatientExamReq, CreatePatientReq, TodayPatientItem, UpdatePatientExamReqSchema, UpdatePatientReq } from "../dto/patient.js";
 import type { PaginatedResponse } from "../dto/response.js";
 import { calculateZScoreWHO } from "../dto/zscore.js";
 import type { Patient, PrismaClient, StuntingResult } from "../generated/prisma/client.js";
-import type { ExaminationCreateInput, ExaminationUpdateInput, PatientCreateInput, PatientUpdateInput, StuntingResultCreateInput, StuntingResultUpdateInput } from "../generated/prisma/models.js";
+import type { ExaminationCreateInput, ExaminationUpdateInput, PatientCreateInput, PatientUpdateInput, ScheduleCreateInput, StuntingResultCreateInput, StuntingResultUpdateInput } from "../generated/prisma/models.js";
 import type { IPatientRepository } from "../repositories/patient_repository.interface.js";
 import { calculateAgeMonths } from "../utils/calculate.js";
 import { AppError, handlePrismaError } from "../utils/error.js";
@@ -19,7 +19,7 @@ export class PatientService implements IPatientService {
 
     checkPosyanduID(posyandu_id: string): void {
         if(!posyandu_id) {
-            throw new AppError("Forbidden", 403)
+            throw new AppError("Not Found", 404)
         }
     }
 
@@ -119,10 +119,7 @@ export class PatientService implements IPatientService {
         } catch(err) {
             handlePrismaError(err)
         }
-    }
-
-        
-    
+    }    
 
     async deletePatient(posyandu_id: string, patient_id: string): Promise<void> {
         this.checkPosyanduID(posyandu_id);
@@ -185,6 +182,35 @@ export class PatientService implements IPatientService {
             return result;
             
         } catch (err){
+            handlePrismaError(err)
+        }
+    }
+
+        
+    async addExamSchedule(posyandu_id: string, user_id: string, newSchedule: CreateExamScheduleReq): Promise<void> {
+        this.checkPosyanduID(posyandu_id);
+
+        try {
+            if(!user_id){
+                throw new AppError("Forbidden", 403)
+            }
+
+            const newScheduleReq: ScheduleCreateInput = {
+                posyandu: {
+                    connect: {id: posyandu_id}
+                },
+                user: {
+                    connect: {id: user_id}
+                },
+                scheduled_date: newSchedule.scheduled_date,
+                time_start: newSchedule.time_start,
+                time_end: newSchedule.time_end,
+                status: newSchedule.status,
+            }
+
+            await this.patientRepo.insertExamSchedule(newScheduleReq);
+
+        } catch(err) {
             handlePrismaError(err)
         }
     }

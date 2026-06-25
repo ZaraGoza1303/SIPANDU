@@ -132,7 +132,7 @@ model Schedule {
   updated_at DateTime @updatedAt @db.Timestamp()
 
   posyandu Posyandu @relation(fields: [posyandu_id], references: [id], onDelete: Cascade)
-  kader User @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  user User @relation(fields: [created_by], references: [id], onDelete: Cascade)
 
   @@map("schedules")
 }

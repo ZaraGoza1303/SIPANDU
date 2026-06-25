@@ -158,6 +158,12 @@ export class PatientRepository implements IPatientRepository {
         })
     }
 
+    async insertExamSchedule(newSchedule: Prisma.ScheduleCreateInput): Promise<void> {
+        await this.db.schedule.create({
+            data: newSchedule
+        })
+    }
+
     async updatePatient(posyandu_id: string, patient_id: string, newPatient: PatientUpdateInput): Promise<void> {
         const updateResult = await this.db.patient.updateMany({
             where: {

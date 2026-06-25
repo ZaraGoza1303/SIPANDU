@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import type { IPatientService } from "../services/patient_service.interface.js";
 import { sendErrorResponse, sendSuccessfullResponse } from "../utils/response.js";
 import { AppError } from "../utils/error.js";
-import { CreatePatientExaminationSchema, CreatePatientSchema, UpdatePatientExamReqSchema, UpdatePatientSchema } from "../dto/patient.js";
+import { CreateExamScheduleSchema, CreatePatientExaminationSchema, CreatePatientSchema, UpdatePatientExamReqSchema, UpdatePatientSchema } from "../dto/patient.js";
 import { fileTypeFromBuffer } from "file-type";
 import type { ISupabase } from "../services/supabase.interface.js";
 import { getFileNameFromUrl, getFilePathWithFolder } from "../utils/format_url.js";
@@ -131,6 +131,34 @@ export class PatientController {
 
             const result = await this.patientService.addPatientExamination(validate.data);
             return res.status(201).json(sendSuccessfullResponse("Pemeriksaan berhasil ditambahkan", result))
+
+        } catch(err: any){
+            if(err instanceof AppError){
+                return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
+            }
+
+            return res.status(500).json(sendErrorResponse("Gagal menambahkan data pasien", err.message))
+        }
+    }
+
+    async addExamSchedule(req: Request, res: Response){
+        try {
+            const posyandu_id = req.user?.posyandu_id as string;
+            const user_id = req.user?.id as string;
+
+            if(!req.body){
+                return res.status(400).json(sendErrorResponse("Request body empty"))
+            };
+
+            const validate = CreateExamScheduleSchema.safeParse(req.body);
+            if(!validate.success){
+                const formatedErr = validate.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
+            }
+
+            await this.patientService.addExamSchedule(posyandu_id, user_id, validate.data);
+            return res.status(201).json(sendSuccessfullResponse("Jadwal Pemeriksaan berhasil ditambahkan"))
+            
 
         } catch(err: any){
             if(err instanceof AppError){

@@ -23,9 +23,9 @@ export class AuthController {
             }
 
             const response = await this.authService.login(validate.data);
-            return res.status(200).json(sendSuccessfullResponse("Successfully Login", response))
+            return res.status(200).json(sendSuccessfullResponse("Login Berhasil", response))
         } catch (err: any) {
-            return res.status(400).json(sendErrorResponse("Login Failed", err.message))
+            return res.status(400).json(sendErrorResponse("Login Gagal", err.message))
         }
     }
 }

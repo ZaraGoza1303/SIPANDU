@@ -1,11 +1,11 @@
-import type { IPatientRepository } from "./patient_repository.interface.js";
-import type { Examination, Patient, Prisma, PrismaClient, StuntingResult } from "../generated/prisma/client.js";
-import type { ExaminationCreateInput, ExaminationUpdateInput, PatientCreateInput, PatientUpdateInput, StuntingResultCreateInput, StuntingResultUpdateInput } from "../generated/prisma/models.js";
+import type { IPatientsRepository } from "./patient_repository.interface.js";
+import type { Patient, PrismaClient } from "../generated/prisma/client.js";
+import type { PatientCreateInput, PatientUpdateInput } from "../generated/prisma/models.js";
 import type { PaginatedResponse } from "../dto/response.js";
 import { AppError } from "../utils/error.js";
-import type { ExaminationWithPatient, PatientBirthAndGenderOnly, TodayPatientItem } from "../dto/patient.js";
+import type { PatientBirthAndGenderOnly, TodayPatientItem } from "../dto/patient.js";
 
-export class PatientRepository implements IPatientRepository {
+export class PatientsRepository implements IPatientsRepository {
     private db: PrismaClient;
 
     constructor(db: PrismaClient) {
@@ -125,19 +125,6 @@ export class PatientRepository implements IPatientRepository {
         return patient
     }
 
-    async getExamByID(exam_id: string): Promise<ExaminationWithPatient | null> {
-        const exam = await this.db.examination.findUnique({
-            where: {
-                id: exam_id
-            },
-            include: {
-                patient: true
-            }
-        })
-
-        return exam;
-    }
-
      async getPatientBirthAndGenderOnly(patient_id: string): Promise<PatientBirthAndGenderOnly | null> {
         const patient = await this.db.patient.findUnique({
             where: {
@@ -155,12 +142,6 @@ export class PatientRepository implements IPatientRepository {
     async insertPatient(newPatient: PatientCreateInput): Promise<void> {
         await this.db.patient.create({
             data: newPatient
-        })
-    }
-
-    async insertExamSchedule(newSchedule: Prisma.ScheduleCreateInput): Promise<void> {
-        await this.db.schedule.create({
-            data: newSchedule
         })
     }
 
@@ -189,63 +170,5 @@ export class PatientRepository implements IPatientRepository {
         if (deleteResult.count === 0) {
             throw new AppError("Pasien tidak ditemukan", 404);
         }
-    }
-
-    async checkScheduleExam(posyandu_id: string, today: Date, tomorrow: Date): Promise<Boolean> {
-        const isScheduleExists = await this.db.schedule.count({
-            where: {
-                posyandu_id: posyandu_id,
-                scheduled_date: {
-                    gte: today,
-                    lte: tomorrow
-                }
-            },
-        })
-
-        return isScheduleExists > 0;
-    }
-
-    async insertExamination(newExam: ExaminationCreateInput, tx?: Prisma.TransactionClient): Promise<Examination> {
-        const client = tx || this.db
-        const result = await client.examination.create({
-            data: newExam
-        })
-
-        return result;
-    }
-
-    async insertStuntingResult(newStuntingResult: StuntingResultCreateInput, tx?: Prisma.TransactionClient): Promise<StuntingResult> {
-        const client = tx || this.db
-        const result = await client.stuntingResult.create({
-            data: newStuntingResult
-        })
-
-        return result;
-    }
-        
-    async updateExamination(exam_id: string, newExamination: ExaminationUpdateInput, tx?: Prisma.TransactionClient): Promise<void> {
-        const client = tx || this.db
-
-        await client.examination.update({
-            where: {
-                id: exam_id,
-            },
-
-            data: newExamination
-        })
-    }
-
-    async updateStuntingResult(exam_id: string, newStuntingResult: StuntingResultUpdateInput, tx?: Prisma.TransactionClient): Promise<StuntingResult> {
-        const client = tx || this.db
-
-        const result = await client.stuntingResult.update({
-            where: {
-                id: exam_id,
-            },
-
-            data: newStuntingResult
-        })
-
-        return result
     }
 }

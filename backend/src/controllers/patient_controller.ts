@@ -6,14 +6,20 @@ import { CreateExamScheduleSchema, CreatePatientExaminationSchema, CreatePatient
 import { fileTypeFromBuffer } from "file-type";
 import type { ISupabase } from "../services/supabase.interface.js";
 import { getFileNameFromUrl, getFilePathWithFolder } from "../utils/format_url.js";
+import type { IExaminationsService } from "../services/examinations.interface.js";
 
 export class PatientController {
-    private patientService: IPatientService
     private supabase: ISupabase;
+    private patientService: IPatientService
+    private examinationsService: IExaminationsService;
 
-    constructor(patientService: IPatientService, supabase: ISupabase) {
+    constructor(
+        supabase: ISupabase, patientService: IPatientService,
+        examinationsService: IExaminationsService
+    ) {
+        this.supabase = supabase;
         this.patientService = patientService;
-        this.supabase = supabase
+        this.examinationsService = examinationsService;
     }
 
     async getAll(req: Request, res: Response){
@@ -129,7 +135,7 @@ export class PatientController {
                 return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
             }
 
-            const result = await this.patientService.addPatientExamination(validate.data);
+            const result = await this.examinationsService.addPatientExamination(validate.data);
             return res.status(201).json(sendSuccessfullResponse("Pemeriksaan berhasil ditambahkan", result))
 
         } catch(err: any){
@@ -156,7 +162,7 @@ export class PatientController {
                 return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
             }
 
-            await this.patientService.addExamSchedule(posyandu_id, user_id, validate.data);
+            await this.examinationsService.addExamSchedule(posyandu_id, user_id, validate.data);
             return res.status(201).json(sendSuccessfullResponse("Jadwal Pemeriksaan berhasil ditambahkan"))
             
 
@@ -241,7 +247,7 @@ export class PatientController {
                 return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
             }
 
-            const result = await this.patientService.updatePatientExamination(exam_id, validate.data);
+            const result = await this.examinationsService.updatePatientExamination(exam_id, validate.data);
             return res.status(200).json(sendSuccessfullResponse("Data pemeriksaan berhasil diupdate", result))
 
         } catch (err: any) {

@@ -1,18 +1,30 @@
 import { Router } from "express";
-import { PatientRepository } from "../repositories/patient_repository.js";
+import { PatientsRepository } from "../repositories/patient_repository.js";
 import { PatientService } from "../services/patient_service.js";
 import { PatientController } from "../controllers/patient_controller.js";
 import { verifyJWTToken } from "../middleware/jwt.js";
 import { PrismaClient } from "../generated/prisma/client.js";
 import { Supabase } from "../services/supabase.js";
+import { ExaminationsRepository } from "../repositories/examinations_repository.js";
+import { ExaminationsService } from "../services/examinations_service.js";
+import { StuntingResultsRepository } from "../repositories/stunting-results_repository.js";
 
 const patientRouter = Router();
 
 const db = new PrismaClient();
 const supabase = new Supabase();
-const patientRepo = new PatientRepository(db);
-const patientService = new PatientService(patientRepo, db);
-const patientController = new PatientController(patientService, supabase);
+
+//Repo
+const stuntingResultsRepo = new StuntingResultsRepository(db);
+const examinationsRepo = new ExaminationsRepository(db);
+const patientsRepo = new PatientsRepository(db); 
+
+//Service
+const examinationsService = new ExaminationsService(db, patientsRepo, stuntingResultsRepo, examinationsRepo);
+const patientService = new PatientService(patientsRepo, examinationsRepo);
+
+//Controller
+const patientController = new PatientController(supabase, patientService, examinationsService);
 
 patientRouter.use(verifyJWTToken);
 patientRouter.get('/all', (req, res) => patientController.getAll(req, res));

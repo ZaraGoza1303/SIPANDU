@@ -105,12 +105,12 @@ const [showPassword, setShowPassword] = useState(false);
           </div>
         </div>
       </div>
-      <div className="pointer-events-none absolute right-5 bottom-5 opacity-10">
+      <div className="pointer-events-none absolute right-5 bottom-5 opacity-5g">
         <Image
             src="/IconSipandu.png"
             alt="Logo SIPANDU"
-            width={100}
-            height={100}
+            width={130}
+            height={130}
         />
       </div>
     </main>

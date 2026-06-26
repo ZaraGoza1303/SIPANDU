@@ -200,7 +200,7 @@ export default function DashboardPage() {
                     console.error("Gagal mengambil data, token tidak valid atau kadaluarsa");
                 }
             } catch (error) {
-                console.error("Error koneksi ke API Farhan:", error);
+                console.error("Error koneksi ke API:", error);
             } finally {
                 setLoadingPatients(false);
             }

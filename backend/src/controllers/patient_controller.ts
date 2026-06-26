@@ -2,24 +2,20 @@ import type { Request, Response } from "express";
 import type { IPatientService } from "../services/patient_service.interface.js";
 import { sendErrorResponse, sendSuccessfullResponse } from "../utils/response.js";
 import { AppError } from "../utils/error.js";
-import { CreateExamScheduleSchema, CreatePatientExaminationSchema, CreatePatientSchema, UpdatePatientExamReqSchema, UpdatePatientSchema } from "../dto/patient.js";
+import { CreatePatientSchema, UpdatePatientSchema } from "../dto/patient.js";
 import type { ISupabase } from "../services/supabase.interface.js";
 import { getFileNameFromUrl, getFilePathWithFolder } from "../utils/format_url.js";
 import { validateImageFile } from "../utils/validateFile.js";
-import type { IExaminationsService } from "../services/examinations.interface.js";
 
 export class PatientController {
     private supabase: ISupabase;
     private patientService: IPatientService
-    private examinationsService: IExaminationsService;
 
     constructor(
-        supabase: ISupabase, patientService: IPatientService,
-        examinationsService: IExaminationsService
+        supabase: ISupabase, patientService: IPatientService
     ) {
         this.supabase = supabase;
         this.patientService = patientService;
-        this.examinationsService = examinationsService;
     }
 
     async getAll(req: Request, res: Response){
@@ -116,60 +112,6 @@ export class PatientController {
         }
     }
 
-    async addPatientExamination(req: Request, res: Response) {
-        try {
-            const posyandu_id = req.user?.posyandu_id as string;
-
-            if(!req.body){
-                return res.status(400).json(sendErrorResponse("Request body empty"))
-            };
-
-            const validate = CreatePatientExaminationSchema.safeParse(req.body);
-            if(!validate.success){
-                const formatedErr = validate.error.flatten().fieldErrors;
-                return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
-            }
-
-            const result = await this.examinationsService.addPatientExamination(posyandu_id, validate.data);
-            return res.status(201).json(sendSuccessfullResponse("Pemeriksaan berhasil ditambahkan", result))
-
-        } catch(err: any){
-            if(err instanceof AppError){
-                return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
-            }
-
-            return res.status(500).json(sendErrorResponse("Gagal menambahkan data pasien", err.message))
-        }
-    }
-
-    async addExamSchedule(req: Request, res: Response){
-        try {
-            const posyandu_id = req.user?.posyandu_id as string;
-            const user_id = req.user?.id as string;
-
-            if(!req.body){
-                return res.status(400).json(sendErrorResponse("Request body empty"))
-            };
-
-            const validate = CreateExamScheduleSchema.safeParse(req.body);
-            if(!validate.success){
-                const formatedErr = validate.error.flatten().fieldErrors;
-                return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
-            }
-
-            await this.examinationsService.addExamSchedule(posyandu_id, user_id, validate.data);
-            return res.status(201).json(sendSuccessfullResponse("Jadwal Pemeriksaan berhasil ditambahkan"))
-            
-
-        } catch(err: any){
-            if(err instanceof AppError){
-                return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
-            }
-
-            return res.status(500).json(sendErrorResponse("Gagal menambahkan data pasien", err.message))
-        }
-    }
-
     async updatePatient(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
@@ -210,34 +152,6 @@ export class PatientController {
 
             await this.patientService.updatePatient(posyandu_id, patient_id, updatedData);
             return res.status(200).json(sendSuccessfullResponse("Data Patient berhasil diupdate"))
-
-        } catch (err: any) {
-            if(err instanceof AppError){
-                return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
-            }
-
-            return res.status(500).json(sendErrorResponse("Gagal mengubah data pasien", err.message))
-        }
-    }
-
-    async updatePatientExamination(req: Request, res: Response) {
-        try {
-            const posyandu_id = req.user?.posyandu_id as string;
-            const exam_id = req.query.exam_id as string;
-
-            if(!req.body){
-                return res.status(400).json(sendErrorResponse("Request body empty"))
-            };
-
-
-            const validate = UpdatePatientExamReqSchema.safeParse(req.body);
-            if(!validate.success){
-                const formatedErr = validate.error.flatten().fieldErrors;
-                return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
-            }
-
-            const result = await this.examinationsService.updatePatientExamination(posyandu_id, exam_id, validate.data);
-            return res.status(200).json(sendSuccessfullResponse("Data pemeriksaan berhasil diupdate", result))
 
         } catch (err: any) {
             if(err instanceof AppError){

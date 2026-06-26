@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { User, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 
@@ -44,7 +45,7 @@ const [showPassword, setShowPassword] = useState(false);
               </label>
 
               <a
-                href="#"
+                href="/login/forgotPW"
                 className="text-sm text-blue-600 hover:underline"
               >
                 Lupa Password?

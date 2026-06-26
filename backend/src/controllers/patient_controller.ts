@@ -4,7 +4,7 @@ import { sendErrorResponse, sendSuccessfullResponse } from "../utils/response.js
 import { AppError } from "../utils/error.js";
 import { CreatePatientSchema, UpdatePatientSchema } from "../dto/patient.js";
 import type { ISupabase } from "../services/supabase.interface.js";
-import { getFileNameFromUrl, getFilePathWithFolder } from "../utils/format_url.js";
+import { getFilePathWithFolder } from "../utils/format_url.js";
 import { validateImageFile } from "../utils/validateFile.js";
 
 export class PatientController {
@@ -128,7 +128,7 @@ export class PatientController {
                 let oldPictureName: string | undefined;
 
                 if(currentPatient && currentPatient.picture){
-                    oldPictureName = getFileNameFromUrl(currentPatient.picture)
+                    oldPictureName = getFilePathWithFolder(currentPatient.picture, 'pictures/')
                 }
 
                 pictureUrl = await this.supabase.uploadFile(

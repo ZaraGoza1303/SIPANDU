@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
           </p>
 
           <div className="mb-6">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label className="mb-2 block text-sm font-bold text-gray-700">
               Email
             </label>
 

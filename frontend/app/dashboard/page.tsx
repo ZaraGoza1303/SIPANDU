@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {FiUsers, FiActivity, FiAlertTriangle, FiCalendar, FiPlus, FiMoreVertical, FiTrendingUp, FiTrendingDown, FiChevronDown, } from "react-icons/fi";
+import {FiUsers, FiActivity, FiAlertTriangle, FiCalendar, FiPlus, FiTrendingUp, FiTrendingDown, FiChevronDown, } from "react-icons/fi";
 import {LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, } from "recharts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -15,16 +15,6 @@ interface DistribusiItem {
     label: string;
     pct: number;
     color: string;
-}
-
-interface JadwalItem {
-    id: number;
-    inisial: string;
-    nama: string;
-    usia: string;
-    jenis: string;
-    status: string;
-    warna: string;
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -45,12 +35,6 @@ const distribusiUmur: DistribusiItem[] = [
     { label: "2–5 thn",  pct: 15, color: "#E5E7EB" },
 ];
 
-const jadwalData: JadwalItem[] = [
-    { id: 1, inisial: "AS", nama: "Aditya Syahputra",  usia: "14 bln", jenis: "Timbang & Imunisasi", status: "Normal",   warna: "#3B82F6" },
-    { id: 2, inisial: "BK", nama: "Bunga Kirana",       usia: "6 bln",  jenis: "Rutin Bulanan",        status: "Stunting", warna: "#F97316" },
-    { id: 3, inisial: "EL", nama: "Eka Larasati",       usia: "3 bln",  jenis: "Imunisasi DPT",        status: "Normal",   warna: "#10B981" },
-    { id: 4, inisial: "FM", nama: "Farah Maheswari",    usia: "48 bln", jenis: "Cek Gizi Berkala",     status: "Normal",   warna: "#8B5CF6" },
-];
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
@@ -169,6 +153,9 @@ export default function DashboardPage() {
         jadwalHariIni: 0,
     });
 
+    const [patients, setPatients] =useState<any[]>([]);
+    const [loadingPatients, setLoadingPatients] = useState(true);
+
     const [trendFilter] = useState("6 Bulan Terakhir");
     const trendData: TrendItem[] = stuntingTrend;
 
@@ -190,6 +177,36 @@ export default function DashboardPage() {
             if (step >= steps) clearInterval(timer);
         }, 900 / steps);
         return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        const fetchPatientsData = async () => {
+            try {
+                // Ambil token login yang disimpan oleh temanmu
+                const token = localStorage.getItem('token'); 
+
+                const response = await fetch('https://stylar-nonseverable-denver.ngrok-free.dev/api/pasien/all-today-patients', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` // Sertakan token akses
+                    }
+                });
+
+                if (response.ok) {
+                    const res = await response.json();
+                    setPatients(res.data.items || []); // Simpan data dari API Farhan ke dalam state
+                } else {
+                    console.error("Gagal mengambil data, token tidak valid atau kadaluarsa");
+                }
+            } catch (error) {
+                console.error("Error koneksi ke API Farhan:", error);
+            } finally {
+                setLoadingPatients(false);
+            }
+        };
+
+        fetchPatientsData();
     }, []);
 
     return (
@@ -285,24 +302,67 @@ export default function DashboardPage() {
                     </thead>
 
                     <tbody>
-                        {jadwalData.map((row) => (
-                        <tr key={row.id} className="border-t border-gray-50 hover:bg-blue-50/40 transition-colors">
-                            <td className="px-5 py-3">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ background: row.warna }}>
-                                {row.inisial}
-                                </div>
-                                <span className="font-medium text-gray-800">{row.nama}</span>
-                            </div>
-                            </td>
-                            <td className="px-5 py-3 text-gray-500">{row.usia}</td>
-                            <td className="px-5 py-3 text-gray-600">{row.jenis}</td>
-                            <td className="px-5 py-3"><StatusBadge status={row.status} /></td>
-                            <td className="px-5 py-3">
-                            <button className="text-gray-400 hover:text-gray-600"><FiMoreVertical className="w-4 h-4" /></button>
-                            </td>
-                        </tr>
-                        ))}
+                        {/* 🌟 DIUBAH: Menggunakan data asli `patients` dari API alih-alih `jadwalData` mock */}
+                        {loadingPatients ? (
+                            <tr>
+                                <td colSpan={5} className="text-center py-6 text-gray-500">Memuat data pasien...</td>
+                            </tr>
+                        ) : patients.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="text-center py-6 text-gray-500">Tidak ada pasien hari ini.</td>
+                            </tr>
+                        ) : (
+                            patients.map((row) => {
+                                // jika array examination ada isi (> 0) berarti sudah diperiksa
+                                const isChecked = row.examination && row.examination.length > 0;
+
+                                return (
+                                    <tr key={row.id} className="border-t border-gray-50 hover:bg-blue-50/40 transition-colors">
+                                        <td className="px-5 py-3">
+                                            <div className="flex items-center gap-3">
+                                                {/* Inisial otomatis dari huruf pertama nama pasien */}
+                                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 bg-blue-500">
+                                                    {row.name ? row.name.substring(0, 2).toUpperCase() : "PS"}
+                                                </div>
+                                                <span className="font-medium text-gray-800">{row.name}</span>
+                                            </div>
+                                        </td>
+                                        {/* Sesuaikan property key API (contoh: row.usia atau row.umur) */}
+                                        <td className="px-5 py-3 text-gray-500">
+                                            {row.birth_date ? "12 bln" : "-"} 
+                                        </td>
+                                        <td className="px-5 py-3 text-gray-600">Rutin Bulanan</td>
+                                        
+                                        {/* STATUS BADGE BERUBAH BERDASARKAN LOGIKA EXAMINATION */}
+                                        <td className="px-5 py-3">
+                                            {isChecked ? (
+                                                <StatusBadge status="Normal" /> // Kamu bisa ganti status sesuai response status stunting
+                                            ) : (
+                                                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
+                                                    Belum Diperiksa
+                                                </span>
+                                            )}
+                                        </td>
+
+                                        {/* BUTTON AKSI BERUBAH BERDASARKAN LOGIKA EXAMINATION */}
+                                        <td className="px-5 py-3">
+                                            {isChecked ? (
+                                                <button disabled 
+                                                    className="text-xs bg-gray-100 text-gray-400 px-3 py-1.5 rounded-md cursor-not-allowed">
+                                                    Selesai
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => alert(`Arahkan ke form pemeriksaan untuk pasien ID: ${row.id}`)}
+                                                    className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md font-medium transition-colors">
+                                                    Periksa
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
                     </tbody>
                 </table>
             </div>

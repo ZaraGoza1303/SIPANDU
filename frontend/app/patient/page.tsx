@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Patient = {
@@ -172,9 +173,12 @@ export default function PatientPage() {
 
                       <td className="px-5 py-4">
                         <div className="flex gap-2">
-                          <button className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600">
+                          <Link
+                            href={`/patient/${patient.id}`}
+                            className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+                          >
                             Lihat
-                          </button>
+                          </Link>
 
                           <button className="rounded bg-yellow-500 px-3 py-1 text-sm text-white hover:bg-yellow-600">
                             Edit

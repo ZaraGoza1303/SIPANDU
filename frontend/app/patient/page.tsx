@@ -18,6 +18,7 @@ type Patient = {
 export default function PatientPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchPatient();
@@ -25,13 +26,21 @@ export default function PatientPage() {
 
   async function fetchPatient() {
     try {
+      setLoading(true);
+
       const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Token tidak ditemukan. Silakan login ulang.");
+        return;
+      }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/all?page=1&limit=10&search=${search}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
           },
         }
       );
@@ -40,9 +49,14 @@ export default function PatientPage() {
 
       if (result.success) {
         setPatients(result.data.items);
+      } else {
+        alert(result.message);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      alert("Gagal mengambil data pasien.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -70,6 +84,8 @@ export default function PatientPage() {
       <br />
       <br />
 
+      {loading && <p>Loading...</p>}
+
       <table border={1} cellPadding={10}>
         <thead>
           <tr>
@@ -84,21 +100,30 @@ export default function PatientPage() {
         </thead>
 
         <tbody>
-          {patients.map((patient) => (
-            <tr key={patient.id}>
-              <td>{patient.nik}</td>
-              <td>{patient.name}</td>
-              <td>{patient.birth_date}</td>
-              <td>{patient.gender}</td>
-              <td>{patient.mother_name}</td>
-              <td>{patient.phone_parent}</td>
-              <td>
-                <button>Lihat</button>
-                <button>Edit</button>
-                <button>Hapus</button>
-              </td>
+          {patients.length === 0 ? (
+            <tr>
+              <td colSpan={7}>Data tidak ditemukan</td>
             </tr>
-          ))}
+          ) : (
+            patients.map((patient) => (
+              <tr key={patient.id}>
+                <td>{patient.nik}</td>
+                <td>{patient.name}</td>
+                <td>
+                  {new Date(patient.birth_date)
+                    .toLocaleDateString("id-ID")}
+                </td>
+                <td>{patient.gender}</td>
+                <td>{patient.mother_name}</td>
+                <td>{patient.phone_parent}</td>
+                <td>
+                  <button>Lihat</button>
+                  <button>Edit</button>
+                  <button>Hapus</button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
 

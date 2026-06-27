@@ -7,6 +7,45 @@ import { User, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 
 export default function LoginPage() {
 const [showPassword, setShowPassword] = useState(false);
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+
+const handleLogin = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      console.log(result);
+
+      if (result.success) {
+        localStorage.setItem(
+          "token",
+          result.data.jwt_token
+        );
+
+        alert("Login berhasil");
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Gagal terhubung ke server");
+    }
+  };
+
   return (
    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f5f6f8] px-4">
       <div className="w-full max-w-md">
@@ -32,6 +71,8 @@ const [showPassword, setShowPassword] = useState(false);
 
               <input
                 type="text"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="nama@email.com"
                 className="w-full rounded-lg border border-gray-400 py-3 pr-4 pl-10 text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500"
               />
@@ -60,6 +101,8 @@ const [showPassword, setShowPassword] = useState(false);
 
               <input
                 type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full rounded-lg border border-gray-300 py-3 pr-10 pl-10 text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500"
               />
@@ -86,7 +129,11 @@ const [showPassword, setShowPassword] = useState(false);
             </span>
           </div>
 
-          <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 font-medium text-white transition hover:bg-blue-700">
+          <button
+            type="button"
+            onClick={handleLogin}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 font-medium text-white transition hover:bg-blue-700"
+          >
             Masuk Ke Portal
             <LogIn size={18} />
           </button>

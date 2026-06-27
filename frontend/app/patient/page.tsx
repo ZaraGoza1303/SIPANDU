@@ -61,75 +61,139 @@ export default function PatientPage() {
   }
 
   return (
-    <div>
-      <h1>Data Pasien</h1>
+  <div className="min-h-screen bg-gray-100 p-8">
+    <div className="mx-auto max-w-7xl">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Data Pasien
+          </h1>
+          <p className="text-gray-500">
+            Kelola data pasien posyandu
+          </p>
+        </div>
 
-      <br />
+        <button className="rounded-lg bg-blue-600 px-5 py-3 text-white transition hover:bg-blue-700">
+          + Tambah Pasien
+        </button>
+      </div>
 
-      <input
-        type="text"
-        placeholder="Cari nama atau NIK"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div className="mb-6 rounded-xl bg-white p-5 shadow">
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="Cari nama atau NIK..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+          />
 
-      <button onClick={fetchPatient}>
-        Cari
-      </button>
+          <button
+            onClick={fetchPatient}
+            className="rounded-lg bg-blue-600 px-6 text-white hover:bg-blue-700"
+          >
+            Cari
+          </button>
+        </div>
+      </div>
 
-      <button>
-        Tambah Pasien
-      </button>
+      <div className="rounded-xl bg-white shadow">
+        <div className="border-b p-5">
+          <h2 className="text-lg font-semibold">
+            Daftar Pasien
+          </h2>
+          <p className="text-sm text-gray-500">
+            Total data: {patients.length}
+          </p>
+        </div>
 
-      <br />
-      <br />
+        {loading ? (
+          <div className="p-10 text-center text-gray-500">
+            Loading...
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr className="text-left text-sm text-gray-600">
+                  <th className="px-5 py-4">NIK</th>
+                  <th className="px-5 py-4">Nama Anak</th>
+                  <th className="px-5 py-4">Tanggal Lahir</th>
+                  <th className="px-5 py-4">Gender</th>
+                  <th className="px-5 py-4">Nama Ibu</th>
+                  <th className="px-5 py-4">No WA</th>
+                  <th className="px-5 py-4">Aksi</th>
+                </tr>
+              </thead>
 
-      {loading && <p>Loading...</p>}
+              <tbody>
+                {patients.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="py-10 text-center text-gray-500"
+                    >
+                      Data tidak ditemukan
+                    </td>
+                  </tr>
+                ) : (
+                  patients.map((patient) => (
+                    <tr
+                      key={patient.id}
+                      className="border-t hover:bg-gray-50"
+                    >
+                      <td className="px-5 py-4">
+                        {patient.nik}
+                      </td>
 
-      <table border={1} cellPadding={10}>
-        <thead>
-          <tr>
-            <th>NIK</th>
-            <th>Nama Anak</th>
-            <th>Tanggal Lahir</th>
-            <th>Jenis Kelamin</th>
-            <th>Nama Ibu</th>
-            <th>No WA Ortu</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
+                      <td className="px-5 py-4 font-medium">
+                        {patient.name}
+                      </td>
 
-        <tbody>
-          {patients.length === 0 ? (
-            <tr>
-              <td colSpan={7}>Data tidak ditemukan</td>
-            </tr>
-          ) : (
-            patients.map((patient) => (
-              <tr key={patient.id}>
-                <td>{patient.nik}</td>
-                <td>{patient.name}</td>
-                <td>
-                  {new Date(patient.birth_date)
-                    .toLocaleDateString("id-ID")}
-                </td>
-                <td>{patient.gender}</td>
-                <td>{patient.mother_name}</td>
-                <td>{patient.phone_parent}</td>
-                <td>
-                  <button>Lihat</button>
-                  <button>Edit</button>
-                  <button>Hapus</button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+                      <td className="px-5 py-4">
+                        {new Date(
+                          patient.birth_date
+                        ).toLocaleDateString("id-ID")}
+                      </td>
 
-      <br />
+                      <td className="px-5 py-4">
+                        <span className="rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-700">
+                          {patient.gender}
+                        </span>
+                      </td>
 
-      <p>Total data: {patients.length}</p>
+                      <td className="px-5 py-4">
+                        {patient.mother_name}
+                      </td>
+
+                      <td className="px-5 py-4">
+                        {patient.phone_parent}
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <div className="flex gap-2">
+                          <button className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600">
+                            Lihat
+                          </button>
+
+                          <button className="rounded bg-yellow-500 px-3 py-1 text-sm text-white hover:bg-yellow-600">
+                            Edit
+                          </button>
+
+                          <button className="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600">
+                            Hapus
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
-  );
+  </div>
+);
 }

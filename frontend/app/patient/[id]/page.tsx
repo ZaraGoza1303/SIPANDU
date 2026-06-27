@@ -18,6 +18,7 @@ type Patient = {
 
 export default function PatientDetailPage() {
   const params = useParams();
+
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -52,60 +53,90 @@ export default function PatientDetailPage() {
   }
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="p-6">
+        Loading...
+      </div>
+    );
   }
 
   if (!patient) {
-    return <p>Data pasien tidak ditemukan.</p>;
+    return (
+      <div className="p-6">
+        Data pasien tidak ditemukan.
+      </div>
+    );
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
+    <div className="p-6">
       <h1 className="mb-6 text-3xl font-bold">
         Detail Pasien
       </h1>
 
-      <div className="rounded-xl border bg-white p-6 shadow">
-        <div className="space-y-3">
-          <p>
-            <strong>NIK:</strong> {patient.nik}
-          </p>
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm text-gray-500">
+              Nama
+            </p>
+            <p className="font-medium">
+              {patient.name}
+            </p>
+          </div>
 
-          <p>
-            <strong>Nama:</strong> {patient.name}
-          </p>
+          <div>
+            <p className="text-sm text-gray-500">
+              NIK
+            </p>
+            <p>{patient.nik}</p>
+          </div>
 
-          <p>
-            <strong>Tanggal Lahir:</strong>{" "}
-            {new Date(patient.birth_date).toLocaleDateString(
-              "id-ID"
-            )}
-          </p>
+          <div>
+            <p className="text-sm text-gray-500">
+              Tanggal Lahir
+            </p>
+            <p>
+              {new Date(
+                patient.birth_date
+              ).toLocaleDateString("id-ID")}
+            </p>
+          </div>
 
-          <p>
-            <strong>Jenis Kelamin:</strong>{" "}
-            {patient.gender}
-          </p>
+          <div>
+            <p className="text-sm text-gray-500">
+              Jenis Kelamin
+            </p>
+            <p>{patient.gender}</p>
+          </div>
 
-          <p>
-            <strong>Nama Ibu:</strong>{" "}
-            {patient.mother_name}
-          </p>
+          <div>
+            <p className="text-sm text-gray-500">
+              Nama Ibu
+            </p>
+            <p>{patient.mother_name}</p>
+          </div>
 
-          <p>
-            <strong>Nama Ayah:</strong>{" "}
-            {patient.father_name}
-          </p>
+          <div>
+            <p className="text-sm text-gray-500">
+              Nama Ayah
+            </p>
+            <p>{patient.father_name}</p>
+          </div>
 
-          <p>
-            <strong>Alamat:</strong>{" "}
-            {patient.address}
-          </p>
+          <div>
+            <p className="text-sm text-gray-500">
+              Alamat
+            </p>
+            <p>{patient.address}</p>
+          </div>
 
-          <p>
-            <strong>No WA:</strong>{" "}
-            {patient.phone_parent}
-          </p>
+          <div>
+            <p className="text-sm text-gray-500">
+              No WA Orang Tua
+            </p>
+            <p>{patient.phone_parent}</p>
+          </div>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { useState } from "react";
 
 export default function AddPatientPage() {
   const router = useRouter();
+  
 
   const [loading, setLoading] = useState(false);
 
@@ -21,57 +22,88 @@ export default function AddPatientPage() {
   });
 
   async function savePatient() {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-      if (!token) {
-        alert("Token tidak ditemukan.");
-        return;
-      }
-
-      const formData = new FormData();
-
-      formData.append("nik", form.nik);
-      formData.append("nik_parent", form.nik_parent);
-      formData.append("name", form.name);
-      formData.append("birth_date", form.birth_date);
-      formData.append("gender", form.gender);
-      formData.append("mother_name", form.mother_name);
-      formData.append("father_name", form.father_name);
-      formData.append("address", form.address);
-      formData.append("phone_parent", form.phone_parent);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/add`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-          body: formData,
-        }
-      );
-
-      const result = await response.json();
-
-      if (!result.success) {
-        alert(result.message);
-        return;
-      }
-
-      alert("Pasien berhasil ditambahkan.");
-
-      router.push("/patient");
-    } catch (error) {
-      console.log(error);
-      alert("Gagal menambahkan pasien.");
-    } finally {
-      setLoading(false);
+    if (!token) {
+      alert("Silakan login terlebih dahulu.");
+      return;
     }
+
+    if (
+      !form.nik ||
+      !form.nik_parent ||
+      !form.name ||
+      !form.birth_date ||
+      !form.gender ||
+      !form.mother_name ||
+      !form.address ||
+      !form.phone_parent
+    ) {
+      alert("Semua data wajib diisi.");
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("nik", form.nik);
+    formData.append("nik_parent", form.nik_parent);
+    formData.append("name", form.name);
+    formData.append("birth_date", form.birth_date);
+    formData.append("gender", form.gender);
+    formData.append("mother_name", form.mother_name);
+    formData.append("father_name", form.father_name);
+    formData.append("address", form.address);
+    formData.append("phone_parent", form.phone_parent);
+    formData.append("picture", "");
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/add`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: formData,
+      }
+    );
+
+    const result = await response.json();
+
+    console.log("STATUS:", response.status);
+    console.log("RESULT:", result);
+
+    if (!response.ok) {
+  console.log(result);
+  alert(JSON.stringify(result, null, 2));
+  return;
+}
+
+    alert("Pasien berhasil ditambahkan.");
+
+    setForm({
+      nik: "",
+      nik_parent: "",
+      name: "",
+      birth_date: "",
+      gender: "",
+      mother_name: "",
+      father_name: "",
+      address: "",
+      phone_parent: "",
+    });
+
+    router.push("/patient");
+  } catch (error) {
+    console.error(error);
+    alert("Gagal terhubung ke server.");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="p-6">

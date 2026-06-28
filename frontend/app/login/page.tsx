@@ -1,23 +1,37 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { User, Lock, Eye, EyeOff, LogIn } from "lucide-react";
+import {
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  LogIn,
+} from "lucide-react";
 
 export default function LoginPage() {
-const [showPassword, setShowPassword] = useState(false);
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
+  const router = useRouter();
 
-const handleLogin = async () => {
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] =
+    useState("");
+
+  const handleLogin = async () => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
+            "ngrok-skip-browser-warning":
+              "true",
           },
           body: JSON.stringify({
             email,
@@ -26,7 +40,8 @@ const handleLogin = async () => {
         }
       );
 
-      const result = await response.json();
+      const result =
+        await response.json();
 
       console.log(result);
 
@@ -37,17 +52,21 @@ const handleLogin = async () => {
         );
 
         alert("Login berhasil");
+
+        router.push("/patient");
       } else {
         alert(result.message);
       }
     } catch (error) {
       console.error(error);
-      alert("Gagal terhubung ke server");
+      alert(
+        "Gagal terhubung ke server"
+      );
     }
   };
 
   return (
-   <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f5f6f8] px-4">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f5f6f8] px-4">
       <div className="w-full max-w-md">
         <div className="rounded-2xl bg-white p-8 shadow-md">
           <h1 className="text-3xl font-bold text-gray-800">
@@ -60,7 +79,7 @@ const handleLogin = async () => {
 
           <div className="mb-5">
             <label className="mb-2 block text-sm font-medium text-gray-700">
-              Email atau Username
+              Email
             </label>
 
             <div className="relative">
@@ -72,26 +91,19 @@ const handleLogin = async () => {
               <input
                 type="text"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
                 placeholder="nama@email.com"
-                className="w-full rounded-lg border border-gray-400 py-3 pr-4 pl-10 text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500"
+                className="w-full rounded-lg border border-gray-300 py-3 pr-4 pl-10 text-gray-700 outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
           <div className="mb-4">
-            <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-700">
-                Kata Sandi
-              </label>
-
-              <a
-                href="/login/forgotPW"
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Lupa Password?
-              </a>
-            </div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Kata Sandi
+            </label>
 
             <div className="relative">
               <Lock
@@ -100,22 +112,34 @@ const handleLogin = async () => {
               />
 
               <input
-                type={showPassword ? "text" : "password"}
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) =>
+                  setPassword(
+                    e.target.value
+                  )
+                }
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-300 py-3 pr-10 pl-10 text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500"
+                className="w-full rounded-lg border border-gray-300 py-3 pr-10 pl-10 text-gray-700 outline-none focus:border-blue-500"
               />
 
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() =>
+                  setShowPassword(
+                    !showPassword
+                  )
+                }
                 className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400"
               >
                 {showPassword ? (
-                    <EyeOff size={18} />
+                  <EyeOff size={18} />
                 ) : (
-                    <Eye size={18} />
+                  <Eye size={18} />
                 )}
               </button>
             </div>
@@ -140,25 +164,34 @@ const handleLogin = async () => {
         </div>
 
         <div className="mt-6 flex items-center justify-between text-sm text-gray-400">
-          <span>© 2026 SIPANDU v0.1</span>
+          <span>
+            © 2026 SIPANDU v0.1
+          </span>
 
           <div className="flex gap-4">
-            <a href="#" className="hover:text-gray-600">
+            <a
+              href="#"
+              className="hover:text-gray-600"
+            >
               Bantuan
             </a>
 
-            <a href="#" className="hover:text-gray-600">
+            <a
+              href="#"
+              className="hover:text-gray-600"
+            >
               Syarat
             </a>
           </div>
         </div>
       </div>
+
       <div className="pointer-events-none absolute right-5 bottom-5 opacity-5">
         <Image
-            src="/IconSipandu.png"
-            alt="Logo SIPANDU"
-            width={130}
-            height={130}
+          src="/IconSipandu.png"
+          alt="Logo SIPANDU"
+          width={130}
+          height={130}
         />
       </div>
     </main>

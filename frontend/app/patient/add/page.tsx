@@ -6,20 +6,20 @@ import { useState } from "react";
 export default function AddPatientPage() {
   const router = useRouter();
   
+  const [picture, setPicture] = useState<File | null>(null);
+const [loading, setLoading] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-
-  const [form, setForm] = useState({
-    nik: "",
-    nik_parent: "",
-    name: "",
-    birth_date: "",
-    gender: "",
-    mother_name: "",
-    father_name: "",
-    address: "",
-    phone_parent: "",
-  });
+const [form, setForm] = useState({
+  nik: "",
+  nik_parent: "",
+  name: "",
+  birth_date: "",
+  gender: "",
+  mother_name: "",
+  father_name: "",
+  address: "",
+  phone_parent: "",
+});
 
   async function savePatient() {
   try {
@@ -46,6 +46,11 @@ export default function AddPatientPage() {
       return;
     }
 
+    if (!picture) {
+      alert("Foto pasien wajib dipilih.");
+      return;
+    }
+
     const formData = new FormData();
 
     formData.append("nik", form.nik);
@@ -57,7 +62,14 @@ export default function AddPatientPage() {
     formData.append("father_name", form.father_name);
     formData.append("address", form.address);
     formData.append("phone_parent", form.phone_parent);
-    formData.append("picture", "");
+
+    formData.append("picture", picture);
+
+    console.log("TOKEN:", token);
+
+    for (const [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/add`,
@@ -77,26 +89,13 @@ export default function AddPatientPage() {
     console.log("RESULT:", result);
 
     if (!response.ok) {
-  console.log(result);
-  alert(JSON.stringify(result, null, 2));
-  return;
-}
+      alert(JSON.stringify(result, null, 2));
+      return;
+    }
 
     alert("Pasien berhasil ditambahkan.");
-
-    setForm({
-      nik: "",
-      nik_parent: "",
-      name: "",
-      birth_date: "",
-      gender: "",
-      mother_name: "",
-      father_name: "",
-      address: "",
-      phone_parent: "",
-    });
-
     router.push("/patient");
+
   } catch (error) {
     console.error(error);
     alert("Gagal terhubung ke server.");
@@ -232,6 +231,33 @@ export default function AddPatientPage() {
             })
           }
         />
+
+        <div className="mt-4">
+  <label className="mb-2 block font-medium">
+    Foto Pasien
+  </label>
+
+  <input
+    type="file"
+    accept="image/png,image/jpeg,image/jpg"
+    className="w-full rounded-lg border p-3"
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+
+      console.log("FILE DIPILIH:", file);
+
+      if (file) {
+        setPicture(file);
+      }
+    }}
+  />
+
+  {picture && (
+    <p className="mt-2 text-sm text-gray-500">
+      File dipilih: {picture.name}
+    </p>
+  )}
+</div>
 
         <div className="mt-6 flex gap-3">
           <button

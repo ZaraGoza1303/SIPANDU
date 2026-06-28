@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -43,6 +44,7 @@ export default function PatientDetailPage() {
       const result = await response.json();
 
       if (result.success) {
+        console.log(result.data);
         setPatient(result.data);
       }
     } catch (error) {
@@ -75,6 +77,21 @@ export default function PatientDetailPage() {
       </h1>
 
       <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="mb-6 flex justify-center">
+  {patient.picture ? (
+    <Image
+      src={patient.picture}
+      alt={patient.name}
+      width={150}
+      height={150}
+      className="h-40 w-40 rounded-full border object-cover"
+    />
+  ) : (
+    <div className="flex h-40 w-40 items-center justify-center rounded-full border bg-gray-100 text-gray-500">
+      Tidak ada foto
+    </div>
+  )}
+</div>
         <div className="space-y-4">
           <div>
             <p className="text-sm text-gray-500">

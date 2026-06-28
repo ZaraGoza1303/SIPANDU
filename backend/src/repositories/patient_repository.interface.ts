@@ -1,7 +1,7 @@
-import type { ExaminationWithPatient, TodayPatientItem } from "../dto/patient.js";
+import type { TodayPatientItem } from "../dto/patient.js";
 import type { PaginatedResponse } from "../dto/response.js";
-import type { Examination, Patient, Prisma, StuntingResult } from "../generated/prisma/client.js"
-import type { ExaminationCreateInput, ExaminationUpdateInput, PatientCreateInput, PatientUpdateInput, ScheduleCreateInput, StuntingResultCreateInput, StuntingResultUpdateInput } from "../generated/prisma/models.js"
+import type { Patient } from "../generated/prisma/client.js"
+import type { PatientCreateInput, PatientUpdateInput } from "../generated/prisma/models.js"
 
 export interface IPatientsRepository {
     //base patient

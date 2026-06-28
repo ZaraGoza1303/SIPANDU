@@ -1,6 +1,6 @@
-import type { CreateExamScheduleReq, CreatePatientExamReq, CreatePatientReq, TodayPatientItem, UpdatePatientExamReqSchema, UpdatePatientReq } from "../dto/patient.js";
+import type { CreatePatientReq, TodayPatientItem, UpdatePatientReq } from "../dto/patient.js";
 import type { PaginatedResponse } from "../dto/response.js";
-import type { Patient, StuntingResult } from "../generated/prisma/client.js";
+import type { Patient } from "../generated/prisma/client.js";
 
 export interface IPatientService {
     //base patient

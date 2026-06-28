@@ -9,22 +9,24 @@ import dashboardRouter from './src/routes/dashboard.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
 
+dotenv.config();
+
 const app = express();
 const upload = multer();
 
 const corsOptions = {
     origin: 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
         'Content-Type',
         'Authorization',
-        'X-Requested-With'
+        'X-Requested-With',
+        'ngrok-skip-browser-warning',
+        'Origin'
     ],
     credentials: true,
 }
 
-dotenv.config();
-app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '5mb' }));
 

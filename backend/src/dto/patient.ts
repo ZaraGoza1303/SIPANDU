@@ -3,7 +3,7 @@ import type { Prisma } from "../generated/prisma/client.js";
 
 export const CreatePatientSchema = z.object({
     nik: z.string().min(16, "Panjang NIK minimal 16 karakter"),
-    picture: z.string().nullable(),
+    picture: z.string().nullable().optional(),
     nik_parent: z.string().min(16, "Panjang NIK minimal 16 karakter"),
     name: z.string().min(1, "Nama wajib diisi"),
     birth_date: z.string().date(),

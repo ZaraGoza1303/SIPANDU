@@ -1,5 +1,9 @@
-import React from "react"; 
+"use client";
+
+import React, { useEffect, useState } from "react"; 
 import Link from "next/link";
+import Image from 'next/image';
+import { usePathname } from "next/navigation";
 import { FiGrid, FiUsers, FiClipboard, FiCalendar, FiBarChart2, FiSettings, FiUser, FiBell, FiSearch } from "react-icons/fi";
 
 const navItems = [
@@ -11,17 +15,45 @@ const navItems = [
     { href: "/pengaturan",  icon: FiSettings,   label: "Pengaturan"  },
 ];
 
-//nnti ganti dengan data dari session/auth (NextAuth, Clerk, dll.)
-const currentUser = {
-    name: "Dr. Siti Aminah",
-    role: "Administrator",
-    initials: "SA",
-};
+interface UserInfo {
+    name: string;
+    role: string;
+    initials: string;
+}
+ 
+function getInitials(name: string): string {
+    return name
+        .split(" ")
+        .slice(0, 2)
+        .map((w) => w[0]?.toUpperCase() ?? "")
+        .join("");
+}
+ 
+function getUserFromToken(): UserInfo {
+    try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("no token");
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        // Sesuaikan field berikut dengan claim JWT dari BE teman kamu
+        // Cek dulu di Console: JSON.parse(atob(localStorage.getItem('token').split('.')[1]))
+        const name = payload.email ?? payload.sub ?? payload.username ?? "Pengguna";
+        const role = payload.role ?? "Kader Posyandu";
+        return { name, role, initials: getInitials(name) };
+    } catch {
+        return { name: "Pengguna", role: "Kader Posyandu", initials: "KP" };
+    }
+}
 
 export default function DashboardPage( {
     children, }:{
         children: React.ReactNode;  
     }) {
+        const pathname = usePathname();
+        const [user, setUser] = useState<UserInfo>({
+        name: "Pengguna",
+        role: "Kader Posyandu",
+        initials: "KP",
+    });
         return (
             /*--navigasi di kiri*/
             <div className= "flex min-h-screen">
@@ -29,7 +61,15 @@ export default function DashboardPage( {
                     <div className="px-1 py-2 pb-5">
                         <div className="flex items-center gap-2">
                             <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
-                                <span className="text-white text-xs font-bold"></span>
+                                <span className="text-white text-xs font-bold">
+                                        <Image 
+                                        src="/images/IconSipanduPutih.png" // Langsung mulai dari /images (Next.js tahu ini di dalam folder public)
+                                        alt="Icon Sipandu"
+                                        width={50} // Karena menggunakan string, wajib tentukan width & height
+                                        height={50}
+                                        unoptimized 
+                                    />
+                                </span>
                             </div>
                             <div>
                             <p className="text-lg font-bold text-blue-500 leading-tight">SIPANDU</p>
@@ -38,28 +78,46 @@ export default function DashboardPage( {
                         </div>
                     </div>
 
-                    <nav className="space-y-4 font-bold text-gray-600">
-                        {navItems.map(({ href, icon: Icon, label }) => (
+                 {/* Nav */}
+                <nav className="space-y-4">
+                    {navItems.map(({ href, icon: Icon, label }) => {
+                        const isActive = pathname === href || pathname.startsWith(href + "/");
+                        return (
                             <Link
                                 key={href}
                                 href={href}
-                                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                                    ${isActive
+                                        ? "bg-blue-50 text-blue-600"
+                                        : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                                    }`}
                             >
-                                <Icon className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                                <Icon
+                                    className={`w-4 h-4 transition-colors
+                                        ${isActive
+                                            ? "text-blue-500"
+                                            : "text-gray-400 group-hover:text-blue-500"
+                                        }`}
+                                />
                                 {label}
+                                {/* Indikator aktif di kanan */}
+                                {isActive && (
+                                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                )}
                             </Link>
-                        ))}
-                    </nav>
+                        );
+                    })}
+                </nav>
 
                     <div className="px-3 py-3 border-t border-gray-100 mt-78">
                         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
                             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                            {currentUser.initials}
+                            {user.initials}
                             </div>
 
                             <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-800 truncate">{currentUser.name}</p>
-                            <p className="text-xs text-gray-400 truncate">{currentUser.role}</p>
+                            <p className="text-sm font-semibold text-gray-800 truncate">{user.name}</p>
+                            <p className="text-xs text-gray-400 truncate">{user.role}</p>
                             </div>
                 
                             {/* Icon */}

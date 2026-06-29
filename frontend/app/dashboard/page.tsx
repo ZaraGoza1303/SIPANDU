@@ -99,24 +99,17 @@ function buildDistribusi(dist: { range: string; count: number }[]): DistribusiIt
 
 interface StatCardProps {
   icon: React.ElementType; iconBg: string; label: string;
-  value: string | number; delta?: number; deltaLabel?: string;
+  value: string | number; 
   sub?: string; badge?: string;
 }
 
-function StatCard({ icon: Icon, iconBg, label, value, delta, deltaLabel, sub, badge }: StatCardProps) {
-  const isPositive = (delta ?? 0) >= 0;
+function StatCard({ icon: Icon, iconBg, label, value, sub, badge }: StatCardProps) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col gap-3 min-w-0">
       <div className="flex items-center justify-between">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: iconBg }}>
           <Icon className="w-4 h-4 text-white" />
         </div>
-        {delta !== undefined && (
-          <span className={`flex items-center gap-0.5 text-xs font-semibold ${isPositive ? "text-green-500" : "text-red-500"}`}>
-            {isPositive ? <FiTrendingUp className="w-3 h-3" /> : <FiTrendingDown className="w-3 h-3" />}
-            {Math.abs(delta)}%
-          </span>
-        )}
         {badge && (
           <span className="text-xs font-semibold bg-red-100 text-red-600 px-2 py-0.5 rounded-full">{badge}</span>
         )}
@@ -125,7 +118,6 @@ function StatCard({ icon: Icon, iconBg, label, value, delta, deltaLabel, sub, ba
         <p className="text-2xl font-bold text-gray-800">{value}</p>
         <p className="text-xs text-gray-500 mt-0.5">{label}</p>
         {sub        && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
-        {deltaLabel && <p className="text-xs text-gray-400 mt-1">{deltaLabel}</p>}
       </div>
     </div>
   );
@@ -188,7 +180,7 @@ interface ExamModalProps {
   patients: Patient[];
   preselectedId?: string;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (patientId: string, examResult: any) => void;
 }
 
 function ExamModal({ patients, preselectedId, onClose, onSuccess }: ExamModalProps) {
@@ -213,7 +205,15 @@ function ExamModal({ patients, preselectedId, onClose, onSuccess }: ExamModalPro
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
       setForm(prev => ({ ...prev, [field]: e.target.value }));
 
-  async function handleSubmit(e: React.FormEvent) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
+  async function handleSubmit(  e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -269,11 +269,12 @@ function ExamModal({ patients, preselectedId, onClose, onSuccess }: ExamModalPro
       "text-green-600 font-bold";
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 flex flex-col gap-5">
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-gray-800 text-lg">Hasil Pemeriksaan</h2>
-            <button onClick={() => { onSuccess(); onClose(); }} className="text-gray-400 hover:text-gray-600">
+            <button onClick={() => { onSuccess(form.patient_id, result); onClose(); }} 
+            className="text-gray-400 hover:text-gray-600">
               <FiX className="w-5 h-5" />
             </button>
           </div>
@@ -299,7 +300,7 @@ function ExamModal({ patients, preselectedId, onClose, onSuccess }: ExamModalPro
           </div>
 
           <button
-            onClick={() => { onSuccess(); onClose(); }}
+            onClick={() => { onSuccess(form.patient_id, result); onClose(); }}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 rounded-lg transition-colors"
           >
             Selesai
@@ -311,10 +312,10 @@ function ExamModal({ patients, preselectedId, onClose, onSuccess }: ExamModalPro
 
   // ── Form screen ──
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 py-8">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[85vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white flex-shrink-0">
           <div>
             <h2 className="font-bold text-gray-800 text-lg">Tambah Pemeriksaan</h2>
             <p className="text-xs text-gray-400 mt-0.5">Isi data pengukuran balita</p>
@@ -324,7 +325,7 @@ function ExamModal({ patients, preselectedId, onClose, onSuccess }: ExamModalPro
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
               {error}
@@ -399,7 +400,7 @@ function ExamModal({ patients, preselectedId, onClose, onSuccess }: ExamModalPro
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-3 pt-2">
             <button
               type="button" onClick={onClose}
               className="flex-1 border border-gray-200 text-gray-600 text-sm font-semibold py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
@@ -452,6 +453,7 @@ const filteredPatients = patients.filter(patient =>
   patient.name.toLowerCase().includes(search.toLowerCase())
 );
 
+  // ── Fetch trend stunting data ── 
 useEffect(() => {
   const token = getToken();
   if (!token) return;
@@ -463,10 +465,14 @@ useEffect(() => {
     .then(json => {
       if (json.success) {
         setTrendData(json.data ?? []);
+      } else {
+        setTrendData([]);
       }
     })
-    .catch(console.error);
-}, []);   
+    .catch(() => {
+      setTrendData([]);
+    });
+}, []);  
 
   // ── Fetch dashboard stats ──
   useEffect(() => {
@@ -506,13 +512,12 @@ useEffect(() => {
 
         const d: DashboardStats = json.data;
 
-        // Animate count-up
         const targets = {
           totalPasien:      d.totalPatients,
           pemeriksaanBulan: d.totalExaminationsThisMonth,
           kasusStunting:    d.stuntingCount,
           pasienNormal:     d.normalCount,
-          jadwalHariIni:    0, // dashboard API doesn't return this, keeps from today-patients
+          jadwalHariIni:    0, 
         };
         const steps = 40;
         let step = 0;
@@ -524,12 +529,11 @@ useEffect(() => {
             pemeriksaanBulan: Math.round(targets.pemeriksaanBulan * ease),
             kasusStunting:    Math.round(targets.kasusStunting     * ease),
             pasienNormal:     Math.round(targets.pasienNormal      * ease),
-            jadwalHariIni:    prev.jadwalHariIni, // set later from today-patients
+            jadwalHariIni:    prev.jadwalHariIni, 
           }));
           if (step >= steps) clearInterval(timer);
         }, 900 / steps);
 
-        // Age distribution
         if (d.ageGroupDistribution?.length) {
           setDistribusiUmur(buildDistribusi(d.ageGroupDistribution));
         }
@@ -537,7 +541,6 @@ useEffect(() => {
       .catch(console.error);
   }, []);
 
-  // ── Fetch today patients ──
   useEffect(() => {
     const token = getToken();
     if (!token) return;
@@ -558,7 +561,6 @@ useEffect(() => {
       .finally(() => setLoadingPatients(false));
   }, []);
 
-  // ── Fetch all patients (for modal dropdown) ──
   useEffect(() => {
     const token = getToken();
     if (!token) return;
@@ -578,17 +580,72 @@ useEffect(() => {
     setShowModal(true);
   }
 
-  function refreshTodayPatients() {
+  function refreshStats() {
     const token = getToken();
     if (!token) return;
-    fetch(`${BASE_URL}/api/pasien/all-today-patients`, {
-      headers: authHeaders(token),
-    })
+
+    fetch(`${BASE_URL}/api/dashboard/stats`, { headers: authHeaders(token) })
       .then(r => r.json())
       .then(json => {
-        if (json.success) setPatients(json.data.items ?? []);
+        if (!json.success) return;
+        const d: DashboardStats = json.data;
+        setStats(prev => ({
+          ...prev,
+          totalPasien:      d.totalPatients,
+          pemeriksaanBulan: d.totalExaminationsThisMonth,
+          kasusStunting:    d.stuntingCount,
+          pasienNormal:     d.normalCount,
+        }));
+        if (d.ageGroupDistribution?.length) {
+          setDistribusiUmur(buildDistribusi(d.ageGroupDistribution));
+        }
       })
       .catch(console.error);
+  }
+
+  function refreshTrendData() {
+    const token = getToken();
+    if (!token) return;
+    fetch(`${BASE_URL}/api/dashboard/trend-stunting`, { headers: authHeaders(token) })
+      .then(r => r.json())
+      .then(json => { if (json.success) setTrendData(json.data ?? []); })
+      .catch(console.error);
+  }
+
+  function handleExamSuccess(patientId: string, examResult: any) {
+    setPatients(prev => {
+      const alreadyInTable = prev.find(p => p.id === patientId);
+
+      if (alreadyInTable) {
+        return prev.map(p =>
+          p.id === patientId
+            ? {
+                ...p,
+                examination: [{
+                  id: examResult.examination_id,
+                  stunting_status: examResult.stunting_status,
+                }],
+              }
+            : p
+        );
+      } else {
+        const patientData = allPatients.find(p => p.id === patientId);
+        if (patientData) {
+          const newPatient: Patient = {
+            ...patientData,
+            examination: [{
+              id: examResult.examination_id,
+              stunting_status: examResult.stunting_status,
+            }],
+          };
+          return [...prev, newPatient];
+        }
+        return prev;
+      }
+    });
+
+    refreshStats();
+    refreshTrendData();
   }
 
   return (
@@ -599,33 +656,30 @@ useEffect(() => {
           patients={allPatients.length > 0 ? allPatients : patients}
           preselectedId={preselectedPatId}
           onClose={() => setShowModal(false)}
-          onSuccess={refreshTodayPatients}
+          onSuccess={handleExamSuccess}
         />
       )}
       
       {/* Header */}
-                    <header className="fixed top-0 left-60 right-0 z-50 flex items-center justify-between bg-white border-b px-5 py-3">
-                        <div className="relative flex-1 max-w-3xl">
-                            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <header className="fixed top-0 left-60 right-0 z-40 flex items-center bg-gray-100 justify-between border-b px-5 py-3">
+        <div className="relative flex-1 max-w-3xl">
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+          type="text"
+          placeholder="Cari data pasien atau jadwal..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 text-gray-600"/>
+        </div>
 
-                            <input
-                                type="text"
-                                placeholder="Cari data pasien atau jadwal..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 text-gray-600"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-4 ml-5">
-                            <FiBell className="w-5 h-5 text-gray-500 cursor-pointer hover:text-gray-800" />
-
-                            <div className="flex items-center gap-2 border-l pl-4 text-sm text-gray-600 cursor-pointer">
-                                <span className="hover:text-gray-800">Posyandu Kliningan 04</span>
-                                <FiUser className="w-4 h-4" />
-                            </div>
-                        </div>
-                    </header>
+        <div className="flex items-center gap-4 ml-5">
+          <FiBell className="w-5 h-5 text-gray-500 cursor-pointer hover:text-gray-800" />
+          <div className="flex items-center gap-2 border-l pl-4 text-sm text-gray-600 cursor-pointer">
+            <span className="hover:text-gray-800">Posyandu Kliningan 04</span>
+            <FiUser className="w-4 h-4" />
+          </div>
+        </div>
+      </header>
 
       <div className="flex items-center justify-between">
         <div>
@@ -645,13 +699,13 @@ useEffect(() => {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-5">
         <StatCard icon={FiUsers}         iconBg="#3B82F6" label="Total Pasien"
-          value={stats.totalPasien.toLocaleString("id-ID")} delta={4} />
+          value={stats.totalPasien.toLocaleString("id-ID")}/>
         <StatCard icon={FiActivity}      iconBg="#8B5CF6" label="Pemeriksaan Bulan Ini"
-          value={stats.pemeriksaanBulan} delta={12} deltaLabel="🎯 Target: 100 pemeriksaan" />
+          value={stats.pemeriksaanBulan} />
         <StatCard icon={FiAlertTriangle} iconBg="#EF4444" label="Kasus Stunting Aktif"
-          value={stats.kasusStunting} delta={-2} badge="PERLU INTERVENSI" />
+          value={stats.kasusStunting} badge={stats.kasusStunting > 0 ? "PERLU INTERVENSI" : undefined}  />
         <StatCard icon={FiCheckCircle} iconBg="#55ef44" label="Pasien Normal"
-          value={stats.pasienNormal} delta={2} />
+          value={stats.pasienNormal} />
         <StatCard icon={FiCalendar}      iconBg="#10B981" label="Jadwal Hari Ini"
           value={stats.jadwalHariIni}
           sub={new Date().toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short" })} />

@@ -29,4 +29,24 @@ export class DashboardController {
             return res.status(500).json(sendErrorResponse("Gagal mengambil data dashboard", err.message));
         }
     }
+
+    async getMonthlyTrend(req: Request, res: Response) {
+        try {
+            const posyandu_id = req.user?.posyandu_id as string;
+
+            if (!posyandu_id) {
+                return res.status(400).json(sendErrorResponse("posyandu_id tidak ditemukan"));
+            }
+
+            const trend = await this.dashboardService.getMonthlyTrend(posyandu_id);
+            return res.status(200).json(sendSuccessfullResponse("Berhasil mengambil data trend stunting", trend));
+
+        } catch (err: any) {
+            if(err instanceof AppError){
+                return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message));
+            }
+
+            return res.status(500).json(sendErrorResponse("Gagal mengambil data trend stunting", err.message));
+        }
+    }
 }

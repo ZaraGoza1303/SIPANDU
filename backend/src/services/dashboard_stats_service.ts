@@ -1,6 +1,6 @@
 import type { IDashboardStatsService } from "./dashboard_stats_service.interface.js";
 import type {  IDashboardStatsRepository } from "../repositories/dashboard-stats.interface.js";
-import type { DashboardStats } from "../dto/dashboard_stats.js";
+import type { DashboardStats, MonthlyTrendItem } from "../dto/dashboard_stats.js";
 
 export class DashboardStatsService implements IDashboardStatsService {
     private dashboardRepo: IDashboardStatsRepository;
@@ -31,5 +31,9 @@ export class DashboardStatsService implements IDashboardStatsService {
             normalCount,
             ageGroupDistribution,
         };
+    }
+
+    async getMonthlyTrend(posyandu_id: string): Promise<MonthlyTrendItem[]> {
+        return await this.dashboardRepo.getMonthlyTrend(posyandu_id);
     }
 }

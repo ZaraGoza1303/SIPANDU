@@ -11,3 +11,10 @@ export interface DashboardStats {
   ageGroupDistribution: AgeGroupCount[];
 }
 
+export interface MonthlyTrendItem {
+  month: string;
+  total: number;
+  stunting: number;
+  percentage: number;
+}
+

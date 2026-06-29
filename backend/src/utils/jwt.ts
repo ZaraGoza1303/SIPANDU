@@ -5,7 +5,7 @@ export const generateJWTToken = async (payload: any): Promise<string> =>{
     const token = jwt.sign(
         payload, 
         process.env.JWT_TOKEN!,
-        {expiresIn: '1h'}
+        {expiresIn: '3h'}
     )
 
     return token;

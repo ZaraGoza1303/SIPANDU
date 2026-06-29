@@ -1,5 +1,5 @@
-import type { AgeGroupCount } from "../dto/dashboard_stats.js";
-import { PrismaClient, StuntingStatus } from "../generated/prisma/client.js";
+import type { AgeGroupCount, MonthlyTrendItem } from "../dto/dashboard_stats.js";
+import { PrismaClient, StuntingStatus, Prisma } from "../generated/prisma/client.js";
 import type { IDashboardStatsRepository } from "./dashboard-stats.interface.js";
 
 export class DashboardStatsRepository implements IDashboardStatsRepository {
@@ -85,6 +85,29 @@ export class DashboardStatsRepository implements IDashboardStatsRepository {
             count: grouped
                 .filter(g => g.age_months >= min && g.age_months <= max)
                 .reduce((sum, g) => sum + g._count.age_months, 0)
+        }));
+    }
+
+    async getMonthlyTrend(posyandu_id: string): Promise<MonthlyTrendItem[]> {
+        const rows: { month: string; total: bigint; stunting: bigint }[] = await this.db.$queryRaw(Prisma.sql`
+            SELECT
+                TO_CHAR(DATE_TRUNC('month', e.exam_date), 'Mon YYYY') as month,
+                COUNT(*)::int as total,
+                COUNT(sr.id) FILTER (WHERE sr.stunting_status IN (${StuntingStatus.Stunted}::text, ${StuntingStatus.SeverelyStunted}::text))::int as stunting
+            FROM examinations e
+            LEFT JOIN stunting_results sr ON sr.examination_id = e.id
+            JOIN patients p ON p.id = e.patient_id
+            WHERE p.posyandu_id = ${posyandu_id}::uuid
+                AND e.exam_date >= (CURRENT_DATE - INTERVAL '6 months')
+            GROUP BY DATE_TRUNC('month', e.exam_date)
+            ORDER BY DATE_TRUNC('month', e.exam_date) ASC
+        `);
+
+        return rows.map((row) => ({
+            month: row.month,
+            total: Number(row.total),
+            stunting: Number(row.stunting),
+            percentage: row.total > 0 ? Number(((Number(row.stunting) / Number(row.total)) * 100).toFixed(1)) : 0,
         }));
     }
 }

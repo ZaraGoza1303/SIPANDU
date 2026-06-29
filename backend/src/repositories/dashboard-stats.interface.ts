@@ -1,4 +1,4 @@
-import type { AgeGroupCount } from "../dto/dashboard_stats.js";
+import type { AgeGroupCount, MonthlyTrendItem } from "../dto/dashboard_stats.js";
 
 
 export interface IDashboardStatsRepository {
@@ -7,4 +7,5 @@ export interface IDashboardStatsRepository {
   countActiveStunting(posyandu_id: string): Promise<number>;
   countNormalStatus(posyandu_id: string): Promise<number>;
   countByAgeGroup(posyandu_id: string): Promise<AgeGroupCount[]>;
+  getMonthlyTrend(posyandu_id: string): Promise<MonthlyTrendItem[]>;
 }

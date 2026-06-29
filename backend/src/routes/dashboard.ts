@@ -14,5 +14,6 @@ const dashboardController = new DashboardController(dashboardService);
 
 dashboardRouter.use(verifyJWTToken);
 dashboardRouter.get('/stats', (req, res) => dashboardController.getStats(req, res));
+dashboardRouter.get('/trend-stunting', (req, res) => dashboardController.getMonthlyTrend(req, res));
 
 export default dashboardRouter;

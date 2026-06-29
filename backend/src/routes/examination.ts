@@ -27,6 +27,6 @@ examinationRouter.use(verifyJWTToken);
 examinationRouter.use(verifyPosyanduAccess);
 examinationRouter.post('/add', (req, res) => examinationController.addExamination(req, res));
 examinationRouter.post('/schedule', (req, res) => examinationController.addSchedule(req, res));
-examinationRouter.patch('/update', (req, res) => examinationController.updateExamination(req, res));
+examinationRouter.patch('/update/:exam_id', (req, res) => examinationController.updateExamination(req, res));
 
 export default examinationRouter;

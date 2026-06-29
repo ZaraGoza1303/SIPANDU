@@ -27,9 +27,9 @@ patientRouter.use(verifyJWTToken);
 patientRouter.use(verifyPosyanduAccess);
 patientRouter.get('/all', (req, res) => patientController.getAll(req, res));
 patientRouter.get('/all-today-patients', (req, res) => patientController.getAllTodayPatients(req, res));
-patientRouter.get('/detail', (req, res) => patientController.getByID(req, res));
+patientRouter.get('/detail/:patient_id', (req, res) => patientController.getByID(req, res));
 patientRouter.post('/add', (req, res) => patientController.addPatient(req, res));
-patientRouter.patch('/update', (req, res) => patientController.updatePatient(req, res));
-patientRouter.delete('/delete', (req, res) => patientController.deletePatient(req, res));
+patientRouter.patch('/update/:patient_id', (req, res) => patientController.updatePatient(req, res));
+patientRouter.delete('/delete/:patient_id', (req, res) => patientController.deletePatient(req, res));
 
 export default patientRouter;

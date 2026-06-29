@@ -43,7 +43,7 @@ export class ExaminationsService implements IExaminationsService {
 
             const result = await this.prismaClient.$transaction(async (tx) => {
                 const newExaminationReq: ExaminationCreateInput = {
-                    exam_date: newExamination.exam_date,
+                    exam_date: new Date(newExamination.exam_date),
                     patient: {
                         connect: { id: newExamination.patient_id }
                     },
@@ -120,7 +120,7 @@ export class ExaminationsService implements IExaminationsService {
                 throw new AppError("Forbidden", 403);
             }
 
-            const examDate = newExamination.exam_date ?? existingExam.exam_date;
+            const examDate = newExamination.exam_date ? new Date(newExamination.exam_date) : existingExam.exam_date;
             const weight = newExamination.weight ?? existingExam.weight;
             const height = newExamination.height ?? existingExam.height;
 

@@ -21,7 +21,6 @@ export const CreatePatientExaminationSchema = z.object({
     exam_date: z.string().date(),
     patient_id: z.string().min(1, "Nama pasien wajib diisi"),
     user_id: z.string().min(1, "Nama pemeriksa wajib diisi"),
-    age_months: z.number(),
     weight: z.number(),
     height: z.number(),
     head_circumference: z.number(),

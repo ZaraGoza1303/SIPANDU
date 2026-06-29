@@ -72,8 +72,8 @@ export default function DashboardPage( {
                                 </span>
                             </div>
                             <div>
-                            <p className="text-lg font-bold text-blue-500 leading-tight">SIPANDU</p>
-                            <p className="text-[10px] text-gray-400 leading-tight">Sistem Informasi Posyandu</p>
+                                <p className="text-lg font-bold text-blue-500 leading-tight">SIPANDU</p>
+                                <p className="text-[10px] text-gray-400 leading-tight">Sistem Informasi Posyandu</p>
                             </div>
                         </div>
                     </div>
@@ -112,12 +112,12 @@ export default function DashboardPage( {
                     <div className="px-3 py-3 border-t border-gray-100 mt-78">
                         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
                             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                            {user.initials}
+                                {user.initials}
                             </div>
 
                             <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-800 truncate">{user.name}</p>
-                            <p className="text-xs text-gray-400 truncate">{user.role}</p>
+                                <p className="text-sm font-semibold text-gray-800 truncate">{user.name}</p>
+                                <p className="text-xs text-gray-400 truncate">{user.role}</p>
                             </div>
                 
                             {/* Icon */}
@@ -128,30 +128,9 @@ export default function DashboardPage( {
 
                 {/* Area kanan */}
                 <div className="ml-60 flex-1">
-                    <header className="sticky top-0 z-50 flex items-center justify-between bg-white border-b px-5 py-3">
-                        <div className="relative flex-1 max-w-3xl">
-                            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-
-                            <input
-                                type="text"
-                                placeholder="Cari data pasien atau jadwal..."
-                                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 text-gray-600"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-4 ml-5">
-                            <FiBell className="w-5 h-5 text-gray-500 cursor-pointer hover:text-gray-800" />
-
-                            <div className="flex items-center gap-2 border-l pl-4 text-sm text-gray-600 cursor-pointer">
-                                <span className="hover:text-gray-800">Posyandu Kliningan 04</span>
-                                <FiUser className="w-4 h-4" />
-                            </div>
-                        </div>
-                    </header>
-
                     {/* Main Content */}
-                    <main className="bg-gray-50 p-5 min-h-screen">
-                    {children}
+                    <main className="bg-gray-50 p-5 pt-20 min-h-screen">
+                        {children}
                     </main>
                 </div>
             </div>

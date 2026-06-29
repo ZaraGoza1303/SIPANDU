@@ -4,13 +4,15 @@ import React, { useState, useEffect } from "react";
 import {
   FiUsers, FiActivity, FiAlertTriangle, FiCalendar,
   FiPlus, FiTrendingUp, FiTrendingDown, FiChevronDown,
-  FiX, FiLoader, FiCheckCircle
+  FiX, FiLoader, FiCheckCircle,
+  FiSearch, FiUser, FiBell
 } from "react-icons/fi";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+const BASE_URL = "https://stylar-nonseverable-denver.ngrok-free.dev";
 
 interface TrendStuntingItem {
   month: string;
@@ -233,7 +235,7 @@ function ExamModal({ patients, preselectedId, onClose, onSuccess }: ExamModalPro
       };
 
       const res = await fetch(
-        "https://stylar-nonseverable-denver.ngrok-free.dev/api/pemeriksaan/add",
+        `${BASE_URL}/api/pemeriksaan/add`,
         {
           method:  "POST",
           headers: authHeaders(token),
@@ -424,8 +426,6 @@ function ExamModal({ patients, preselectedId, onClose, onSuccess }: ExamModalPro
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const BASE_URL = "https://stylar-nonseverable-denver.ngrok-free.dev";
-
 export default function DashboardPage() {
   const [stats, setStats] = useState({
     totalPasien:          0,
@@ -446,16 +446,18 @@ export default function DashboardPage() {
   const [preselectedPatId, setPreselectedPatId] = useState<string | undefined>();
 
 const [trendData, setTrendData] = useState<TrendStuntingItem[]>([]);
+const [search, setSearch] = useState("");
+
+const filteredPatients = patients.filter(patient =>
+  patient.name.toLowerCase().includes(search.toLowerCase())
+);
 
 useEffect(() => {
   const token = getToken();
   if (!token) return;
 
   fetch(`${BASE_URL}/api/dashboard/trend-stunting`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'ngrok-skip-browser-warning': 'true'
-    }
+    headers: authHeaders(token)
   })
     .then(res => res.json())
     .then(json => {
@@ -472,15 +474,8 @@ useEffect(() => {
     
     if (!token) return;
 
-    console.log("TOKEN:", token);
-console.log("AUTH:", `Bearer ${token}`);
-
     fetch(`${BASE_URL}/api/dashboard/stats`, {
-      headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-    'ngrok-skip-browser-warning': 'true'
-  },
+      headers: authHeaders(token),
     })
       .then(r => r.json())
       .then(json => {
@@ -547,16 +542,9 @@ console.log("AUTH:", `Bearer ${token}`);
     const token = getToken();
     if (!token) return;
 
-    console.log("TOKEN:", token);
-    console.log("AUTH:", `Bearer ${token}`);
-
     setLoadingPatients(true);
     fetch(`${BASE_URL}/api/pasien/all-today-patients`, {
-      headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-    'ngrok-skip-browser-warning': 'true'
-  },
+      headers: authHeaders(token),
     })
       .then(r => r.json())
       .then(json => {
@@ -575,15 +563,8 @@ console.log("AUTH:", `Bearer ${token}`);
     const token = getToken();
     if (!token) return;
 
-    console.log("TOKEN:", token);
-console.log("AUTH:", `Bearer ${token}`);
-
     fetch(`${BASE_URL}/api/pasien/all`, {
-      headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-    'ngrok-skip-browser-warning': 'true',
-  },
+      headers: authHeaders(token),
     })
       .then(r => r.json())
       .then(json => {
@@ -621,8 +602,31 @@ console.log("AUTH:", `Bearer ${token}`);
           onSuccess={refreshTodayPatients}
         />
       )}
-
+      
       {/* Header */}
+                    <header className="fixed top-0 left-60 right-0 z-50 flex items-center justify-between bg-white border-b px-5 py-3">
+                        <div className="relative flex-1 max-w-3xl">
+                            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+
+                            <input
+                                type="text"
+                                placeholder="Cari data pasien atau jadwal..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 text-gray-600"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-4 ml-5">
+                            <FiBell className="w-5 h-5 text-gray-500 cursor-pointer hover:text-gray-800" />
+
+                            <div className="flex items-center gap-2 border-l pl-4 text-sm text-gray-600 cursor-pointer">
+                                <span className="hover:text-gray-800">Posyandu Kliningan 04</span>
+                                <FiUser className="w-4 h-4" />
+                            </div>
+                        </div>
+                    </header>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Dashboard Ringkasan</h1>
@@ -666,14 +670,14 @@ console.log("AUTH:", `Bearer ${token}`);
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-              <XAxis dataKey="bulan" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{ background: "#1F2937", border: "none", borderRadius: 8, color: "#F9FAFB", fontSize: 12 }}
                 itemStyle={{ color: "#60A5FA" }}
                 cursor={{ stroke: "#E5E7EB" }}
               />
-              <Line type="monotone" dataKey="kasus" stroke="#3B82F6" strokeWidth={2.5}
+              <Line type="monotone" dataKey="stunting" stroke="#3B82F6" strokeWidth={2.5}
                 dot={{ r: 4, fill: "#3B82F6", strokeWidth: 0 }} activeDot={{ r: 6 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -705,7 +709,7 @@ console.log("AUTH:", `Bearer ${token}`);
           <div>
             <h2 className="font-semibold text-gray-800">Jadwal Pemeriksaan Hari Ini</h2>
             <p className="text-xs text-gray-400 mt-0.5">
-              {loadingPatients ? "Memuat..." : `${patients.length} pasien terdaftar`}
+              {loadingPatients ? "Memuat..." : `${filteredPatients.length} pasien ditemukan`}
             </p>
           </div>
         </div>
@@ -728,14 +732,14 @@ console.log("AUTH:", `Bearer ${token}`);
                   Memuat data pasien...
                 </td>
               </tr>
-            ) : patients.length === 0 ? (
+            ) : filteredPatients.length === 0 ? (
               <tr>
                 <td colSpan={5} className="text-center py-8 text-gray-400">
                   Tidak ada jadwal pemeriksaan hari ini.
                 </td>
               </tr>
             ) : (
-              patients.map((row) => {
+              filteredPatients.map((row) => {
                 const isChecked   = row.examination && row.examination.length > 0;
                 const examStatus  = row.examination?.[0]?.stunting_status;
 

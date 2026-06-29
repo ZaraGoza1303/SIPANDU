@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import {
   FiUsers, FiActivity, FiAlertTriangle, FiCalendar,
   FiPlus, FiTrendingUp, FiTrendingDown, FiChevronDown,
-  FiX, FiLoader,
+  FiX, FiLoader, FiCheckCircle
 } from "react-icons/fi";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -39,6 +39,11 @@ interface ExamForm {
   head_circumference: string;
   arm_circumference: string;
   notes: string;
+}
+
+interface AgeGroup {
+  range: string;
+  count: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -348,7 +353,7 @@ function ExamModal({ patients, preselectedId, onClose, onSuccess }: ExamModalPro
             />
           </div>
 
-          {/* Data */}
+          {/* Data antropometri*/}
           <div>
             <p className="text-xs font-semibold text-gray-600 mb-2">Data *</p>
             <div className="grid grid-cols-2 gap-3">
@@ -420,16 +425,11 @@ export default function DashboardPage() {
     totalPasien:          0,
     pemeriksaanBulan:     0,
     kasusStunting:        0,
-    jadwalHariIni:        0,
+    pasienNormal:         0,
+    jadwalHariIni:        0
   });
 
-  const [distribusiUmur, setDistribusiUmur] = useState<DistribusiItem[]>([
-    { label: "0–11 bln",  pct: 25, color: "#3B82F6" },
-    { label: "12–23 bln", pct: 30, color: "#60A5FA" },
-    { label: "24–35 bln", pct: 25, color: "#BFDBFE" },
-    { label: "36–47 bln", pct: 13, color: "#93C5FD" },
-    { label: "48–59 bln", pct:  7, color: "#E5E7EB" },
-  ]);
+  const [distribusiUmur, setDistribusiUmur] = useState<DistribusiItem[]>([]);
 
   const [patients,        setPatients]        = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
@@ -465,6 +465,30 @@ console.log("AUTH:", `Bearer ${token}`);
       .then(r => r.json())
       .then(json => {
         if (!json.success) return;
+
+        const ageData: AgeGroup[] = json.data.ageGroupDistribution;
+
+        const total = ageData.reduce(
+          (sum, item) => sum + item.count,
+          0
+        );
+
+        const colors = [
+          "#3B82F6",
+          "#60A5FA",
+          "#BFDBFE",
+          "#93C5FD",
+          "#E5E7EB",
+        ];
+
+        setDistribusiUmur(
+          ageData.map((item, index) => ({
+            label: item.range,
+            pct: Math.round((item.count / total) * 100),
+            color: colors[index % colors.length],
+          }))
+        );
+
         const d: DashboardStats = json.data;
 
         // Animate count-up
@@ -472,6 +496,7 @@ console.log("AUTH:", `Bearer ${token}`);
           totalPasien:      d.totalPatients,
           pemeriksaanBulan: d.totalExaminationsThisMonth,
           kasusStunting:    d.stuntingCount,
+          pasienNormal:     d.normalCount,
           jadwalHariIni:    0, // dashboard API doesn't return this, keeps from today-patients
         };
         const steps = 40;
@@ -483,6 +508,7 @@ console.log("AUTH:", `Bearer ${token}`);
             totalPasien:      Math.round(targets.totalPasien      * ease),
             pemeriksaanBulan: Math.round(targets.pemeriksaanBulan * ease),
             kasusStunting:    Math.round(targets.kasusStunting     * ease),
+            pasienNormal:     Math.round(targets.pasienNormal      * ease),
             jadwalHariIni:    prev.jadwalHariIni, // set later from today-patients
           }));
           if (step >= steps) clearInterval(timer);
@@ -502,7 +528,7 @@ console.log("AUTH:", `Bearer ${token}`);
     if (!token) return;
 
     console.log("TOKEN:", token);
-console.log("AUTH:", `Bearer ${token}`);
+    console.log("AUTH:", `Bearer ${token}`);
 
     setLoadingPatients(true);
     fetch(`${BASE_URL}/api/pasien/all-today-patients`, {
@@ -593,13 +619,15 @@ console.log("AUTH:", `Bearer ${token}`);
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-5">
         <StatCard icon={FiUsers}         iconBg="#3B82F6" label="Total Pasien"
           value={stats.totalPasien.toLocaleString("id-ID")} delta={4} />
         <StatCard icon={FiActivity}      iconBg="#8B5CF6" label="Pemeriksaan Bulan Ini"
           value={stats.pemeriksaanBulan} delta={12} deltaLabel="🎯 Target: 100 pemeriksaan" />
         <StatCard icon={FiAlertTriangle} iconBg="#EF4444" label="Kasus Stunting Aktif"
           value={stats.kasusStunting} delta={-2} badge="PERLU INTERVENSI" />
+        <StatCard icon={FiCheckCircle} iconBg="#55ef44" label="Pasien Normal"
+          value={stats.pasienNormal} delta={2} />
         <StatCard icon={FiCalendar}      iconBg="#10B981" label="Jadwal Hari Ini"
           value={stats.jadwalHariIni}
           sub={new Date().toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short" })} />
@@ -635,7 +663,7 @@ console.log("AUTH:", `Bearer ${token}`);
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <h2 className="font-semibold text-gray-800 mb-4">Distribusi Kelompok Umur</h2>
           <div className="flex flex-col items-center gap-4">
-            <DonutChart data={distribusiUmur} total={stats.totalPasien || 1240} />
+            <DonutChart data={distribusiUmur} total={stats.totalPasien || 0} />
             <div className="w-full space-y-2">
               {distribusiUmur.map((d) => (
                 <div key={d.label} className="flex items-center justify-between text-sm">

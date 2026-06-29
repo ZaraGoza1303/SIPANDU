@@ -8,7 +8,7 @@ import { FiGrid, FiUsers, FiClipboard, FiCalendar, FiBarChart2, FiSettings, FiUs
 
 const navItems = [
     { href: "/dashboard",   icon: FiGrid,       label: "Dashboard"   },
-    { href: "/pasien",      icon: FiUsers,      label: "Pasien"      },
+    { href: "/patient",      icon: FiUsers,      label: "Pasien"      },
     { href: "/pemeriksaan", icon: FiClipboard,  label: "Pemeriksaan" },
     { href: "/jadwal",      icon: FiCalendar,   label: "Jadwal"      },
     { href: "/laporan",     icon: FiBarChart2,  label: "Laporan"     },
@@ -20,7 +20,7 @@ interface UserInfo {
     role: string;
     initials: string;
 }
- 
+
 function getInitials(name: string): string {
     return name
         .split(" ")
@@ -28,7 +28,7 @@ function getInitials(name: string): string {
         .map((w) => w[0]?.toUpperCase() ?? "")
         .join("");
 }
- 
+
 function getUserFromToken(): UserInfo {
     try {
         const token = localStorage.getItem("token");
@@ -54,6 +54,11 @@ export default function DashboardPage( {
         role: "Kader Posyandu",
         initials: "KP",
     });
+
+        useEffect(() => {
+        setUser(getUserFromToken());
+        }, []);
+
         return (
             /*--navigasi di kiri*/
             <div className= "flex min-h-screen">
@@ -63,9 +68,9 @@ export default function DashboardPage( {
                             <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
                                 <span className="text-white text-xs font-bold">
                                         <Image 
-                                        src="/images/IconSipanduPutih.png" // Langsung mulai dari /images (Next.js tahu ini di dalam folder public)
+                                        src="/IconSipanduPutih.png"
                                         alt="Icon Sipandu"
-                                        width={50} // Karena menggunakan string, wajib tentukan width & height
+                                        width={50}
                                         height={50}
                                         unoptimized 
                                     />
@@ -109,7 +114,7 @@ export default function DashboardPage( {
                     })}
                 </nav>
 
-                    <div className="px-3 py-3 border-t border-gray-100 mt-78">
+                    <div className="px-3 py-3 border-t border-gray-100 mt-40">
                         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
                             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                                 {user.initials}

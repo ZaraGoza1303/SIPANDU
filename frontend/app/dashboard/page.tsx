@@ -12,7 +12,13 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface TrendItem   { bulan: string; kasus: number; }
+interface TrendStuntingItem {
+  month: string;
+  total: number;
+  stunting: number;
+  percentage: number;
+}
+
 interface DistribusiItem { label: string; pct: number; color: string; }
 
 interface DashboardStats {
@@ -439,12 +445,26 @@ export default function DashboardPage() {
   const [showModal,        setShowModal]        = useState(false);
   const [preselectedPatId, setPreselectedPatId] = useState<string | undefined>();
 
-  // Dummy trend data (replace with real endpoint if available)
-  const trendData: TrendItem[] = [
-    { bulan: "Mei", kasus: 10 }, { bulan: "Jun", kasus: 15 },
-    { bulan: "Jul", kasus: 20 }, { bulan: "Agu", kasus: 14 },
-    { bulan: "Sep", kasus: 11 }, { bulan: "Okt", kasus: 12 },
-  ];    
+const [trendData, setTrendData] = useState<TrendStuntingItem[]>([]);
+
+useEffect(() => {
+  const token = getToken();
+  if (!token) return;
+
+  fetch(`${BASE_URL}/api/dashboard/trend-stunting`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'ngrok-skip-browser-warning': 'true'
+    }
+  })
+    .then(res => res.json())
+    .then(json => {
+      if (json.success) {
+        setTrendData(json.data ?? []);
+      }
+    })
+    .catch(console.error);
+}, []);   
 
   // ── Fetch dashboard stats ──
   useEffect(() => {

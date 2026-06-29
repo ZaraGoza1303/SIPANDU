@@ -53,7 +53,7 @@ export default function LoginPage() {
 
         alert("Login berhasil");
 
-        router.push("/patient");
+        router.push("/dashboard");
       } else {
         alert(result.message);
       }

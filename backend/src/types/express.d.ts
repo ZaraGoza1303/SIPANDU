@@ -3,8 +3,9 @@ declare global {
         interface Request {
             user?: {
                 id: string, 
+                posyandu_id: string,
                 email: string,
-                role: string
+                role: string,
             }
         }
     }

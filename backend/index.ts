@@ -1,18 +1,40 @@
 import connectDB from './src/databases/db.js';
-import 'dotenv/config'
 import express from 'express';
+import helmet from 'helmet';
 import multer from 'multer';
 import authRouter from './src/routes/auth.js';
+import patientRouter from './src/routes/patient.js';
+import examinationRouter from './src/routes/examination.js';
+import dashboardRouter from './src/routes/dashboard.js';
+import dotenv from 'dotenv';
+import cors from 'cors';
+
+dotenv.config();
 
 const app = express();
 const upload = multer();
 
-app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-app.use(upload.none());
+const corsOptions = {
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'ngrok-skip-browser-warning',
+        'Origin'
+    ],
+    credentials: true,
+}
+
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '5mb' }));
 
 const initRouter = () => {
     app.use('/api/auth', authRouter);
+    app.use('/api/pasien', upload.single('picture'), patientRouter);
+    app.use('/api/pemeriksaan', examinationRouter);
+    app.use('/api/dashboard', dashboardRouter);
 }
 
 const startApp = async () => {

@@ -23,7 +23,7 @@ export class AuthService implements IAauthService {
             throw new Error("Wrong email or password!")
         }
 
-        const jwtToken = await generateJWTToken({ id: existsUser?.id, email: existsUser.email, role: existsUser.role });
+        const jwtToken = await generateJWTToken({ id: existsUser?.id, email: existsUser.email, role: existsUser.role, posyandu_id: existsUser.posyandu_id });
         const res: LoginRes = {
             jwt_token: jwtToken
         }

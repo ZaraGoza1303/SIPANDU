@@ -1,0 +1,113 @@
+import type { AgeGroupCount, MonthlyTrendItem } from "../dto/dashboard_stats.js";
+import { PrismaClient, StuntingStatus, Prisma } from "../generated/prisma/client.js";
+import type { IDashboardStatsRepository } from "./dashboard-stats.interface.js";
+
+export class DashboardStatsRepository implements IDashboardStatsRepository {
+    private db: PrismaClient;
+
+    constructor(db: PrismaClient) {
+        this.db = db;
+    }
+
+    async countAllPatients(posyandu_id: string): Promise<number> {
+        return await this.db.patient.count({
+            where: { posyandu_id }
+        });
+    }
+
+    async countTotalExaminationsThisMonth(posyandu_id: string): Promise<number> {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+        return await this.db.examination.count({
+            where: {
+                exam_date: {
+                    gte: startOfMonth,
+                    lt: startOfNextMonth,
+                },
+                patient: {
+                    posyandu_id
+                }
+            }
+        });
+    }
+
+    async countActiveStunting(posyandu_id: string): Promise<number> {
+        return await this.db.stuntingResult.count({
+            where: {
+                stunting_status: {
+                    in: [StuntingStatus.Stunted, StuntingStatus.SeverelyStunted]
+                },
+                examination: {
+                    patient: {
+                        posyandu_id
+                    }
+                }
+            }
+        });
+    }
+
+    async countNormalStatus(posyandu_id: string): Promise<number> {
+        return await this.db.stuntingResult.count({
+            where: {
+                stunting_status: StuntingStatus.Normal,
+                examination: {
+                    patient: {
+                        posyandu_id
+                    }
+                }
+            }
+        });
+    }
+
+    async countByAgeGroup(posyandu_id: string): Promise<AgeGroupCount[]> {
+        const grouped = await this.db.stuntingResult.groupBy({
+            by: ['age_months'],
+            where: {
+                examination: {
+                    patient: { posyandu_id }
+                }
+            },
+            _count: { age_months: true }
+        });
+
+        const ranges = [
+            { label: '0-11 Bulan', min: 0, max: 11 },
+            { label: '12-23 Bulan', min: 12, max: 23 },
+            { label: '24-35 Bulan', min: 24, max: 35 },
+            { label: '36-47 Bulan', min: 36, max: 47 },
+            { label: '48-59 Bulan', min: 48, max: 59 },
+        ];
+
+        return ranges.map(({ label, min, max }) => ({
+            range: label,
+            count: grouped
+                .filter(g => g.age_months >= min && g.age_months <= max)
+                .reduce((sum, g) => sum + g._count.age_months, 0)
+        }));
+    }
+
+    async getMonthlyTrend(posyandu_id: string): Promise<MonthlyTrendItem[]> {
+        const rows: { month: string; total: bigint; stunting: bigint }[] = await this.db.$queryRaw(Prisma.sql`
+            SELECT
+                TO_CHAR(DATE_TRUNC('month', e.exam_date), 'Mon YYYY') as month,
+                COUNT(*)::int as total,
+                COUNT(sr.id) FILTER (WHERE sr.stunting_status IN (${StuntingStatus.Stunted}::text, ${StuntingStatus.SeverelyStunted}::text))::int as stunting
+            FROM examinations e
+            LEFT JOIN stunting_results sr ON sr.examination_id = e.id
+            JOIN patients p ON p.id = e.patient_id
+            WHERE p.posyandu_id = ${posyandu_id}::uuid
+                AND e.exam_date >= (CURRENT_DATE - INTERVAL '6 months')
+            GROUP BY DATE_TRUNC('month', e.exam_date)
+            ORDER BY DATE_TRUNC('month', e.exam_date) ASC
+        `);
+
+        return rows.map((row) => ({
+            month: row.month,
+            total: Number(row.total),
+            stunting: Number(row.stunting),
+            percentage: row.total > 0 ? Number(((Number(row.stunting) / Number(row.total)) * 100).toFixed(1)) : 0,
+        }));
+    }
+}

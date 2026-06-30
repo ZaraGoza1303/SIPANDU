@@ -16,26 +16,60 @@ type Patient = {
 export default function PatientPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchPatient();
   }, []);
 
   async function fetchPatient() {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Silakan login terlebih dahulu.");
+      return;
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/all?page=1&limit=10&search=${search}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      setPatients(result.data.items);
+    }
+  } catch (error) {
+    console.log(error);
+    alert("Gagal mengambil data pasien.");
+  } finally {
+    setLoading(false);
+  }
+}
+
+  async function handleDelete(id: string) {
+    const confirmDelete = confirm(
+      "Yakin ingin menghapus pasien ini?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
       const token = localStorage.getItem("token");
 
-      if (!token) {
-        alert("Silakan login terlebih dahulu.");
-        return;
-      }
-
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/all?page=1&limit=10&search=${search}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/delete/${id}`,
         {
+          method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
@@ -46,13 +80,17 @@ export default function PatientPage() {
       const result = await response.json();
 
       if (result.success) {
-        setPatients(result.data.items);
+        setPatients((prev) =>
+          prev.filter((patient) => patient.id !== id)
+        );
+
+        alert("Pasien berhasil dihapus.");
+      } else {
+        alert(result.message);
       }
     } catch (error) {
       console.log(error);
-      alert("Gagal mengambil data pasien.");
-    } finally {
-      setLoading(false);
+      alert("Gagal menghapus pasien.");
     }
   }
 
@@ -110,14 +148,20 @@ export default function PatientPage() {
 
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={7} className="p-6 text-center">
-                  Loading...
+              <tr>  
+                <td
+                  colSpan={7}
+                  className="p-6 text-center text-gray-500"
+                >
+                  Memuat data...
                 </td>
               </tr>
             ) : patients.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-6 text-center">
+                <td
+                  colSpan={7}
+                  className="p-6 text-center text-gray-500"
+                >
                   Data tidak ditemukan.
                 </td>
               </tr>
@@ -154,12 +198,23 @@ export default function PatientPage() {
                   </td>
 
                   <td className="p-4">
-                    <Link
-                      href={`/patient/${patient.id}`}
-                      className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
-                    >
-                      Lihat
-                    </Link>
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/patient/${patient.id}`}
+                        className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+                      >
+                        Lihat
+                      </Link>
+
+                      <button
+                        onClick={() =>
+                          handleDelete(patient.id)
+                        }
+                        className="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600"
+                      >
+                        Hapus
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

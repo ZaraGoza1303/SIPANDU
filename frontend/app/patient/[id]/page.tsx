@@ -24,7 +24,6 @@ export default function PatientDetailPage() {
   const [loading, setLoading] = useState(true);
   const [openEdit, setOpenEdit] = useState(false);
   const [saving, setSaving] = useState(false);
-
   const [picture, setPicture] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
@@ -43,30 +42,46 @@ export default function PatientDetailPage() {
   }, []);
 
   async function fetchPatient() {
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/detail?patient_id=${params.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
+    const patientId = Array.isArray(params.id)
+      ? params.id[0]
+      : params.id;
 
-      const result = await response.json();
+    const url =
+      `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/detail/${patientId}`;
 
-      if (result.success) {
-        setPatient(result.data);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
+    console.log("URL:", url);
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+
+    console.log("STATUS:", response.status);
+
+    const text = await response.text();
+
+    console.log("RESPONSE:", text);
+
+    if (!response.ok) {
+      return;
     }
+
+    const result = JSON.parse(text);
+
+    if (result.success) {
+      setPatient(result.data);
+    }
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setLoading(false);
   }
+}
 
   async function handleUpdate() {
     try {
@@ -76,16 +91,21 @@ export default function PatientDetailPage() {
 
       const data = new FormData();
 
-      Object.entries(formData).forEach(([key, value]) => {
-        data.append(key, value);
-      });
+      data.append("nik", formData.nik);
+      data.append("name", formData.name);
+      data.append("birth_date", formData.birth_date);
+      data.append("gender", formData.gender);
+      data.append("mother_name", formData.mother_name);
+      data.append("father_name", formData.father_name);
+      data.append("address", formData.address);
+      data.append("phone_parent", formData.phone_parent);
 
       if (picture) {
         data.append("picture", picture);
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/update?patient_id=${params.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/update/${params.id}`,
         {
           method: "PATCH",
           headers: {
@@ -99,6 +119,7 @@ export default function PatientDetailPage() {
       const result = await response.json();
 
       if (result.success) {
+        alert("Data berhasil diperbarui");
         setOpenEdit(false);
         fetchPatient();
       } else {
@@ -113,11 +134,7 @@ export default function PatientDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="p-6">
-        Loading...
-      </div>
-    );
+    return <div className="p-6">Loading...</div>;
   }
 
   if (!patient) {
@@ -131,7 +148,6 @@ export default function PatientDetailPage() {
   return (
     <div className="p-6">
       <div className="rounded-xl border bg-white p-6 shadow-sm">
-
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">
             Detail Pasien
@@ -150,16 +166,10 @@ export default function PatientDetailPage() {
                 phone_parent: patient.phone_parent,
               });
 
+              setPicture(null);
               setOpenEdit(true);
             }}
-            className="
-              rounded-lg
-              bg-blue-600
-              px-5 py-3
-              text-white
-              hover:bg-blue-700
-              transition
-            "
+            className="rounded-lg bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
           >
             Edit Profil
           </button>
@@ -186,9 +196,7 @@ export default function PatientDetailPage() {
             <p className="text-sm text-gray-500">
               Nama
             </p>
-            <p className="font-medium">
-              {patient.name}
-            </p>
+            <p>{patient.name}</p>
           </div>
 
           <div>
@@ -203,7 +211,9 @@ export default function PatientDetailPage() {
               Tanggal Lahir
             </p>
             <p>
-              {new Date(patient.birth_date).toLocaleDateString("id-ID")}
+              {new Date(
+                patient.birth_date
+              ).toLocaleDateString("id-ID")}
             </p>
           </div>
 
@@ -256,8 +266,8 @@ export default function PatientDetailPage() {
 
               <input
                 type="text"
-                placeholder="Nama"
                 value={formData.name}
+                placeholder="Nama"
                 onChange={(e) =>
                   setFormData({
                     ...formData,
@@ -269,8 +279,8 @@ export default function PatientDetailPage() {
 
               <input
                 type="text"
-                placeholder="NIK"
                 value={formData.nik}
+                placeholder="NIK"
                 onChange={(e) =>
                   setFormData({
                     ...formData,
@@ -302,14 +312,21 @@ export default function PatientDetailPage() {
                 }
                 className="rounded border p-3"
               >
-                <option value="L">Laki-laki</option>
-                <option value="P">Perempuan</option>
+                <option value="">
+                  Pilih Gender
+                </option>
+                <option value="Laki-Laki">
+                  Laki-Laki
+                </option>
+                <option value="Perempuan">
+                  Perempuan
+                </option>
               </select>
 
               <input
                 type="text"
-                placeholder="Nama Ibu"
                 value={formData.mother_name}
+                placeholder="Nama Ibu"
                 onChange={(e) =>
                   setFormData({
                     ...formData,
@@ -321,8 +338,8 @@ export default function PatientDetailPage() {
 
               <input
                 type="text"
-                placeholder="Nama Ayah"
                 value={formData.father_name}
+                placeholder="Nama Ayah"
                 onChange={(e) =>
                   setFormData({
                     ...formData,
@@ -334,8 +351,8 @@ export default function PatientDetailPage() {
 
               <input
                 type="text"
-                placeholder="No WA Orang Tua"
                 value={formData.phone_parent}
+                placeholder="No WA Orang Tua"
                 onChange={(e) =>
                   setFormData({
                     ...formData,
@@ -348,20 +365,18 @@ export default function PatientDetailPage() {
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) =>
-                  setPicture(
-                    e.target.files
-                      ? e.target.files[0]
-                      : null
-                  )
-                }
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    setPicture(e.target.files[0]);
+                  }
+                }}
                 className="rounded border p-3"
               />
             </div>
 
             <textarea
-              placeholder="Alamat"
               value={formData.address}
+              placeholder="Alamat"
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -382,13 +397,7 @@ export default function PatientDetailPage() {
               <button
                 onClick={handleUpdate}
                 disabled={saving}
-                className="
-                  rounded
-                  bg-blue-600
-                  px-5 py-3
-                  text-white
-                  hover:bg-blue-700
-                "
+                className="rounded bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
               >
                 {saving ? "Menyimpan..." : "Simpan"}
               </button>

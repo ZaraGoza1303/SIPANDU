@@ -93,7 +93,7 @@ export class DashboardStatsRepository implements IDashboardStatsRepository {
             SELECT
                 TO_CHAR(DATE_TRUNC('month', e.exam_date), 'Mon YYYY') as month,
                 COUNT(*)::int as total,
-                COUNT(sr.id) FILTER (WHERE sr.stunting_status IN (${StuntingStatus.Stunted}::text, ${StuntingStatus.SeverelyStunted}::text))::int as stunting
+                COUNT(sr.id) FILTER (WHERE sr.stunting_status::text IN ('Stunted', 'SeverelyStunted'))::int as stunting
             FROM examinations e
             LEFT JOIN stunting_results sr ON sr.examination_id = e.id
             JOIN patients p ON p.id = e.patient_id

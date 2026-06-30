@@ -67,7 +67,7 @@ export class ExaminationController {
     async updateExamination(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const exam_id = req.query.exam_id as string;
+            const exam_id = req.params.exam_id as string;
 
             if(!req.body){
                 return res.status(400).json(sendErrorResponse("Request body empty"))

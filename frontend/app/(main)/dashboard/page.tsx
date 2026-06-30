@@ -647,7 +647,7 @@ useEffect(() => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-2">
       {/* Modal */}
       {showModal && (
         <ExamModal
@@ -658,26 +658,6 @@ useEffect(() => {
         />
       )}
       
-      {/* Header */}
-      <header className="fixed top-0 left-60 right-0 z-40 flex items-center bg-gray-100 justify-between border-b px-5 py-3">
-        <div className="relative flex-1 max-w-3xl">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-          type="text"
-          placeholder="Cari data pasien atau jadwal..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 text-gray-600"/>
-        </div>
-
-        <div className="flex items-center gap-4 ml-5">
-          <FiBell className="w-5 h-5 text-gray-500 cursor-pointer hover:text-gray-800" />
-          <div className="flex items-center gap-2 border-l pl-4 text-sm text-gray-600 cursor-pointer">
-            <span className="hover:text-gray-800">Posyandu Kliningan 04</span>
-            <FiUser className="w-4 h-4" />
-          </div>
-        </div>
-      </header>
 
       <div className="flex items-center justify-between">
         <div>

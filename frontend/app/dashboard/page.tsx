@@ -60,8 +60,6 @@ function getToken(): string | null {
   return localStorage.getItem("token");
 }
 
-// Semua request ke ngrok butuh header ini, kalau tidak response-nya
-// adalah HTML warning page (bukan JSON) → parsing gagal → loading terus
 function authHeaders(token: string): Record<string, string> {
   return {
     "Content-Type":                "application/json",

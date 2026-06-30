@@ -34,8 +34,6 @@ function getUserFromToken(): UserInfo {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("no token");
         const payload = JSON.parse(atob(token.split(".")[1]));
-        // Sesuaikan field berikut dengan claim JWT dari BE teman kamu
-        // Cek dulu di Console: JSON.parse(atob(localStorage.getItem('token').split('.')[1]))
         const name = payload.email ?? payload.sub ?? payload.username ?? "Pengguna";
         const role = payload.role ?? "Kader Posyandu";
         return { name, role, initials: getInitials(name) };

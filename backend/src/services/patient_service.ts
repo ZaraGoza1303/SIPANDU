@@ -74,7 +74,7 @@ export class PatientService implements IPatientService {
                     connect: {id: posyandu_id}
                 },
                 nik: newPatient.nik,
-                picture: newPatient.picture,
+                picture: newPatient.picture ?? null,
                 nik_parent: newPatient.nik_parent,
                 name: newPatient.name,
                 birth_date: new Date(newPatient.birth_date),
@@ -92,10 +92,9 @@ export class PatientService implements IPatientService {
     }
 
     async updatePatient(posyandu_id: string, patient_id: string, newPatient: UpdatePatientReq): Promise<void> {
-        checkPosyanduID(posyandu_id);
-        
         try {
-
+            const existsPatient = await this.patientRepo.getByID(posyandu_id, patient_id);
+            if (!existsPatient) throw new AppError("Patient not found", 404);
             const updateData: PatientUpdateInput = {};
 
             if (newPatient.name !== undefined) updateData.name = newPatient.name;

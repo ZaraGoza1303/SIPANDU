@@ -18,6 +18,7 @@ type Patient = {
   mother_name: string;
   phone_parent: string;
   picture?: string | null;
+  stunting_status?: string;
 };
 
 export default function PatientPage() {
@@ -51,6 +52,13 @@ export default function PatientPage() {
       );
 
       const result = await response.json();
+
+      console.log(result);
+
+      if (result.success) {
+        console.log(result.data.items[0]);
+        setPatients(result.data.items);
+      }
 
       if (result.success) {
         setPatients(result.data.items);
@@ -189,6 +197,7 @@ export default function PatientPage() {
                 <th className="p-5">Nama Anak</th>
                 <th className="p-5">Tanggal Lahir</th>
                 <th className="p-5">Usia</th>
+                <th className="p-5">Status Stunting</th>
                 <th className="p-5">Nama Orang Tua</th>
                 <th className="p-5">No WA Ortu</th>
                 <th className="p-5">Aksi</th>
@@ -199,7 +208,7 @@ export default function PatientPage() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="py-10 text-center text-gray-400"
                   >
                     Memuat data...
@@ -238,6 +247,27 @@ export default function PatientPage() {
 
                     <td className="p-5 text-blue-600">
                       {getAge(patient.birth_date)}
+                    </td>
+                    <td className="p-5">
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                          patient.stunting_status === "Normal"
+                            ? "bg-green-100 text-green-700"
+                            : patient.stunting_status === "Stunted"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : patient.stunting_status === "SeverelyStunted"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-gray-100 text-gray-500"
+                        }`}
+                      >
+                        {patient.stunting_status === "Normal"
+                          ? "Normal"
+                          : patient.stunting_status === "Stunted"
+                          ? "Stunting"
+                          : patient.stunting_status === "SeverelyStunted"
+                          ? "Stunting Berat"
+                          : "Belum Diperiksa"}
+                      </span>
                     </td>
 
                     <td className="p-5 text-gray-700">

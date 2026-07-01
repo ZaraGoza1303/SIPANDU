@@ -1,411 +1,288 @@
 "use client";
-
-import Image from "next/image";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-
-type Patient = {
-  id: string;
-  nik: string;
-  name: string;
-  birth_date: string;
-  gender: string;
-  mother_name: string;
-  father_name: string;
-  address: string;
-  phone_parent: string;
-  picture: string | null;
-};
+import Link from "next/link";
+import { FiArrowLeft, FiEdit2, FiPrinter } from "react-icons/fi";
 
 export default function PatientDetailPage() {
-  const params = useParams();
-
-  const [patient, setPatient] = useState<Patient | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [openEdit, setOpenEdit] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [picture, setPicture] = useState<File | null>(null);
-
-  const [formData, setFormData] = useState({
-    nik: "",
-    name: "",
-    birth_date: "",
-    gender: "",
-    mother_name: "",
-    father_name: "",
-    address: "",
-    phone_parent: "",
-  });
-
-  useEffect(() => {
-    fetchPatient();
-  }, []);
-
-  async function fetchPatient() {
-  try {
-    const token = localStorage.getItem("token");
-
-    const patientId = Array.isArray(params.id)
-      ? params.id[0]
-      : params.id;
-
-    const url =
-      `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/detail/${patientId}`;
-
-    console.log("URL:", url);
-
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
-
-    console.log("STATUS:", response.status);
-
-    const text = await response.text();
-
-    console.log("RESPONSE:", text);
-
-    if (!response.ok) {
-      return;
-    }
-
-    const result = JSON.parse(text);
-
-    if (result.success) {
-      setPatient(result.data);
-    }
-  } catch (error) {
-    console.log(error);
-  } finally {
-    setLoading(false);
-  }
-}
-
-  async function handleUpdate() {
-    try {
-      setSaving(true);
-
-      const token = localStorage.getItem("token");
-
-      const data = new FormData();
-
-      data.append("nik", formData.nik);
-      data.append("name", formData.name);
-      data.append("birth_date", formData.birth_date);
-      data.append("gender", formData.gender);
-      data.append("mother_name", formData.mother_name);
-      data.append("father_name", formData.father_name);
-      data.append("address", formData.address);
-      data.append("phone_parent", formData.phone_parent);
-
-      if (picture) {
-        data.append("picture", picture);
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/update/${params.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-          body: data,
-        }
-      );
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert("Data berhasil diperbarui");
-        setOpenEdit(false);
-        fetchPatient();
-      } else {
-        alert(result.message);
-      }
-    } catch (error) {
-      console.log(error);
-      alert("Gagal update data");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  if (loading) {
-    return <div className="p-6">Loading...</div>;
-  }
-
-  if (!patient) {
-    return (
-      <div className="p-6">
-        Data pasien tidak ditemukan.
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6">
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">
-            Detail Pasien
-          </h1>
+    <div className="space-y-6">
 
-          <button
-            onClick={() => {
-              setFormData({
-                nik: patient.nik,
-                name: patient.name,
-                birth_date: patient.birth_date.slice(0, 10),
-                gender: patient.gender,
-                mother_name: patient.mother_name,
-                father_name: patient.father_name,
-                address: patient.address,
-                phone_parent: patient.phone_parent,
-              });
+      {/* Breadcrumb */}
+      <div>
+        <Link
+          href="/patient"
+          className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+        >
+          <FiArrowLeft />
+          Kembali ke Data Pasien
+        </Link>
+      </div>
 
-              setPicture(null);
-              setOpenEdit(true);
-            }}
-            className="rounded-lg bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
-          >
-            Edit Profil
+      {/* Profile Card */}
+      <div className="rounded-2xl bg-white shadow-sm border border-gray-100 p-8">
+
+        <div className="flex justify-between">
+
+          {/* kiri */}
+          <div className="flex gap-6">
+
+            {/* Foto */}
+            <div className="flex flex-col items-center">
+              <div className="w-28 h-28 rounded-full bg-gray-200"></div>
+
+              <span className="mt-3 rounded-full bg-blue-100 px-4 py-1 text-xs font-semibold text-blue-700">
+                PASIEN AKTIF
+              </span>
+            </div>
+
+            {/* Biodata */}
+            <div>
+
+              <h1 className="text-3xl font-bold text-gray-800">
+                -
+              </h1>
+
+              <p className="text-gray-500 mt-1">
+                NIK : -
+              </p>
+
+              <div className="grid grid-cols-2 gap-x-12 gap-y-5 mt-8">
+
+                <div>
+                  <p className="text-xs uppercase text-gray-400">
+                    Tanggal Lahir
+                  </p>
+                  <p className="font-medium text-gray-700">-</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase text-gray-400">
+                    No WhatsApp
+                  </p>
+                  <p className="font-medium text-blue-600">-</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase text-gray-400">
+                    Usia
+                  </p>
+                  <p className="font-medium text-gray-700">-</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase text-gray-400">
+                    RW / Desa
+                  </p>
+                  <p className="font-medium text-gray-700">-</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase text-gray-400">
+                    Jenis Kelamin
+                  </p>
+                  <p className="font-medium text-gray-700">-</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase text-gray-400">
+                    Alamat
+                  </p>
+                  <p className="font-medium text-gray-700">
+                    -
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase text-gray-400">
+                    Nama Orang Tua
+                  </p>
+                  <p className="font-medium text-gray-700">-</p>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* kanan */}
+          <div className="flex flex-col gap-3">
+
+            <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700">
+              <FiEdit2 />
+              Edit Profil
+            </button>
+
+            <button className="flex items-center gap-2 rounded-xl border px-5 py-3 text-gray-700 hover:bg-gray-50">
+              <FiPrinter />
+              Cetak KMS
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+            {/* Navigation Tab */}
+      <div className="border-b border-gray-200">
+        <div className="flex gap-8 text-sm font-medium">
+          <button className="border-b-2 border-blue-600 pb-3 text-blue-600">
+            Riwayat Pemeriksaan
+          </button>
+
+          <button className="pb-3 text-gray-500 hover:text-blue-600">
+            Status Gizi
+          </button>
+
+          <button className="pb-3 text-gray-500 hover:text-blue-600">
+            Catatan Keluhan
+          </button>
+
+          <button className="pb-3 text-gray-500 hover:text-blue-600">
+            Jadwal
           </button>
         </div>
-
-        <div className="mb-6 flex justify-center">
-          {patient.picture ? (
-            <Image
-              src={patient.picture}
-              alt={patient.name}
-              width={150}
-              height={150}
-              className="h-40 w-40 rounded-full border object-cover"
-            />
-          ) : (
-            <div className="flex h-40 w-40 items-center justify-center rounded-full border bg-gray-100 text-gray-500">
-              Tidak ada foto
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <p className="text-sm text-gray-500">
-              Nama
-            </p>
-            <p>{patient.name}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">
-              NIK
-            </p>
-            <p>{patient.nik}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">
-              Tanggal Lahir
-            </p>
-            <p>
-              {new Date(
-                patient.birth_date
-              ).toLocaleDateString("id-ID")}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">
-              Jenis Kelamin
-            </p>
-            <p>{patient.gender}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">
-              Nama Ibu
-            </p>
-            <p>{patient.mother_name}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">
-              Nama Ayah
-            </p>
-            <p>{patient.father_name}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">
-              Alamat
-            </p>
-            <p>{patient.address}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">
-              No WA Orang Tua
-            </p>
-            <p>{patient.phone_parent}</p>
-          </div>
-        </div>
       </div>
 
-      {openEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
+      {/* Summary */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
 
-            <h2 className="mb-6 text-2xl font-bold">
-              Edit Profil Pasien
-            </h2>
+        {/* Trend BB */}
+        <div className="rounded-2xl bg-blue-600 p-6 text-white shadow-sm">
 
-            <div className="grid gap-4 md:grid-cols-2">
+          <p className="text-xs uppercase tracking-wider text-blue-100">
+            Tren Berat Badan
+          </p>
 
-              <input
-                type="text"
-                value={formData.name}
-                placeholder="Nama"
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    name: e.target.value,
-                  })
-                }
-                className="rounded border p-3"
-              />
+          <h2 className="mt-3 text-3xl font-bold">
+            -
+          </h2>
 
-              <input
-                type="text"
-                value={formData.nik}
-                placeholder="NIK"
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    nik: e.target.value,
-                  })
-                }
-                className="rounded border p-3"
-              />
+          <p className="mt-2 text-sm text-blue-100">
+            Belum tersedia data
+          </p>
 
-              <input
-                type="date"
-                value={formData.birth_date}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    birth_date: e.target.value,
-                  })
-                }
-                className="rounded border p-3"
-              />
+        </div>
 
-              <select
-                value={formData.gender}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    gender: e.target.value,
-                  })
-                }
-                className="rounded border p-3"
-              >
-                <option value="">
-                  Pilih Gender
-                </option>
-                <option value="Laki-Laki">
-                  Laki-Laki
-                </option>
-                <option value="Perempuan">
-                  Perempuan
-                </option>
-              </select>
+        {/* Jadwal */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
 
-              <input
-                type="text"
-                value={formData.mother_name}
-                placeholder="Nama Ibu"
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    mother_name: e.target.value,
-                  })
-                }
-                className="rounded border p-3"
-              />
+          <p className="text-xs uppercase tracking-wider text-gray-400">
+            Pemeriksaan Berikutnya
+          </p>
 
-              <input
-                type="text"
-                value={formData.father_name}
-                placeholder="Nama Ayah"
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    father_name: e.target.value,
-                  })
-                }
-                className="rounded border p-3"
-              />
+          <h2 className="mt-3 text-xl font-semibold text-gray-800">
+            -
+          </h2>
 
-              <input
-                type="text"
-                value={formData.phone_parent}
-                placeholder="No WA Orang Tua"
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    phone_parent: e.target.value,
-                  })
-                }
-                className="rounded border p-3"
-              />
+          <p className="mt-2 text-sm text-gray-500">
+            Belum ada jadwal
+          </p>
 
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    setPicture(e.target.files[0]);
-                  }
-                }}
-                className="rounded border p-3"
-              />
-            </div>
+        </div>
 
-            <textarea
-              value={formData.address}
-              placeholder="Alamat"
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  address: e.target.value,
-                })
-              }
-              className="mt-4 h-24 w-full rounded border p-3"
-            />
+        {/* Imunisasi */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => setOpenEdit(false)}
-                className="rounded bg-gray-200 px-5 py-3"
-              >
-                Batal
-              </button>
+          <p className="text-xs uppercase tracking-wider text-gray-400">
+            Status Imunisasi
+          </p>
 
-              <button
-                onClick={handleUpdate}
-                disabled={saving}
-                className="rounded bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
-              >
-                {saving ? "Menyimpan..." : "Simpan"}
-              </button>
-            </div>
+          <h2 className="mt-3 text-xl font-semibold text-gray-800">
+            -
+          </h2>
+
+          <p className="mt-2 text-sm text-gray-500">
+            Belum tersedia
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* Log Pemeriksaan */}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+
+          <h2 className="text-lg font-semibold text-gray-800">
+            Log Pemeriksaan Rutin
+          </h2>
+
+          <div className="flex gap-2">
+
+            <button className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50">
+              Filter
+            </button>
+
+            <button className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50">
+              Download
+            </button>
 
           </div>
+
         </div>
-      )}
+
+        {/* Table */}
+        <table className="w-full">
+
+          <thead className="bg-gray-50">
+
+            <tr className="text-left text-xs uppercase tracking-wider text-gray-500">
+
+              <th className="px-6 py-4">Tanggal</th>
+              <th className="px-6 py-4">BB (Kg)</th>
+              <th className="px-6 py-4">TB (Cm)</th>
+              <th className="px-6 py-4">LILA</th>
+              <th className="px-6 py-4">Z-Score</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4">Pemeriksa</th>
+              <th className="px-6 py-4 text-center">Aksi</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            <tr>
+
+              <td
+                colSpan={8}
+                className="py-20 text-center text-gray-400"
+              >
+                Belum ada riwayat pemeriksaan.
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+
+          <p className="text-sm text-gray-500">
+            Menampilkan 0 pemeriksaan
+          </p>
+
+          <div className="flex gap-2">
+
+            <button className="rounded-lg border px-4 py-2 text-sm text-gray-400">
+              Sebelumnya
+            </button>
+
+            <button className="rounded-lg border bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700">
+              Berikutnya
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
     </div>
   );
 }

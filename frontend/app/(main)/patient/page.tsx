@@ -191,6 +191,7 @@ export default function PatientPage() {
                 <th className="p-5">Usia</th>
                 <th className="p-5">Nama Orang Tua</th>
                 <th className="p-5">No WA Ortu</th>
+                <th className="p-5">Status Stunting</th>
                 <th className="p-5">Aksi</th>
               </tr>
             </thead>

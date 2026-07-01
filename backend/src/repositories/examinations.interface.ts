@@ -10,4 +10,5 @@ export interface IExaminationsRepository {
     updateExamSchedule(posyandu_id: string, exam_id: string, newSchedule: ScheduleUpdateInput): Promise<void>;
     updateExamination(posyandu_id: string, exam_id: string, newExamination: ExaminationUpdateInput, tx?: Prisma.TransactionClient): Promise<void>;
     checkScheduleExam(posyandu_id: string, today: Date, tomorrow: Date): Promise<Boolean>
+    deleteExamSchedule(posyandu_id: string, exam_id: string): Promise<void>;
 }

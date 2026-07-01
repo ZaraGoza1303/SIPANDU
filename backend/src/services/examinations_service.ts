@@ -170,4 +170,12 @@ export class ExaminationsService implements IExaminationsService {
         }
     }
     
+    async deleteExamSchedule(posyandu_id: string, exam_id: string): Promise<void> {
+            try {
+                await this.examinationsRepo.deleteExamSchedule(posyandu_id, exam_id);
+            } catch (err) {
+                handlePrismaError(err);
+            }
+        }
+
 }

@@ -6,4 +6,5 @@ export interface IExaminationsService {
     addExamSchedule(posyandu_id: string, user_id: string, newSchedule: CreateExamScheduleReq): Promise<void>;
     updateExamSchedule(posyandu_id: string, exam_id: string, newSchedule: UpdateExamScheduleReq): Promise<void>;
     updatePatientExamination(posyandu_id: string, exam_id: string, newExamination: UpdatePatientExamReqSchema): Promise<StuntingResult>; 
+    deleteExamSchedule(posyandu_id: string, exam_id: string): Promise<void>;
 }

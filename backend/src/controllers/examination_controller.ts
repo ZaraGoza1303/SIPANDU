@@ -117,4 +117,21 @@ export class ExaminationController {
             return res.status(500).json(sendErrorResponse("Gagal mengubah data pemeriksaan", err.message))
         }
     }
+async deleteExamSchedule(req: Request, res: Response) {
+    try {
+        const posyandu_id = req.user?.posyandu_id as string;
+        const exam_id = req.params.exam_id as string;
+
+        await this.examinationsService.deleteExamSchedule(posyandu_id, exam_id);
+        return res.status(200).json(sendSuccessfullResponse("Jadwal pemeriksaan berhasil dihapus"));
+
+    } catch (err: any) {
+        if (err instanceof AppError) {
+            return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message));
+        }
+
+        return res.status(500).json(sendErrorResponse("Gagal menghapus jadwal pemeriksaan", err.message));
+    }
+}
+    
 }

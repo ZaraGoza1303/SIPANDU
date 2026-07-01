@@ -99,5 +99,18 @@ export class ExaminationsRepository implements IExaminationsRepository {
 
         return isScheduleExists > 0;
     }
+
+    async deleteExamSchedule(posyandu_id: string, exam_id: string): Promise<void> {
+    const result = await this.db.schedule.deleteMany({
+        where: {
+            id: exam_id,
+            posyandu_id: posyandu_id
+        }
+    });
+
+    if (result.count === 0) {
+        throw new AppError("Jadwal pemeriksaan tidak ditemukan", 404);
+    }
+}
     
 }

@@ -1,5 +1,6 @@
+import { AppError } from "../utils/error.js";
 import type { ExaminationWithPatient } from "../dto/patient.js";
-import type { Examination, Prisma, PrismaClient } from "../generated/prisma/client.js";
+import type { Examination, Prisma, PrismaClient, Schedule } from "../generated/prisma/client.js";
 import type { ExaminationCreateInput, ExaminationUpdateInput } from "../generated/prisma/models.js";
 import type { IExaminationsRepository } from "./examinations.interface.js";
 
@@ -10,10 +11,13 @@ export class ExaminationsRepository implements IExaminationsRepository {
         this.db = db;
     }
 
-    async getExamByID(exam_id: string): Promise<ExaminationWithPatient | null> {
-        const exam = await this.db.examination.findUnique({
+    async getExamByID(posyandu_id: string, exam_id: string): Promise<ExaminationWithPatient | null> {
+        const exam = await this.db.examination.findFirst({
             where: {
-                id: exam_id
+                id: exam_id,
+                patient: {
+                    posyandu_id
+                }
             },
             include: {
                 patient: true
@@ -21,6 +25,17 @@ export class ExaminationsRepository implements IExaminationsRepository {
         })
 
         return exam;
+    }
+
+    async getExamScheduleByID(posyandu_id: string, exam_id: string): Promise<Schedule | null> {
+        const schedule = await this.db.schedule.findFirst({
+            where: {
+                id: exam_id,
+                posyandu_id: posyandu_id,
+            }
+        })
+
+        return schedule;
     }
 
     async insertExamination(newExam: ExaminationCreateInput, tx?: Prisma.TransactionClient): Promise<Examination> {
@@ -38,16 +53,37 @@ export class ExaminationsRepository implements IExaminationsRepository {
         })
     }
 
-    async updateExamination(exam_id: string, newExamination: ExaminationUpdateInput, tx?: Prisma.TransactionClient): Promise<void> {
-        const client = tx || this.db
-
-        await client.examination.update({
+    async updateExamSchedule(posyandu_id: string, exam_id: string, newSchedule: Prisma.ScheduleUpdateInput): Promise<void> {
+        const result = await this.db.schedule.updateMany({
             where: {
                 id: exam_id,
+                posyandu_id: posyandu_id
+            },
+            data: newSchedule
+        })
+
+        if (result.count === 0) {
+            throw new AppError("Jadwal pemeriksaan tidak ditemukan", 404);
+        }
+    }
+
+    async updateExamination(posyandu_id: string, exam_id: string, newExamination: ExaminationUpdateInput, tx?: Prisma.TransactionClient): Promise<void> {
+        const client = tx || this.db
+
+        const result = await client.examination.updateMany({
+            where: {
+                id: exam_id,
+                patient: {
+                    posyandu_id
+                }
             },
 
             data: newExamination
         })
+
+        if (result.count === 0) {
+            throw new AppError("Data pemeriksaan tidak ditemukan", 404);
+        }
     }
 
     async checkScheduleExam(posyandu_id: string, today: Date, tomorrow: Date): Promise<Boolean> {

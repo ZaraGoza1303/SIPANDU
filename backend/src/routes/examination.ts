@@ -28,5 +28,6 @@ examinationRouter.use(verifyPosyanduAccess);
 examinationRouter.post('/add', (req, res) => examinationController.addExamination(req, res));
 examinationRouter.post('/schedule', (req, res) => examinationController.addSchedule(req, res));
 examinationRouter.patch('/update/:exam_id', (req, res) => examinationController.updateExamination(req, res));
+examinationRouter.patch('/update/schedule/:exam_id', (req, res) => examinationController.updateExamSchedule(req, res));
 
 export default examinationRouter;

@@ -1,13 +1,12 @@
-import type { CreatePatientExamReq, CreateExamScheduleReq, UpdatePatientExamReqSchema } from "../dto/patient.js";
+import type { CreatePatientExamReq, CreateExamScheduleReq, UpdatePatientExamReqSchema, UpdateExamScheduleReq } from "../dto/patient.js";
 import { calculateZScoreWHO } from "../dto/zscore.js";
 import type { PrismaClient, StuntingResult } from "../generated/prisma/client.js";
-import type { ExaminationCreateInput, ExaminationUpdateInput, ScheduleCreateInput, StuntingResultCreateInput, StuntingResultUpdateInput } from "../generated/prisma/models.js";
+import type { ExaminationCreateInput, ExaminationUpdateInput, ScheduleCreateInput, ScheduleUpdateInput, StuntingResultCreateInput, StuntingResultUpdateInput } from "../generated/prisma/models.js";
 import type { IExaminationsRepository } from "../repositories/examinations.interface.js";
 import type { IPatientsRepository } from "../repositories/patient_repository.interface.js";
 import type { IStuntingResultsRepository } from "../repositories/stunting-results.interface.js";
 import { calculateAgeMonths } from "../utils/calculate.js";
 import { AppError, handlePrismaError } from "../utils/error.js";
-import { checkPosyanduID } from "../utils/func.js";
 import type { IExaminationsService } from "./examinations.interface.js";
 
 export class ExaminationsService implements IExaminationsService {
@@ -84,13 +83,7 @@ export class ExaminationsService implements IExaminationsService {
     }
 
     async addExamSchedule(posyandu_id: string, user_id: string, newSchedule: CreateExamScheduleReq): Promise<void> {
-        checkPosyanduID(posyandu_id);
-
         try {
-            if(!user_id){
-                throw new AppError("Forbidden", 403)
-            }
-
             const newScheduleReq: ScheduleCreateInput = {
                 posyandu: {
                     connect: {id: posyandu_id}
@@ -110,15 +103,27 @@ export class ExaminationsService implements IExaminationsService {
             handlePrismaError(err)
         }
     }
+
+    async updateExamSchedule(posyandu_id: string, exam_id: string, newSchedule: UpdateExamScheduleReq): Promise<void> {
+        try {
+            const updateData: ScheduleUpdateInput = {};
+
+            if (newSchedule.scheduled_date !== undefined) updateData.scheduled_date = new Date(newSchedule.scheduled_date);
+            if (newSchedule.time_start !== undefined) updateData.time_start = newSchedule.time_start;
+            if (newSchedule.time_end !== undefined) updateData.time_end = newSchedule.time_end;
+            if (newSchedule.status !== undefined) updateData.status = newSchedule.status;
+
+            await this.examinationsRepo.updateExamSchedule(posyandu_id, exam_id, updateData);
+
+        } catch (err) {
+            handlePrismaError(err);
+        }
+    }
     
     async updatePatientExamination(posyandu_id: string, exam_id: string, newExamination: UpdatePatientExamReqSchema): Promise<StuntingResult> {
         try {
-            const existingExam = await this.examinationsRepo.getExamByID(exam_id);
+            const existingExam = await this.examinationsRepo.getExamByID(posyandu_id, exam_id);
             if (!existingExam) throw new AppError("Data pemeriksaan tidak ditemukan", 404);
-
-            if (existingExam.patient.posyandu_id !== posyandu_id) {
-                throw new AppError("Forbidden", 403);
-            }
 
             const examDate = newExamination.exam_date ? new Date(newExamination.exam_date) : existingExam.exam_date;
             const weight = newExamination.weight ?? existingExam.weight;
@@ -137,12 +142,13 @@ export class ExaminationsService implements IExaminationsService {
                     exam_date: examDate,
                     weight: weight,
                     height: height, 
-                    head_circumference: newExamination.head_circumference ?? existingExam.head_circumference,
-                    arm_circumference: newExamination.arm_circumference ?? existingExam.arm_circumference,
-                    notes: newExamination.notes ?? "", 
                 };
+
+                if(newExamination.head_circumference !== undefined) newExaminationReq.head_circumference = newExamination.head_circumference;
+                if(newExamination.arm_circumference !== undefined) newExaminationReq.arm_circumference = newExamination.arm_circumference;
+                if(newExamination.notes !== undefined) newExaminationReq.notes = newExamination.notes;
                 
-                await this.examinationsRepo.updateExamination(exam_id, newExaminationReq, tx);
+                await this.examinationsRepo.updateExamination(posyandu_id, exam_id, newExaminationReq, tx);
 
                 const newStuntingResult: StuntingResultUpdateInput = {
                     age_months: ageMonths,

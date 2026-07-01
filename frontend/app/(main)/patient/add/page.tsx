@@ -1,13 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 export default function AddPatientPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
   
   const [picture, setPicture] = useState<File | null>(null);
-const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
 const [form, setForm] = useState({
   nik: "",
@@ -94,7 +96,12 @@ const [form, setForm] = useState({
     }
 
     alert("Pasien berhasil ditambahkan.");
-    router.push("/patient");
+
+    if (from === "pemeriksaan") {
+      router.push("/pemeriksaan/add");
+    } else {
+      router.push("/patient");
+    }
 
   } catch (error) {
     console.error(error);

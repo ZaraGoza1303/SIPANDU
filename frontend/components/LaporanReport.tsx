@@ -143,7 +143,7 @@ export default function LaporanReport({ token }: LaporanReportProps) {
     setTrendError(null);
     try {
       const data = await apiGet<TrendStuntingItem[]>(
-        "api/dashboard/trend-stunting",
+        "/api/dashboard/trend-stunting",
         token
       );
       setTrend(Array.isArray(data) ? data : []);
@@ -164,7 +164,7 @@ export default function LaporanReport({ token }: LaporanReportProps) {
         search,
       });
       const data = await apiGet<{ items: Patient[]; meta: PaginationMeta }>(
-        `api/pasien/all?${qs.toString()}`,
+        `/api/pasien/all?${qs.toString()}`,
         token
       );
       setPatients(data.items || []);
@@ -174,7 +174,6 @@ export default function LaporanReport({ token }: LaporanReportProps) {
     } finally {
       setPatientsLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, page, search]);
 
   useEffect(() => {
@@ -287,33 +286,27 @@ export default function LaporanReport({ token }: LaporanReportProps) {
       {/* Charts row */}
       <div className="mb-3.5 grid grid-cols-1 gap-3.5 lg:grid-cols-[1.2fr_1fr]">
         <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <div className="text-sm font-semibold">Distribusi Status Gizi</div>
-          <div className="mb-2 mt-0.5 text-[11px] text-slate-400">
-            dari GET /api/dashboard/stats
+          <div className="text-lg font-semibold">Distribusi Status Gizi</div><br />
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={giziSummary}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  {giziSummary.map((entry) => (
+                    <Cell
+                      key={entry.name}
+                      fill={entry.name === "Stunting" ? "#dc2626" : "#16a34a"}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={giziSummary}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                {giziSummary.map((entry) => (
-                  <Cell
-                    key={entry.name}
-                    fill={entry.name === "Stunting" ? "#dc2626" : "#16a34a"}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <div className="text-sm font-semibold">Distribusi Kelompok Usia</div>
-          <div className="mb-2 mt-0.5 text-[11px] text-slate-400">
-            ageGroupDistribution — GET /api/dashboard/stats
-          </div>
+          <div className="text-lg font-semibold">Distribusi Kelompok Usia</div><br />
           <div className="mt-2 flex flex-col gap-2.5">
             {(stats?.ageGroupDistribution || []).map((g) => {
               const max = Math.max(
@@ -344,17 +337,14 @@ export default function LaporanReport({ token }: LaporanReportProps) {
 
       {/* Trend chart */}
       <div className="mb-3.5 rounded-xl border border-slate-200 bg-white p-4">
-        <div className="text-sm font-semibold">
+        <div className="text-lg font-semibold">
           Tren Stunting (6 Bulan Terakhir)
-        </div>
-        <div className="mb-2 mt-0.5 text-[11px] text-slate-400">
-          GET /api/dashboard/trend-stunting — API menyediakan 6 bulan, bukan 12
-        </div>
+        </div><br />
         <ResponsiveContainer width="100%" height={260}>
           <LineChart data={trend}>
             <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
-            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+            <XAxis dataKey="month" tick={{ fontSize: 8 }} />
+            <YAxis tick={{ fontSize: 8 }} allowDecimals={false} />
             <Tooltip />
             <Legend />
             <Line
@@ -387,12 +377,7 @@ export default function LaporanReport({ token }: LaporanReportProps) {
       <div className="rounded-xl border border-slate-200 bg-white p-4">
         <div className="mb-2.5 flex flex-wrap items-start justify-between gap-2.5">
           <div>
-            <div className="text-sm font-semibold">Daftar Pasien</div>
-            <div className="mt-0.5 text-[11px] text-slate-400">
-              GET /api/pasien/all — kolom BB/TB/Z-Score/Status Stunting per
-              anak memerlukan endpoint riwayat pemeriksaan yang belum ada di
-              dokumentasi.
-            </div>
+            <div className="text-lg font-semibold">Daftar Pasien</div>
           </div>
           <input
             className="min-w-[220px] rounded-lg border border-slate-300 px-3 py-2 text-sm print:hidden"

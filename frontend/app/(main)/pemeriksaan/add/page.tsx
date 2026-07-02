@@ -39,6 +39,7 @@ export default function AddPemeriksaanPage() {
     complaint: "",
     note: "",
   });
+  const [patients, setPatients] = useState<any[]>([]);
 
   async function saveExamination() {
     try {

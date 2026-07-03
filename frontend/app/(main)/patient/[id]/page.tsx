@@ -199,18 +199,6 @@ const months = ageMonths % 12;
           <button className="border-b-2 border-blue-600 pb-3 text-blue-600">
             Riwayat Pemeriksaan
           </button>
-
-          <button className="pb-3 text-gray-500 hover:text-blue-600">
-            Status Gizi
-          </button>
-
-          <button className="pb-3 text-gray-500 hover:text-blue-600">
-            Catatan Keluhan
-          </button>
-
-          <button className="pb-3 text-gray-500 hover:text-blue-600">
-            Jadwal
-          </button>
         </div>
       </div>
 

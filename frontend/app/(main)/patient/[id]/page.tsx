@@ -174,8 +174,8 @@ const months = ageMonths % 12;
           {/* kanan */}
           <div className="flex flex-col gap-3">
 
-            <Link
-              href={`/patient/edit/${patient?.id}`}
+           <Link
+              href={`/patient/${patient.id}/edit`}
               className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
             >
               <FiEdit2 />

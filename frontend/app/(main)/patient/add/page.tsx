@@ -179,10 +179,10 @@ const [form, setForm] = useState({
               Pilih Gender
             </option>
             <option value="Laki-Laki">
-              Laki-Laki
+              L
             </option>
             <option value="Perempuan">
-              Perempuan
+              P
             </option>
           </select>
 

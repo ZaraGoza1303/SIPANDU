@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
 import {
   FiUsers,
   FiClock,
@@ -13,6 +15,41 @@ import {
 } from "react-icons/fi";
 
 export default function PemeriksaanPage() {
+  const [examinations, setExaminations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    getExaminations();
+  }, []);
+
+  async function getExaminations(keyword = "") {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/pemeriksaan/all?page=1&limit=10&search=${keyword}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      console.log(result);
+
+      if (result.success) {
+        setExaminations(result.data.items);
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <div className="space-y-6">
 
@@ -101,6 +138,11 @@ export default function PemeriksaanPage() {
               <input
                 placeholder="Cari nama anak atau NIK..."
                 className="w-full rounded-xl border pl-12 pr-4 py-3 outline-none"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  getExaminations(e.target.value);
+                }}
               />
 
             </div>
@@ -141,53 +183,63 @@ export default function PemeriksaanPage() {
 
             <tbody>
 
-              {[1,2,3,4].map((i)=>(
-                <tr
-                  key={i}
-                  className="border-t hover:bg-gray-50"
-                >
+              {loading ? (
+  <tr>
+    <td colSpan={5} className="py-10 text-center">
+      Loading...
+    </td>
+  </tr>
+) : examinations.length === 0 ? (
+  <tr>
+    <td colSpan={5} className="py-10 text-center text-gray-400">
+      Belum ada pemeriksaan
+    </td>
+  </tr>
+) : (
+  examinations.map((item: any) => (
+    <tr
+      key={item.id}
+      className="border-t hover:bg-gray-50"
+    >
+      <td className="px-6 py-5">
+        <div>
+          <p className="font-semibold">
+            {item.patient?.name}
+          </p>
 
-                  <td className="px-6 py-5">
+          <p className="text-sm text-gray-400">
+            {item.patient?.nik}
+          </p>
+        </div>
+      </td>
 
-                    <div>
+      <td>{item.patient?.mother_name}</td>
 
-                      <p className="font-semibold">
-                        -
-                      </p>
+      <td>Posyandu</td>
 
-                      <p className="text-sm text-gray-400">
-                        -
-                      </p>
+      <td>
+        <span
+          className={`rounded-full px-3 py-1 text-xs ${
+            item.stunting_status === "Normal"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+          }`}
+        >
+          {item.stunting_status}
+        </span>
+      </td>
 
-                    </div>
-
-                  </td>
-
-                  <td>-</td>
-
-                  <td>-</td>
-
-                  <td>
-
-                    <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs text-yellow-700">
-                      Menunggu
-                    </span>
-
-                  </td>
-
-                  <td>
-
-                    <Link
-                      href="/pemeriksaan/add"
-                      className="text-blue-600 hover:underline"
-                    >
-                      Lanjutkan
-                    </Link>
-
-                  </td>
-
-                </tr>
-              ))}
+      <td>
+        <Link
+          href={`/patient/${item.patient_id}`}
+          className="text-blue-600 hover:underline"
+        >
+          Detail
+        </Link>
+      </td>
+    </tr>
+  ))
+)}
 
             </tbody>
 

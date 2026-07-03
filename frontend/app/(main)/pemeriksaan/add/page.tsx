@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -40,6 +40,35 @@ export default function AddPemeriksaanPage() {
     note: "",
   });
   const [patients, setPatients] = useState<any[]>([]);
+  useEffect(() => {
+  fetchPatients();
+}, []);
+
+async function fetchPatients() {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/all?page=1&limit=100`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      }
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+      setPatients(result.data.items);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
 
   async function saveExamination() {
     try {
@@ -54,28 +83,48 @@ export default function AddPemeriksaanPage() {
 
       console.log(form);
 
-      // nanti endpoint backend di sini
-
-      /*
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pemeriksaan/add`,
-        {
-          method:"POST",
-          headers:{
-            Authorization:`Bearer ${token}`,
-            "Content-Type":"application/json",
-            "ngrok-skip-browser-warning":"true",
-          },
-          body:JSON.stringify(form)
-        }
+      const user = JSON.parse(
+        atob(token.split(".")[1])
       );
+      
+      const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/pemeriksaan/add`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        
 
-      const result = await response.json();
+        body: JSON.stringify({
+          exam_date: form.examination_date,
+          patient_id: form.patient_id,
+          user_id: user.id,
 
-      if(result.success){
-          router.push("/pemeriksaan");
+          weight: Number(form.weight),
+          height: Number(form.height),
+          head_circumference: Number(form.head_circumference),
+          arm_circumference: Number(form.arm_circumference),
+
+          notes: form.note || null,
+        }),
       }
-      */
+    );
+
+    const result = await response.json();
+
+    console.log(result);
+
+    if (!response.ok) {
+      alert(result.message);
+      return;
+    }
+
+    alert("Pemeriksaan berhasil ditambahkan.");
+
+    router.push("/pemeriksaan");
 
     } catch (error) {
       console.log(error);
@@ -154,9 +203,16 @@ export default function AddPemeriksaanPage() {
               }
               className="w-full rounded-xl border p-3"
             >
-              <option value="">
-                Pilih Pasien
-              </option>
+              <option value="">Pilih Pasien</option>
+
+              {patients.map((patient) => (
+                <option
+                  key={patient.id}
+                  value={patient.id}
+                >
+                  {patient.name} - {patient.nik}
+                </option>
+              ))}
             </select>
 
           </div>

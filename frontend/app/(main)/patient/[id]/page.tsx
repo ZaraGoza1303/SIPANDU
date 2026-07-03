@@ -1,8 +1,68 @@
 "use client";
+
 import Link from "next/link";
-import { FiArrowLeft, FiEdit2, FiPrinter } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import dayjs from "dayjs";
+import {
+  FiArrowLeft,
+  FiEdit2,
+  FiPrinter,
+} from "react-icons/fi";
 
 export default function PatientDetailPage() {
+  const { id } = useParams();
+
+const [patient, setPatient] = useState<any>(null);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  async function getPatient() {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/detail/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      console.log(result);
+
+      if (result.success) {
+        setPatient(result.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (id) getPatient();
+}, [id]);
+
+if (loading) {
+  return (
+    <div className="p-10">
+      Memuat data pasien...
+    </div>
+  );
+}
+
+const ageMonths = patient
+  ? dayjs().diff(dayjs(patient.birth_date), "month")
+  : 0;
+
+const years = Math.floor(ageMonths / 12);
+const months = ageMonths % 12;
+
   return (
     <div className="space-y-6">
 
@@ -27,7 +87,11 @@ export default function PatientDetailPage() {
 
             {/* Foto */}
             <div className="flex flex-col items-center">
-              <div className="w-28 h-28 rounded-full bg-gray-200"></div>
+              <img
+                src={patient?.picture || "/default-avatar.png"}
+                alt={patient?.name}
+                className="h-28 w-28 rounded-full object-cover border"
+              />
 
               <span className="mt-3 rounded-full bg-blue-100 px-4 py-1 text-xs font-semibold text-blue-700">
                 PASIEN AKTIF
@@ -38,48 +102,58 @@ export default function PatientDetailPage() {
             <div>
 
               <h1 className="text-3xl font-bold text-gray-800">
-                -
+                {patient?.name}
               </h1>
 
               <p className="text-gray-500 mt-1">
-                NIK : -
+                NIK : {patient?.nik}
               </p>
 
               <div className="grid grid-cols-2 gap-x-12 gap-y-5 mt-8">
 
                 <div>
                   <p className="text-xs uppercase text-gray-400">
-                    Tanggal Lahir
+                    Nama Orang Tua
                   </p>
-                  <p className="font-medium text-gray-700">-</p>
+                  <p className="font-medium text-gray-700">
+                    {patient?.mother_name} / {patient?.father_name}
+                  </p>
                 </div>
 
                 <div>
                   <p className="text-xs uppercase text-gray-400">
-                    No WhatsApp
+                    No. WA Ortu
                   </p>
-                  <p className="font-medium text-blue-600">-</p>
+                  <p className="font-medium text-blue-600">
+                    {patient?.phone_parent}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase text-gray-400">
+                    Tanggal Lahir
+                  </p>
+                  <p className="font-medium text-gray-700">
+                    {dayjs(patient?.birth_date).format("DD MMMM YYYY")}
+                  </p>
                 </div>
 
                 <div>
                   <p className="text-xs uppercase text-gray-400">
                     Usia
                   </p>
-                  <p className="font-medium text-gray-700">-</p>
-                </div>
-
-                <div>
-                  <p className="text-xs uppercase text-gray-400">
-                    RW / Desa
+                  <p className="font-medium text-gray-700">
+                    {years} tahun {months} bulan
                   </p>
-                  <p className="font-medium text-gray-700">-</p>
                 </div>
 
                 <div>
                   <p className="text-xs uppercase text-gray-400">
                     Jenis Kelamin
                   </p>
-                  <p className="font-medium text-gray-700">-</p>
+                  <p className="font-medium text-gray-700">
+                    {patient?.gender}
+                  </p>
                 </div>
 
                 <div>
@@ -87,15 +161,8 @@ export default function PatientDetailPage() {
                     Alamat
                   </p>
                   <p className="font-medium text-gray-700">
-                    -
+                    {patient?.address}
                   </p>
-                </div>
-
-                <div>
-                  <p className="text-xs uppercase text-gray-400">
-                    Nama Orang Tua
-                  </p>
-                  <p className="font-medium text-gray-700">-</p>
                 </div>
 
               </div>
@@ -107,10 +174,13 @@ export default function PatientDetailPage() {
           {/* kanan */}
           <div className="flex flex-col gap-3">
 
-            <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700">
+            <Link
+              href={`/patient/edit/${patient?.id}`}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
+            >
               <FiEdit2 />
               Edit Profil
-            </button>
+            </Link>
 
             <button className="flex items-center gap-2 rounded-xl border px-5 py-3 text-gray-700 hover:bg-gray-50">
               <FiPrinter />

@@ -176,8 +176,7 @@ const months = ageMonths % 12;
 
            <Link
               href={`/patient/${patient.id}/edit`}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
-            >
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700">
               <FiEdit2 />
               Edit Profil
             </Link>

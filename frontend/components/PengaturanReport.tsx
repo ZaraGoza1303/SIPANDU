@@ -69,41 +69,39 @@ export default function PengaturanReport() {
         {/* Right column: settings sections */}
         <div className="flex flex-col gap-4 lg:col-span-2">
           {/* Change password (not wired — no endpoint documented) */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          {/*<div className="rounded-xl border border-slate-200 bg-white p-5">
             <div className="text-sm font-semibold">Ubah Kata Sandi</div>
-            <p className="mt-1 text-[11px] text-slate-400">
-              Belum tersedia di dokumentasi API (butuh endpoint seperti{" "}
-              <code>PATCH /api/auth/change-password</code>). Form di bawah
-              nonaktif sampai endpoint-nya ada.
-            </p>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <input
+              <p className="mt-1 text-[11px] text-slate-400">
+                Belum tersedia di dokumentasi API (butuh endpoint seperti{" "}
+                <code>PATCH /api/auth/change-password</code>). Form di bawah
+                nonaktif sampai endpoint-nya ada.
+              </p>
+
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <input
+                  disabled
+                  placeholder="Kata sandi saat ini"
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-400"
+                />
+                <input
+                  disabled
+                  placeholder="Kata sandi baru"
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-400"
+                />
+              </div>
+
+              <button
                 disabled
-                placeholder="Kata sandi saat ini"
-                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-400"
-              />
-              <input
-                disabled
-                placeholder="Kata sandi baru"
-                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-400"
-              />
-            </div>
-            <button
-              disabled
-              title="Endpoint belum tersedia di dokumentasi API"
-              className="mt-3 cursor-not-allowed rounded-lg bg-slate-200 px-3.5 py-2 text-sm font-medium text-slate-400"
-            >
-              Simpan Kata Sandi
-            </button>
-          </div>
+                title="Endpoint belum tersedia di dokumentasi API"
+                className="mt-3 cursor-not-allowed rounded-lg bg-slate-200 px-3.5 py-2 text-sm font-medium text-slate-400"
+              >
+                Simpan Kata Sandi
+              </button>
+            </div> */}
 
           {/* Appearance — local only */}
           <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="text-sm font-semibold">Preferensi Tampilan</div>
-            <p className="mt-1 text-[11px] text-slate-400">
-              Disimpan lokal di browser ini saja — belum disinkronkan ke
-              server (tidak ada endpoint pengaturan di dokumentasi API).
-            </p>
+            <div className="text-lg font-semibold">Preferensi Tampilan</div>
             <div className="mt-3 flex gap-2">
               <button
                 onClick={() => setTheme("light")}
@@ -130,11 +128,7 @@ export default function PengaturanReport() {
 
           {/* Notifications — local only */}
           <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="text-sm font-semibold">Notifikasi</div>
-            <p className="mt-1 text-[11px] text-slate-400">
-              Disimpan lokal di browser ini saja — sama seperti tampilan,
-              belum ada endpoint untuk menyimpan preferensi ini di server.
-            </p>
+            <div className="text-lg font-semibold">Notifikasi</div>
             <div className="mt-3 flex flex-col divide-y divide-slate-100">
               {(
                 Object.keys(NOTIF_LABELS) as Array<
@@ -184,11 +178,6 @@ export default function PengaturanReport() {
                   )}
                 </div>
               </div>
-
-              <div className="mt-3 text-[11px] text-slate-400">
-                Data diambil dari token login — belum ada endpoint{" "}
-                <code>GET /api/me</code> di dokumentasi untuk profil lengkap.
-              </div>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-5">
@@ -201,6 +190,10 @@ export default function PengaturanReport() {
                 </button>
               ) : (
                 <div className="mt-3 flex gap-2">
+                  <span className="flex-1 text-sm text-slate-600">
+                    Yakin ingin keluar? Semua data yang tersimpan di browser akan
+                    hilang.
+                  </span>
                   <button
                     onClick={handleLogout}
                     className="flex-1 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-red-700"

@@ -56,76 +56,16 @@ export default function PengaturanReport() {
     .toUpperCase();
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 text-slate-900">
+    <div className="min-h-screen p-2 text-slate-900">
       {/* Header */}
       <div className="mb-5">
-        <h1 className="text-2xl font-bold">Pengaturan</h1>
+        <h2 className="text-2xl font-bold">Pengaturan</h2>
         <p className="mt-1 text-sm text-slate-500">
           Kelola akun, tampilan, dan preferensi notifikasi.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Left column: profile + logout */}
-        <div className="flex flex-col gap-4 lg:col-span-1">
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-xl font-semibold text-blue-600">
-                {initials}
-              </div>
-              <div className="min-w-0">
-                <div className="truncate font-semibold">
-                  {claims?.name || "Nama tidak tersedia"}
-                </div>
-                <div className="truncate text-sm text-slate-500">
-                  {claims?.email || "-"}
-                </div>
-                {claims?.role && (
-                  <span className="mt-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
-                    {claims.role}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-3 text-[11px] text-slate-400">
-              Data diambil dari token login — belum ada endpoint{" "}
-              <code>GET /api/me</code> di dokumentasi untuk profil lengkap.
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="text-sm font-semibold">Keluar Akun</div>
-            <p className="mt-1 text-xs text-slate-500">
-              Kamu akan diarahkan kembali ke halaman login.
-            </p>
-
-            {!confirmingLogout ? (
-              <button
-                onClick={() => setConfirmingLogout(true)}
-                className="mt-3 w-full rounded-lg border border-red-200 bg-red-50 px-3.5 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
-              >
-                Keluar
-              </button>
-            ) : (
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={handleLogout}
-                  className="flex-1 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-red-700"
-                >
-                  Ya, keluar
-                </button>
-                <button
-                  onClick={() => setConfirmingLogout(false)}
-                  className="flex-1 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm hover:bg-slate-50"
-                >
-                  Batal
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
+      <div className="gap-4">
         {/* Right column: settings sections */}
         <div className="flex flex-col gap-4 lg:col-span-2">
           {/* Change password (not wired — no endpoint documented) */}
@@ -220,6 +160,61 @@ export default function PengaturanReport() {
                   </span>
                 </label>
               ))}
+            </div>
+          </div>
+
+          {/* Left column: profile + logout */}
+          <div className="flex flex-col gap-4 lg:col-span-1">
+            <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-xl font-semibold text-blue-600">
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-semibold">
+                    {claims?.name || "Nama tidak tersedia"}
+                  </div>
+                  <div className="truncate text-sm text-slate-500">
+                    {claims?.email || "-"}
+                  </div>
+                  {claims?.role && (
+                    <span className="mt-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                      {claims.role}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-3 text-[11px] text-slate-400">
+                Data diambil dari token login — belum ada endpoint{" "}
+                <code>GET /api/me</code> di dokumentasi untuk profil lengkap.
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-5">
+              {!confirmingLogout ? (
+                <button
+                  onClick={() => setConfirmingLogout(true)}
+                  className="w-full rounded-lg border border-red-200 bg-red-50 px-3.5 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
+                >
+                  Keluar
+                </button>
+              ) : (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={handleLogout}
+                    className="flex-1 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  >
+                    Ya, keluar
+                  </button>
+                  <button
+                    onClick={() => setConfirmingLogout(false)}
+                    className="flex-1 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm hover:bg-slate-50"
+                  >
+                    Batal
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

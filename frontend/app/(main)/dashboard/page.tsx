@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearch } from "../layout"; 
 import {
   FiUsers, FiActivity, FiAlertTriangle, FiCalendar,
   FiPlus, FiTrendingUp, FiTrendingDown, FiChevronDown,
@@ -445,7 +446,7 @@ export default function DashboardPage() {
   const [preselectedPatId, setPreselectedPatId] = useState<string | undefined>();
 
 const [trendData, setTrendData] = useState<TrendStuntingItem[]>([]);
-const [search, setSearch] = useState("");
+const { search } = useSearch();
 
 const filteredPatients = patients.filter(patient =>
   patient.name.toLowerCase().includes(search.toLowerCase())
@@ -745,7 +746,6 @@ useEffect(() => {
             </p>
           </div>
         </div>
-
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">

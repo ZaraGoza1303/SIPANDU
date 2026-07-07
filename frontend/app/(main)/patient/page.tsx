@@ -24,6 +24,10 @@ type Patient = {
 export default function PatientPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState("");
+  const [showFilter, setShowFilter] = useState(false);
+  const [ageFilter, setAgeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [regionFilter, setRegionFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -151,42 +155,114 @@ export default function PatientPage() {
         </div>
 
         {/* Filter */}
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap gap-3">
-            <div className="relative">
-              <FiSearch className="absolute left-4 top-3.5 text-gray-400" />
+<div className="rounded-2xl bg-white p-5 shadow-sm">
+  <div className="flex gap-3">
+    <div className="relative flex-1">
+      <FiSearch className="absolute left-4 top-3.5 text-gray-400" />
 
-              <input
-                type="text"
-                placeholder="Cari nama atau NIK..."
-                value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
-                className="w-80 rounded-xl border py-3 pl-11 pr-4 outline-none focus:border-blue-500"
-              />
+      <input
+        type="text"
+        placeholder="Cari nama atau NIK..."
+        value={search}
+        onChange={(e) =>
+          setSearch(e.target.value)
+        }
+        className="w-full rounded-xl border py-3 pl-11 pr-4 outline-none focus:border-blue-500"
+      />
+    </div>
+
+    {/* Filter Dropdown */}
+    <div className="relative">
+      <button
+        onClick={() => setShowFilter(!showFilter)}
+        className="flex items-center gap-2 rounded-xl border px-4 py-3 text-gray-600 hover:bg-gray-50 whitespace-nowrap"
+      >
+        <FiFilter />
+        Filter
+        {(ageFilter || statusFilter || regionFilter) && (
+          <span className="h-2 w-2 rounded-full bg-blue-500" />
+        )}
+      </button>
+
+      {showFilter && (
+        <div className="absolute right-0 z-20 mt-2 w-72 rounded-xl border bg-white p-4 shadow-lg">
+          <div className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                Rentang Usia
+              </label>
+              <select
+                value={ageFilter}
+                onChange={(e) => setAgeFilter(e.target.value)}
+                className="w-full rounded-lg border px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
+              >
+                <option value="">Semua Usia</option>
+                <option value="0-6">0 - 6 Bulan</option>
+                <option value="7-12">7 - 12 Bulan</option>
+                <option value="13-24">13 - 24 Bulan</option>
+                <option value="25-60">25 - 60 Bulan</option>
+              </select>
             </div>
 
-            <button className="rounded-xl border px-4 py-3 text-gray-600">
-              Rentang Usia
-            </button>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                Status Stunting
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full rounded-lg border px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
+              >
+                <option value="">Semua Status</option>
+                <option value="Normal">Normal</option>
+                <option value="Stunted">Stunting</option>
+                <option value="SeverelyStunted">Stunting Berat</option>
+              </select>
+            </div>
 
-            <button className="rounded-xl border px-4 py-3 text-gray-600">
-              Status Stunting
-            </button>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                Wilayah/RW
+              </label>
+              <select
+                value={regionFilter}
+                onChange={(e) => setRegionFilter(e.target.value)}
+                className="w-full rounded-lg border px-3 py-2 text-sm text-gray-700 outline-none focus:border-blue-500"
+              >
+                <option value="">Semua Wilayah</option>
+                <option value="RW01">RW 01</option>
+                <option value="RW02">RW 02</option>
+                <option value="RW03">RW 03</option>
+              </select>
+            </div>
 
-            <button className="rounded-xl border px-4 py-3 text-gray-600">
-              Wilayah/RW
-            </button>
-
-            <button
-              onClick={fetchPatient}
-              className="rounded-xl border px-4 py-3 text-gray-600 hover:bg-gray-50"
-            >
-              <FiFilter />
-            </button>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setAgeFilter("");
+                  setStatusFilter("");
+                  setRegionFilter("");
+                }}
+                className="flex-1 rounded-lg border py-2 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Reset
+              </button>
+              <button
+                onClick={() => {
+                  fetchPatient();
+                  setShowFilter(false);
+                }}
+                className="flex-1 rounded-lg bg-blue-600 py-2 text-sm text-white hover:bg-blue-700"
+              >
+                Terapkan
+              </button>
+            </div>
           </div>
         </div>
+      )}
+    </div>
+  </div>
+</div>
 
         {/* Tabel */}
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">

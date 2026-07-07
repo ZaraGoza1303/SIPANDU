@@ -1,256 +1,244 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiArrowLeft, FiCalendar, FiClock } from "react-icons/fi";
+import Link from "next/link";
+import {
+  FiArrowLeft,
+  FiSearch,
+  FiUser,
+  FiPhone,
+  FiCalendar,
+} from "react-icons/fi";
+
+type Patient = {
+  id: string;
+  nik: string;
+  name: string;
+  birth_date: string;
+  gender: string;
+  mother_name: string;
+  phone_parent: string;
+  picture?: string | null;
+};
 
 export default function AddSchedulePage() {
   const router = useRouter();
 
-  const [form, setForm] = useState({
-    
-    scheduled_date: "",
-    time_start: "",
-    time_end: "",
-    status: "aktif",
-    notes: "",
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [search, setSearch] = useState("");
+
+  const [page, setPage] = useState(1);
+
+  const [meta, setMeta] = useState({
+    current_page: 1,
+    total_pages: 1,
   });
-  const [loading, setLoading] = useState(false);
 
-  async function saveSchedule() {
-  try {
-    setLoading(true);
+  useEffect(() => {
+    getPatients();
+  }, [page, search]);
 
-    const token = localStorage.getItem("token");
+  async function getPatients() {
+    try {
+      setLoading(true);
 
-    if (!token) {
-      alert("Silakan login terlebih dahulu.");
-      return;
-    }
+      const token = localStorage.getItem("token");
 
-    if (
-      !form.scheduled_date ||
-      !form.time_start ||
-      !form.time_end
-    ) {
-      alert("Semua data wajib diisi.");
-      return;
-    }
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/all?page=${page}&limit=10&search=${search}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/pemeriksaan/schedule`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
-        body: JSON.stringify({
-          scheduled_date: form.scheduled_date,
+      const result = await response.json();
 
-          time_start: `${form.scheduled_date}T${form.time_start}:00.000Z`,
+      console.log(result);
 
-          time_end: `${form.scheduled_date}T${form.time_end}:00.000Z`,
+      if (result.success) {
+        setPatients(result.data.items);
 
-          status: form.status,
-          notes: form.notes || null,
-        }),
+        setMeta(result.data.meta);
       }
-    );
-
-    const result = await response.json();
-
-    console.log(result);
-
-    if (!response.ok) {
-      alert(result.message || "Gagal membuat jadwal.");
-      return;
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-
-    alert("Jadwal berhasil dibuat.");
-
-    router.push("/jadwal");
-
-  } catch (err) {
-    console.error(err);
-    alert("Terjadi kesalahan.");
-  } finally {
-    setLoading(false);
   }
-}
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+
       <div>
+
         <Link
           href="/jadwal"
-          className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
         >
           <FiArrowLeft />
           Kembali ke Jadwal
         </Link>
 
         <h1 className="mt-4 text-3xl font-bold">
-          Tambah Jadwal Pemeriksaan
+          Pilih Pasien
         </h1>
 
         <p className="mt-1 text-gray-500">
-          Buat jadwal pelayanan Posyandu.
+          Pilih pasien yang akan dijadwalkan untuk pemeriksaan.
         </p>
+
       </div>
 
-      {/* Form */}
-      <div className="rounded-2xl border bg-white p-8 shadow-sm">
-        <div className="grid gap-5 md:grid-cols-2">
-          {/* Tanggal */}
-          <div>
-            <label className="mb-2 flex items-center gap-2 font-medium">
-              <FiCalendar />
-              Tanggal Pemeriksaan
-            </label>
+      <div className="rounded-2xl border bg-white p-6 shadow-sm">
 
-            <input
-              type="date"
-              value={form.scheduled_date}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  scheduled_date: e.target.value,
-                })
-              }
-              className="w-full rounded-xl border p-3 outline-none focus:border-blue-500"
-            />
-          </div>
+        <div className="relative mb-6">
 
-          {/* Status */}
-          <div>
-            <label className="mb-2 block font-medium">
-              Status Jadwal
-            </label>
+          <FiSearch className="absolute left-4 top-4 text-gray-400" />
 
-            <select
-              value={form.status}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  status: e.target.value,
-                })
-              }
-              className="w-full rounded-xl border p-3 outline-none focus:border-blue-500"
-            >
-              <option value="aktif">
-                Aktif
-              </option>
-
-              <option value="nonaktif">
-                Nonaktif
-              </option>
-            </select>
-          </div>
-
-          {/* Jam Mulai */}
-          <div>
-            <label className="mb-2 flex items-center gap-2 font-medium">
-              <FiClock />
-              Jam Mulai
-            </label>
-
-            <input
-              type="time"
-              value={form.time_start}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  time_start: e.target.value,
-                })
-              }
-              className="w-full rounded-xl border p-3 outline-none focus:border-blue-500"
-            />
-          </div>
-
-          {/* Jam Selesai */}
-          <div>
-            <label className="mb-2 flex items-center gap-2 font-medium">
-              <FiClock />
-              Jam Selesai
-            </label>
-
-            <input
-              type="time"
-              value={form.time_end}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  time_end: e.target.value,
-                })
-              }
-              className="w-full rounded-xl border p-3 outline-none focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Catatan */}
-        <div className="mt-6">
-          <label className="mb-2 block font-medium">
-            Catatan (Opsional)
-          </label>
-
-          <textarea
-            rows={5}
-            placeholder="Contoh: Pemeriksaan balita RW 05..."
-            value={form.notes}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                notes: e.target.value,
-              })
-            }
-            className="w-full rounded-xl border p-3 outline-none focus:border-blue-500"
+          <input
+            placeholder="Cari nama pasien atau NIK..."
+            className="w-full rounded-xl border py-3 pl-12 pr-4 outline-none focus:border-blue-500"
+            value={search}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
           />
+
         </div>
 
-        {/* Info */}
-        <div className="mt-6 rounded-xl bg-blue-50 p-4 text-sm text-blue-700">
-          <p className="font-semibold">
-            Informasi
-          </p>
+        {loading ? (
 
-          <ul className="mt-2 list-disc pl-5 space-y-1">
-            <li>
-              Pastikan tanggal dan jam sudah benar.
-            </li>
+          <div className="py-20 text-center text-gray-500">
+            Memuat data pasien...
+          </div>
 
-            <li>
-              Jadwal berstatus <b>Aktif</b> akan muncul pada halaman Jadwal.
-            </li>
+        ) : patients.length === 0 ? (
 
-            <li>
-              Catatan bersifat opsional.
-            </li>
-          </ul>
-        </div>
+          <div className="py-20 text-center text-gray-400">
+            Tidak ada pasien ditemukan.
+          </div>
 
-        {/* Button */}
-        <div className="mt-8 flex gap-3">
-         <button
-            onClick={saveSchedule}
-            disabled={loading}
-            className="rounded-xl bg-blue-600 px-6 py-3 text-white transition hover:bg-blue-700 disabled:opacity-50"
+        ) : (
+
+          <div className="space-y-4">
+
+            {patients.map((patient) => (
+
+              <div
+                key={patient.id}
+                className="flex items-center justify-between rounded-2xl border p-5 transition hover:border-blue-500 hover:bg-blue-50"
+              >
+
+                <div className="flex items-center gap-5">
+
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gray-100">
+
+                    {patient.picture ? (
+
+                      <img
+                        src={patient.picture}
+                        className="h-full w-full object-cover"
+                      />
+
+                    ) : (
+
+                      <FiUser
+                        size={28}
+                        className="text-gray-400"
+                      />
+
+                    )}
+
+                  </div>
+
+                  <div>
+
+                    <h2 className="text-lg font-semibold">
+                      {patient.name}
+                    </h2>
+
+                    <div className="mt-2 flex flex-wrap gap-5 text-sm text-gray-500">
+
+                      <span className="flex items-center gap-2">
+                        <FiUser />
+                        {patient.mother_name}
+                      </span>
+
+                      <span className="flex items-center gap-2">
+                        <FiPhone />
+                        {patient.phone_parent}
+                      </span>
+
+                      <span className="flex items-center gap-2">
+                        <FiCalendar />
+                        {new Date(
+                          patient.birth_date
+                        ).toLocaleDateString("id-ID")}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <button
+                  onClick={() =>
+                    router.push(
+                      `/patient/${patient.id}/schedule`
+                    )
+                  }
+                  className="rounded-xl bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700"
+                >
+                  Pilih
+                </button>
+
+              </div>
+
+            ))}
+
+                      </div>
+
+        )}
+
+        {!loading && meta.total_pages > 1 && (
+
+          <div className="mt-8 flex items-center justify-between border-t pt-6">
+
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((prev) => prev - 1)}
+              className="rounded-lg border px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-            {loading ? "Menyimpan..." : "Simpan Jadwal"}
-        </button>
+              Sebelumnya
+            </button>
 
-          <button
-            onClick={() => router.push("/jadwal")}
-            className="rounded-xl border px-6 py-3 transition hover:bg-gray-50"
-          >
-            Batal
-          </button>
-        </div>
+            <span className="text-sm text-gray-500">
+              Halaman {meta.current_page} dari {meta.total_pages}
+            </span>
+
+            <button
+              disabled={page === meta.total_pages}
+              onClick={() => setPage((prev) => prev + 1)}
+              className="rounded-lg border px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Berikutnya
+            </button>
+
+          </div>
+
+        )}
+
       </div>
+
     </div>
   );
 }

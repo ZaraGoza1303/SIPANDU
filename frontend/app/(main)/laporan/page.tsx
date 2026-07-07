@@ -1,19 +1,22 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { useAuthToken } from "@/lib/useAuthToken";
 import LaporanReport from "@/components/LaporanReport";
 
 export default function LaporanPage() {
   const { token, ready } = useAuthToken();
-  const router = useRouter();
 
-  useEffect(() => {
-    if (ready && !token) {
-      router.replace("/login?redirect=/laporan");
-    }
-  }, [ready, token, router]);
+  // NOTE: kalau nanti mau wajibkan login, aktifkan lagi redirect ke
+  // /login di sini. Untuk sekarang, halaman selalu di-render — kalau
+  // token belum ada / server belum jalan, LaporanReport sendiri yang
+  // menampilkan pesan errornya (bukan halaman kosong).
+  //
+  // const router = useRouter();
+  // useEffect(() => {
+  //   if (ready && !token) {
+  //     router.replace("/login?redirect=/laporan");
+  //   }
+  // }, [ready, token, router]);
 
   if (!ready) {
     return (
@@ -23,11 +26,5 @@ export default function LaporanPage() {
     );
   }
 
-  if (!token) {
-    // Redirect above is in flight; render nothing to avoid a flash of
-    // report UI with no auth token attached.
-    return null;
-  }
-
-  return <LaporanReport token={token} />;
+  return <LaporanReport token={token ?? undefined} />;
 }

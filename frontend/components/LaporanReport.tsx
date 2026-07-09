@@ -273,46 +273,19 @@ export default function LaporanReport({ token }: LaporanReportProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 pb-4 pt-1 text-slate-900">
-      {/* Top utility bar: report search + annual report shortcut */}
-      <div className="mb-7 flex flex-wrap items-center justify-between gap-3">
-        <div className="relative w-full max-w-lg">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-            <Search className="h-4 w-4" />
-          </span>
-          <input
-            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 print:hidden"
-            placeholder="Cari laporan, data anak…"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setPage(1);
-                setSearch(searchInput);
-              }
-            }}
-          />
-        </div>
-        <button
-          onClick={handleExportPdf}
-          className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 print:hidden"
-        >
-          <FileText className="h-4 w-4" /> Laporan Tahunan {new Date().getFullYear()}
-        </button>
-      </div>
-
+    <div className="min-h-screen bg-slate-50 px-4 text-slate-900">
       {/* Header + filter actions */}
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Laporan</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <h1 className="text-4xl font-bold">Laporan</h1>
+          <p className="mt-1 mb-1 text-sm text-slate-500">
             Statistik kesehatan dan perkembangan anak wilayah Posyandu.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span
+          {/*<span
             title="dashboard/stats & dashboard/trend-stunting belum mendukung query parameter periode — filter ini hanya tampilan."
-            className="flex cursor-help items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm"
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm"
           >
             <Calendar className="h-4 w-4" /> {periode} <span className="text-xs text-slate-400">▾</span>
           </span>
@@ -321,7 +294,7 @@ export default function LaporanReport({ token }: LaporanReportProps) {
             className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm hover:bg-slate-50 print:hidden"
           >
             <RotateCcw className="h-4 w-4" /> Reset
-          </button>
+          </button>*/}
           <button
             onClick={handleExportPdf}
             title="Simpan sebagai PDF"
@@ -332,9 +305,9 @@ export default function LaporanReport({ token }: LaporanReportProps) {
           <button
             onClick={handleExportCsv}
             title="Unduh Excel (CSV)"
-            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm hover:bg-slate-50 print:hidden"
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-green-500 px-3.5 py-2 text-white text-sm hover:bg-green-600 print:hidden"
           >
-            <Download className="h-4 w-4" /> Unduh CSV
+            <Download className="h-4 w-4" /> Excel
           </button>
         </div>
       </div>
@@ -394,11 +367,11 @@ export default function LaporanReport({ token }: LaporanReportProps) {
       {/* Charts row */}
       <div className="mb-3.5 grid grid-cols-1 gap-3.5 lg:grid-cols-2">
         <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <div className="flex items-center gap-1.5 text-lg font-semibold">
+          <div className="flex items-center mb-4 gap-1.5 text-lg font-semibold">
             Ringkasan Status Gizi
             <span
               title="Breakdown per RW/Wilayah belum tersedia dari API — menampilkan ringkasan Normal vs Stunting sebagai gantinya."
-              className="cursor-help text-sm text-slate-400"
+              className="text-sm text-slate-400"
             >
               ⓘ
             </span>
@@ -422,7 +395,7 @@ export default function LaporanReport({ token }: LaporanReportProps) {
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <div className="text-lg font-semibold">
+          <div className="text-lg font-semibold mb-4">
             Distribusi Kelompok Usia
           </div>
           <div className="mt-3 flex flex-col gap-3">
@@ -456,7 +429,7 @@ export default function LaporanReport({ token }: LaporanReportProps) {
       {/* Trend chart */}
       <div className="mb-3.5 rounded-xl border border-slate-200 bg-white p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="text-lg font-semibold">
+          <div className="text-lg font-semibold mb-4">
             Tren Stunting ({trend.length || 6} Bulan Terakhir)
           </div>
           {trendDirection && (
@@ -508,6 +481,7 @@ export default function LaporanReport({ token }: LaporanReportProps) {
           <div className="text-lg font-semibold">
             Daftar Anak dengan Status Stunting
           </div>
+          <hr />
           <div className="flex items-center gap-2 print:hidden">
             <input
               className="min-w-[220px] rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -524,7 +498,7 @@ export default function LaporanReport({ token }: LaporanReportProps) {
             <button
               onClick={handleExportCsv}
               title="Unduh data tabel ini sebagai file Excel (.csv)"
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:bg-slate-50"
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-green-500 px-3 py-2 text-white text-sm hover:bg-green-600"
             >
               <Download className="h-4 w-4" /> Excel
             </button>
@@ -638,7 +612,6 @@ export default function LaporanReport({ token }: LaporanReportProps) {
 
       {/* Footer */}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 print:hidden">
-        <span>Print-friendly layout ini dioptimalkan untuk pencetakan arsip.</span>
         <span>© {new Date().getFullYear()} Posyandu Digital. All data encrypted and secured.</span>
       </div>
     </div>

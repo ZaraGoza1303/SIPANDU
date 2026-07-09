@@ -14,7 +14,8 @@ import {
   FiUser,
   FiBell,
   FiSearch,
-  FiHelpCircle
+  FiHelpCircle,
+  FiFileText
 } from "react-icons/fi";
 
 const navItems = [
@@ -79,6 +80,7 @@ export default function MainLayout({
 }) {
   const pathname = usePathname();
   const isDashboard = pathname === "/dashboard";
+  const isReport = pathname.startsWith("/laporan");
 
     const isPatient =
     pathname === "/patient" ||
@@ -246,6 +248,28 @@ export default function MainLayout({
         })}
       </span>
     </div>
+  </header>
+)}
+
+{/* HEADER LAPORAN */}
+{isReport && (
+  <header className="flex h-20 items-center justify-between border-b bg-white px-8">
+    <div className="relative w-[550px]">
+      <FiSearch
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+      />
+
+      <input
+        type="text"
+        placeholder="Cari laporan, data anak..."
+        className="w-full rounded-xl border border-gray-200 py-3 pl-12 pr-4 text-sm outline-none text-gray-800 placeholder:text-gray-400 focus:border-blue-500"
+      />
+    </div>
+
+    <button className="flex items-center gap-2 text-sm font-medium text-blue-600">
+      <FiFileText size={18} />
+      Laporan Tahunan {new Date().getFullYear()}
+    </button>
   </header>
 )}
 

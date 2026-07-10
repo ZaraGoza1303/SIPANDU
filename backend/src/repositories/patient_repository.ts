@@ -1,4 +1,5 @@
 import type { IPatientsRepository } from "./patient_repository.interface.js";
+import type { PatientWithLatestExamination } from "../dto/patient.js";
 import type { Patient, PrismaClient } from "../generated/prisma/client.js";
 import type { PatientCreateInput, PatientUpdateInput } from "../generated/prisma/models.js";
 import type { PaginatedResponse } from "../dto/response.js";
@@ -114,11 +115,20 @@ export class PatientsRepository implements IPatientsRepository {
         return res
     }
 
-    async getByID(posyandu_id: string, patient_id: string): Promise<Patient | null> {
+    async getByID(posyandu_id: string, patient_id: string): Promise<PatientWithLatestExamination | null> {
         const patient = await this.db.patient.findFirst({
             where: {
                 id: patient_id,
                 posyandu_id: posyandu_id
+            },
+            include: {
+                examination: {
+                    orderBy: { exam_date: 'desc' },
+                    take: 1,
+                    include: {
+                        stunting_result: true
+                    }
+                }
             }
         })
 

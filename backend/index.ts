@@ -34,6 +34,7 @@ const initRouter = () => {
     app.use('/api/auth', authRouter);
     app.use('/api/pasien', upload.single('picture'), patientRouter);
     app.use('/api/pemeriksaan', examinationRouter);
+    app.use('/api/examination', examinationRouter);
     app.use('/api/dashboard', dashboardRouter);
 }
 

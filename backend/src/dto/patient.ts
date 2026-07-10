@@ -1,6 +1,16 @@
 import z from "zod";
 import type { Prisma } from "../generated/prisma/client.js";
 
+export type PatientWithLatestExamination = Prisma.PatientGetPayload<{
+    include: {
+        examination: {
+            take: 1,
+            orderBy: { exam_date: 'desc' },
+            include: { stunting_result: true }
+        }
+    }
+}>
+
 export const CreatePatientSchema = z.object({
     nik: z.string().min(16, "Panjang NIK minimal 16 karakter"),
     picture: z.string().nullable().optional(),
@@ -63,9 +73,20 @@ export type ExaminationWithPatient = Prisma.ExaminationGetPayload<{
     include: { patient: true }
 }>;
 
+export type ExaminationWithStunting = Prisma.ExaminationGetPayload<{
+    include: { 
+        patient: true,
+        stunting_result: true,
+    }
+}>;
+
 export type CreatePatientReq = z.infer<typeof CreatePatientSchema>;
 export type UpdatePatientReq = z.infer<typeof UpdatePatientSchema>;
 export type UpdatePatientExamReqSchema = z.infer<typeof UpdatePatientExamReqSchema>;
 export type CreatePatientExamReq = z.infer<typeof CreatePatientExaminationSchema>;
 export type CreateExamScheduleReq = z.infer<typeof CreateExamScheduleSchema>;
 export type UpdateExamScheduleReq = z.infer<typeof UpdateExamScheduleReqSchema>;
+
+export type ScheduleWithUser = Prisma.ScheduleGetPayload<{
+    include: { user: true }
+}>;

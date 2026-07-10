@@ -325,6 +325,130 @@ Field sama seperti `add`, tapi **semua opsional** (partial update). Backend akan
 
 ---
 
+### `GET /api/pemeriksaan/all`
+
+| | |
+|---|---|
+| **Auth** | ✅ Bearer Token |
+| **Query params** | `?page=1&limit=10&search=` |
+
+> 📝 `search` mencari berdasarkan **nama pasien** atau **notes** pemeriksaan
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "uuid-exam",
+        "patient_id": "uuid-pasien",
+        "user_id": "uuid-user",
+        "exam_date": "2026-07-02T00:00:00.000Z",
+        "weight": 8.5,
+        "height": 72,
+        "head_circumference": 44,
+        "arm_circumference": 12,
+        "notes": "TEST",
+        "patient": {
+          "id": "uuid-pasien",
+          "name": "Budi",
+          "nik": "1234567890123456",
+          "birth_date": "...",
+          "gender": "Laki-Laki"
+        },
+        "stunting_result": {
+          "age_months": 18,
+          "stunting_status": "Normal",
+          "wasting_status": "GiziBaikNormal",
+          "underweight_status": "BeratBadanNormal",
+          "weight_for_age_zscore": -1.23,
+          "height_for_age_zscore": -2.50,
+          "weight_for_height_zscore": -0.45
+        }
+      }
+    ],
+    "next_cursor": null,
+    "meta": {
+      "total_items": 50,
+      "current_page": 1,
+      "limit": 10,
+      "total_pages": 5
+    }
+  },
+  "message": "Berhasil mendapatkan data pemeriksaan"
+}
+```
+
+---
+
+### `GET /api/pemeriksaan/jadwal`
+
+| | |
+|---|---|
+| **Auth** | ✅ Bearer Token |
+| **Query params** | `?page=1&limit=10&search=&tanggal=YYYY-MM-DD` |
+
+> 📝 `search` mencari berdasarkan **status** atau **nama user** pembuat jadwal
+> 📝 `tanggal` filter berdasarkan tanggal pelaksanaan (format `YYYY-MM-DD`)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "uuid-jadwal",
+        "posyandu_id": "uuid-posyandu",
+        "created_by": "uuid-user",
+        "scheduled_date": "2026-07-05T00:00:00.000Z",
+        "time_start": "2026-07-05T08:00:00.000Z",
+        "time_end": "2026-07-05T12:00:00.000Z",
+        "status": "aktif",
+        "user": {
+          "id": "uuid-user",
+          "name": "Siti",
+          "email": "siti@posyandu.test"
+        }
+      }
+    ],
+    "next_cursor": null,
+    "meta": {
+      "total_items": 10,
+      "current_page": 1,
+      "limit": 10,
+      "total_pages": 1
+    }
+  },
+  "message": "Berhasil mendapatkan data jadwal"
+}
+```
+
+---
+
+### `PATCH /api/pemeriksaan/jadwal/:id/selesai`
+
+| | |
+|---|---|
+| **Auth** | ✅ Bearer Token |
+| **Path params** | `id` (required) — ID jadwal |
+
+> 📝 Mengubah status jadwal menjadi `"selesai"`
+> ⚠️ Error 404 jika `id` tidak ditemukan
+
+Contoh: `/api/pemeriksaan/jadwal/77777777-7777-7777-7777-777777777701/selesai`
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Jadwal berhasil ditandai selesai"
+}
+```
+
+---
+
 ## 4. Dashboard
 
 ### `GET /api/dashboard/stats`
@@ -410,3 +534,6 @@ Menampilkan trend stunting **6 bulan terakhir** per posyandu. Filter posyandu ot
 | `/api/pemeriksaan/schedule` | POST | JSON | ✅ | — |
 | `/api/dashboard/stats` | GET | — | ✅ | — |
 | `/api/dashboard/trend-stunting` | GET | — | ✅ | — |
+| `/api/pemeriksaan/all` | GET | Query | ✅ | — |
+| `/api/pemeriksaan/jadwal` | GET | Query | ✅ | — |
+| `/api/pemeriksaan/jadwal/:id/selesai` | PATCH | Path | ✅ | `:id` |

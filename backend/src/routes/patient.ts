@@ -5,12 +5,12 @@ import { PatientService } from "../services/patient_service.js";
 import { PatientController } from "../controllers/patient_controller.js";
 import { verifyJWTToken } from "../middleware/jwt.js";
 import { verifyPosyanduAccess } from "../middleware/verifyPosyandu.js";
-import { PrismaClient } from "../generated/prisma/client.js";
+import prisma from "../databases/prisma.js";
 import { Supabase } from "../services/supabase.js";
 
 const patientRouter = Router();
 
-const db = new PrismaClient();
+const db = prisma;
 const supabase = new Supabase();
 
 //Repo

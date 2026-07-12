@@ -28,12 +28,12 @@ export class PatientController {
             const patients = await this.patientService.getAll(posyandu_id, page, limit, search);
             return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patients))
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menampilkan data pasien", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menampilkan data pasien", (err as Error).message))
         }
     }
 
@@ -47,12 +47,12 @@ export class PatientController {
             const patients = await this.patientService.getAllTodayPatients(posyandu_id, page, limit, search);
             return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patients))
             
-        } catch(err: any){
+        } catch(err: unknown){
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal mengambil data pasien hari ini", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal mengambil data pasien hari ini", (err as Error).message))
         }
     }
 
@@ -64,12 +64,12 @@ export class PatientController {
             const patient = await this.patientService.getByID(posyandu_id, patient_id);
             return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patient))
 
-        } catch (err:any) {
+        } catch (err: unknown) {
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menampilkan data pasien", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menampilkan data pasien", (err as Error).message))
         }
     }
 
@@ -103,12 +103,12 @@ export class PatientController {
             await this.patientService.insertPatient(posyandu_id, patientData);
             return res.status(201).json(sendSuccessfullResponse("Patient berhasil ditambahkan"))
 
-        } catch (err: any){
+        } catch (err: unknown){
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menambahkan data pasien", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menambahkan data pasien", (err as Error).message))
         }
     }
 
@@ -153,12 +153,12 @@ export class PatientController {
             await this.patientService.updatePatient(posyandu_id, patient_id, updatedData);
             return res.status(200).json(sendSuccessfullResponse("Data Patient berhasil diupdate"))
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal mengubah data pasien", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal mengubah data pasien", (err as Error).message))
         }
     }
 
@@ -179,12 +179,12 @@ export class PatientController {
             await this.patientService.deletePatient(posyandu_id, patient_id);
             return res.status(200).json(sendSuccessfullResponse("Patient berhasil dihapus"))
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menghapus data pasien", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menghapus data pasien", (err as Error).message))
         }
     }
 }

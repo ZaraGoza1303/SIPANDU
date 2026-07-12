@@ -10,4 +10,6 @@ export interface IExaminationsService {
     getAllExaminations(posyandu_id: string, page: number, limit: number, search?: string | null): Promise<PaginatedResponse<ExaminationWithStunting>>;
     getAllSchedules(posyandu_id: string, page: number, limit: number, search?: string | null, tanggal?: string | null): Promise<PaginatedResponse<ScheduleWithUser>>;
     markScheduleAsCompleted(posyandu_id: string, exam_id: string): Promise<void>;
+    countTodayPendingExaminations(posyandu_id: string): Promise<{ total_patients: number; examined_count: number; pending_count: number }>;
+    getExaminationsByPatient(posyandu_id: string, patient_id: string, page: number, limit: number): Promise<PaginatedResponse<ExaminationWithStunting>>;
 }

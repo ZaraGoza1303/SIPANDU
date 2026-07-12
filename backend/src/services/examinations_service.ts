@@ -198,4 +198,26 @@ export class ExaminationsService implements IExaminationsService {
             handlePrismaError(err);
         }
     }
+
+    async countTodayPendingExaminations(posyandu_id: string): Promise<{ total_patients: number; examined_count: number; pending_count: number }> {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const tomorrow = new Date();
+            tomorrow.setHours(23, 59, 59, 999);
+
+            return await this.examinationsRepo.countTodayPendingExaminations(posyandu_id, today, tomorrow);
+        } catch (err) {
+            return handlePrismaError(err);
+        }
+    }
+
+    async getExaminationsByPatient(posyandu_id: string, patient_id: string, page: number, limit: number): Promise<PaginatedResponse<ExaminationWithStunting>> {
+        try {
+            return await this.examinationsRepo.getExaminationsByPatient(posyandu_id, patient_id, page, limit);
+        } catch (err) {
+            return handlePrismaError(err);
+        }
+    }
 }

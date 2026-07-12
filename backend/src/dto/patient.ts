@@ -59,9 +59,8 @@ export interface TodayPatientItem {
     gender: string;
     mother_name: string;
     phone_parent: string;
-    examination: {
-        id: string;
-    }[];
+    is_examined_today: boolean;
+    today_examination_count: number;
 }
 
 export interface PatientBirthAndGenderOnly {

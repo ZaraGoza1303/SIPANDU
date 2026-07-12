@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-import "dotenv/config"
+import type { UserPayload } from "../types/express.js";
 
-export const generateJWTToken = async (payload: any): Promise<string> =>{
+export const generateJWTToken = async (payload: UserPayload): Promise<string> =>{
     const token = jwt.sign(
         payload, 
         process.env.JWT_TOKEN!,

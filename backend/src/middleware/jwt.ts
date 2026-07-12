@@ -19,7 +19,7 @@ export const verifyJWTToken = (req: Request, res: Response, next: NextFunction) 
     }
 }
 
-export const authorizeRole = (allowedRoles: string) => {
+export const authorizeRole = (...allowedRoles: string[]) => {
     return(req: Request, res: Response, next: NextFunction) => {
         if(!req.user || !allowedRoles.includes(req.user.role)){
             return res.status(403).json(sendErrorResponse("Forbidden"));

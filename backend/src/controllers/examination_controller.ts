@@ -28,12 +28,12 @@ export class ExaminationController {
             const result = await this.examinationsService.addPatientExamination(posyandu_id, validate.data);
             return res.status(201).json(sendSuccessfullResponse("Pemeriksaan berhasil ditambahkan", result))
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (err instanceof AppError) {
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menambahkan data pemeriksaan", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menambahkan data pemeriksaan", (err as Error).message))
         }
     }
 
@@ -55,12 +55,12 @@ export class ExaminationController {
             await this.examinationsService.addExamSchedule(posyandu_id, user_id, validate.data);
             return res.status(201).json(sendSuccessfullResponse("Jadwal Pemeriksaan berhasil ditambahkan"))
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (err instanceof AppError) {
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menambahkan jadwal pemeriksaan", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menambahkan jadwal pemeriksaan", (err as Error).message))
         }
     }
 
@@ -82,12 +82,12 @@ export class ExaminationController {
             const result = await this.examinationsService.updatePatientExamination(posyandu_id, exam_id, validate.data);
             return res.status(200).json(sendSuccessfullResponse("Data pemeriksaan berhasil diupdate", result))
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (err instanceof AppError) {
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal mengubah data pemeriksaan", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal mengubah data pemeriksaan", (err as Error).message))
         }
     }
 
@@ -109,12 +109,12 @@ export class ExaminationController {
             const result = await this.examinationsService.updateExamSchedule(posyandu_id, exam_id, validate.data);
             return res.status(200).json(sendSuccessfullResponse("Data schedule berhasil diupdate", result))
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (err instanceof AppError) {
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal mengubah data pemeriksaan", err.message));
+            return res.status(500).json(sendErrorResponse("Gagal mengubah data pemeriksaan", (err as Error).message));
         }
     }
 
@@ -128,12 +128,12 @@ export class ExaminationController {
             const result = await this.examinationsService.getAllExaminations(posyandu_id, page, limit, search);
             return res.status(200).json(sendSuccessfullResponse("Berhasil mendapatkan data pemeriksaan", result));
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (err instanceof AppError) {
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal mendapatkan data pemeriksaan", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal mendapatkan data pemeriksaan", (err as Error).message))
         }
     }
 
@@ -148,12 +148,12 @@ export class ExaminationController {
             const result = await this.examinationsService.getAllSchedules(posyandu_id, page, limit, search, tanggal);
             return res.status(200).json(sendSuccessfullResponse("Berhasil mendapatkan data jadwal", result));
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (err instanceof AppError) {
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal mendapatkan data jadwal", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal mendapatkan data jadwal", (err as Error).message))
         }
     }
 
@@ -165,12 +165,60 @@ export class ExaminationController {
             await this.examinationsService.markScheduleAsCompleted(posyandu_id, exam_id);
             return res.status(200).json(sendSuccessfullResponse("Jadwal berhasil ditandai selesai"));
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (err instanceof AppError) {
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menandai jadwal selesai", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menandai jadwal selesai", (err as Error).message))
+        }
+    }
+
+    async getTodayPendingCount(req: Request, res: Response) {
+        try {
+            const posyandu_id = req.user?.posyandu_id as string;
+
+            if (!posyandu_id) {
+                return res.status(400).json(sendErrorResponse("posyandu_id tidak ditemukan"));
+            }
+
+            const result = await this.examinationsService.countTodayPendingExaminations(posyandu_id);
+            return res.status(200).json(sendSuccessfullResponse("Berhasil mendapatkan data pemeriksaan tertunda", result));
+
+        } catch (err: unknown) {
+            if (err instanceof AppError) {
+                return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
+            }
+
+            return res.status(500).json(sendErrorResponse("Gagal mendapatkan data pemeriksaan tertunda", (err as Error).message))
+        }
+    }
+
+    async getPatientExaminationLog(req: Request, res: Response) {
+        try {
+            const posyandu_id = req.user?.posyandu_id as string;
+            const patient_id = req.params.patient_id as string;
+
+            if (!posyandu_id) {
+                return res.status(400).json(sendErrorResponse("posyandu_id tidak ditemukan"));
+            }
+
+            if (!patient_id) {
+                return res.status(400).json(sendErrorResponse("patient_id diperlukan"));
+            }
+
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+
+            const result = await this.examinationsService.getExaminationsByPatient(posyandu_id, patient_id, page, limit);
+            return res.status(200).json(sendSuccessfullResponse("Berhasil mendapatkan log pemeriksaan pasien", result));
+
+        } catch (err: unknown) {
+            if (err instanceof AppError) {
+                return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
+            }
+
+            return res.status(500).json(sendErrorResponse("Gagal mendapatkan log pemeriksaan pasien", (err as Error).message))
         }
     }
 }

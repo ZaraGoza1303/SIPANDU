@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "tsx watch index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -33,7 +34,8 @@
     "@types/pg": "^8.20.0",
     "prisma": "^6.19.3",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   },
   "keywords": [],
   "author": "",
@@ -43,6 +45,7 @@
     "esbuild@0.28.1": true,
     "@prisma/engines@6.19.3": true,
     "prisma@6.19.3": true,
-    "@prisma/client@6.19.3": true
+    "@prisma/client@6.19.3": true,
+    "unrs-resolver@1.12.2": true
   }
 }

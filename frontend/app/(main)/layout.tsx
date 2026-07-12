@@ -14,7 +14,8 @@ import {
   FiUser,
   FiBell,
   FiSearch,
-  FiHelpCircle
+  FiHelpCircle,
+  FiFileText
 } from "react-icons/fi";
 
 // ─── Search Context (taruh di sini aja, gak perlu file baru) ───────────────
@@ -40,7 +41,6 @@ const navItems = [
   { href: "/pemeriksaan", icon: FiClipboard, label: "Pemeriksaan" },
   { href: "/jadwal", icon: FiCalendar, label: "Jadwal" },
   { href: "/laporan", icon: FiBarChart2, label: "Laporan" },
-  { href: "/pengaturan", icon: FiSettings, label: "Pengaturan" },
 ];
 
 interface UserInfo {
@@ -90,9 +90,13 @@ export default function MainLayout({
 // ─── Layout content (bisa pakai useSearch() karena udah di dalam Provider) ──
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isDashboard = pathname === "/dashboard";
-  const isPatient = pathname === "/patient" || pathname.startsWith("/patient/");
+
   const { search, setSearch } = useSearch();
+  const isDashboard = pathname === "/dashboard";
+
+    const isPatient =
+    pathname === "/patient" ||
+    pathname.startsWith("/patient/");
 
   const [user, setUser] = useState<UserInfo>({
     name: "Pengguna",
@@ -177,22 +181,35 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           </header>
         )}
 
-        {/* HEADER PATIENT */}
-        {isPatient && (
-          <header className="flex h-20 items-center justify-between border-b bg-white px-8">
-            <h1 className="text-3xl font-bold text-blue-600">Posyandu Care</h1>
-            <div className="flex items-center gap-5 text-gray-500">
-              <button className="hover:text-gray-700"><FiBell size={20} /></button>
-              <button className="hover:text-gray-700"><FiHelpCircle size={20} /></button>
-              <div className="h-6 w-px bg-gray-300" />
-              <span className="text-sm font-medium text-gray-600 capitalize">
-                {new Date().toLocaleDateString("id-ID", {
-                  weekday: "long", day: "numeric", month: "long", year: "numeric",
-                })}
-              </span>
-            </div>
-          </header>
-        )}
+{/* HEADER PATIENT */}
+{isPatient && (
+  <header className="flex h-20 items-center justify-between border-b bg-white px-8">
+    <h1 className="text-3xl font-bold text-blue-600">
+      Posyandu Care
+    </h1>
+
+    <div className="flex items-center gap-5 text-gray-500">
+      <button className="hover:text-gray-700">
+        <FiBell size={20} />
+      </button>
+
+      <button className="hover:text-gray-700">
+        <FiHelpCircle size={20} />
+      </button>
+
+      <div className="h-6 w-px bg-gray-300" />
+
+      <span className="text-sm font-medium text-gray-600 capitalize">
+        {new Date().toLocaleDateString("id-ID", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}
+      </span>
+    </div>
+  </header>
+)}
 
         <main className="min-h-screen bg-gray-50 p-6">
           {children}

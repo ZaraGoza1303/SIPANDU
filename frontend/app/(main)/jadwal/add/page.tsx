@@ -86,7 +86,7 @@ export default function AddSchedulePage() {
           Kembali ke Jadwal
         </Link>
 
-        <h1 className="mt-4 text-3xl font-bold">
+        <h1 className="mt-4 text-3xl text-gray-800 font-bold">
           Pilih Pasien
         </h1>
 

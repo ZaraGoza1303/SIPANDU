@@ -77,7 +77,7 @@ export default function JadwalPage() {
           {/* Schedule */}
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-gray-800 text-xl font-semibold">
                 Agenda Hari Ini
               </h2>
 

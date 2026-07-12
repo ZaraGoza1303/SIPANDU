@@ -59,7 +59,7 @@ export class PatientController {
     async getByID(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const patient_id = req.query.patient_id as string;
+            const patient_id = req.params.patient_id as string;
 
             const patient = await this.patientService.getByID(posyandu_id, patient_id);
             return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patient))
@@ -115,7 +115,7 @@ export class PatientController {
     async updatePatient(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const patient_id = req.query?.patient_id as string;
+            const patient_id = req.params.patient_id as string;
             let pictureUrl: string | undefined;
 
             if (req.file) {
@@ -165,7 +165,7 @@ export class PatientController {
     async deletePatient(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const patient_id = req.query?.patient_id as string;
+            const patient_id = req.params.patient_id as string;
 
             const currentPatient = await this.patientService.getByID(posyandu_id, patient_id);
             if (currentPatient && currentPatient.picture) {

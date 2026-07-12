@@ -16,7 +16,7 @@ export default function ReminderPanel() {
 
         <div className="mb-5 flex items-center gap-2">
           <FiBell className="text-blue-600" />
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-gray-800 text-lg font-semibold">
             Reminder
           </h2>
         </div>
@@ -25,7 +25,7 @@ export default function ReminderPanel() {
 
           <div className="rounded-xl bg-blue-50 p-4">
 
-            <p className="font-medium">
+            <p className="text-blue-600 font-medium">
               Pemeriksaan dimulai
             </p>
 
@@ -37,7 +37,7 @@ export default function ReminderPanel() {
 
           <div className="rounded-xl bg-yellow-50 p-4">
 
-            <p className="font-medium">
+            <p className="text-yellow-600 font-medium">
               Jadwal berikutnya
             </p>
 
@@ -56,7 +56,7 @@ export default function ReminderPanel() {
 
         <div className="mb-5 flex items-center gap-2">
           <FiCalendar className="text-blue-600" />
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-lg text-gray-800 font-semibold">
             Ringkasan Hari Ini
           </h2>
         </div>
@@ -66,8 +66,8 @@ export default function ReminderPanel() {
           <div className="flex items-center justify-between">
 
             <div className="flex items-center gap-2">
-              <FiCalendar className="text-gray-500" />
-              <span>Total Jadwal</span>
+              <FiCalendar className="text-gray-600" />
+              <span className="text-gray-500">Total Jadwal</span>
             </div>
 
             <span className="font-semibold">
@@ -80,7 +80,7 @@ export default function ReminderPanel() {
 
             <div className="flex items-center gap-2">
               <FiCheckCircle className="text-green-600" />
-              <span>Sudah Selesai</span>
+              <span className="text-gray-500">Sudah Selesai</span>
             </div>
 
             <span className="font-semibold text-green-600">
@@ -93,7 +93,7 @@ export default function ReminderPanel() {
 
             <div className="flex items-center gap-2">
               <FiClock className="text-yellow-600" />
-              <span>Belum Selesai</span>
+              <span className="text-gray-500">Belum Selesai</span>
             </div>
 
             <span className="font-semibold text-yellow-600">

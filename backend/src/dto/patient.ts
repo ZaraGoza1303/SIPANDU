@@ -21,7 +21,6 @@ export const CreatePatientExaminationSchema = z.object({
     exam_date: z.string().date(),
     patient_id: z.string().min(1, "Nama pasien wajib diisi"),
     user_id: z.string().min(1, "Nama pemeriksa wajib diisi"),
-    age_months: z.number(),
     weight: z.number(),
     height: z.number(),
     head_circumference: z.number(),
@@ -38,6 +37,9 @@ export const CreateExamScheduleSchema = z.object({
     time_end: z.string().date(),
     status: z.string().min(1, "Status wajib diisi"),
 })
+
+export const UpdateExamScheduleReqSchema = CreateExamScheduleSchema.partial().extend({
+});
 
 export interface TodayPatientItem {
     id: string;
@@ -66,3 +68,4 @@ export type UpdatePatientReq = z.infer<typeof UpdatePatientSchema>;
 export type UpdatePatientExamReqSchema = z.infer<typeof UpdatePatientExamReqSchema>;
 export type CreatePatientExamReq = z.infer<typeof CreatePatientExaminationSchema>;
 export type CreateExamScheduleReq = z.infer<typeof CreateExamScheduleSchema>;
+export type UpdateExamScheduleReq = z.infer<typeof UpdateExamScheduleReqSchema>;

@@ -13,7 +13,7 @@ export default function Header() {
           </span>
         </p>
 
-        <h1 className="mt-2 text-4xl font-bold">
+        <h1 className="mt-2 text-4xl text-black font-bold">
           Jadwal Pemeriksaan
         </h1>
 

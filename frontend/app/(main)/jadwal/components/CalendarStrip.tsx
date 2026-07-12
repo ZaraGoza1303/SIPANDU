@@ -36,7 +36,7 @@ export default function CalendarStrip() {
 
       <div className="mb-6 flex items-center justify-between">
 
-        <h2 className="text-2xl font-semibold capitalize">
+        <h2 className="text-2xl text-blue-500 font-semibold capitalize">
           {monthYear}
         </h2>
 

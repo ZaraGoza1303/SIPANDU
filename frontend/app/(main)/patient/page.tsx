@@ -106,7 +106,7 @@ export default function PatientPage() {
         </p>
         <div className="mt-2 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Data Pasien</h1>
+            <h1 className="text-4xl font-bold text-gray-900">Data Pasien</h1>
             <p className="mt-1 text-sm text-gray-500">Kelola data seluruh pasien terdaftar.</p>
           </div>
           <Link

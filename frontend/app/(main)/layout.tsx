@@ -160,7 +160,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <div className="ml-60 flex-1">
         {/* HEADER DASHBOARD */}
         {isDashboard && (
-          <header className="flex h-20 items-center justify-between border-b bg-white px-8">
+          <header className="flex h-17 items-center justify-between border-b bg-white px-8">
             <div className="relative w-[550px]">
               <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -183,8 +183,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 {/* HEADER PATIENT */}
 {isPatient && (
-  <header className="flex h-20 items-center justify-between border-b bg-white px-8">
-    <h1 className="text-3xl font-bold text-blue-600">
+  <header className="flex h-17 items-center justify-between border-b bg-white px-6">
+    <h1 className="text-2xl font-bold text-blue-600">
       Posyandu Care
     </h1>
 

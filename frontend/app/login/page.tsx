@@ -145,12 +145,21 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="mb-6 flex items-center gap-2">
-            <input type="checkbox" />
+          <div className="mb-6 flex items-center justify-between">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" />
 
-            <span className="text-sm text-gray-600">
-              Ingat Saya
-            </span>
+              <span className="text-sm text-gray-600">
+                Ingat Saya
+              </span>
+            </label>
+
+            <a
+              href="/forgotPW"
+              className="text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              Lupa Kata Sandi?
+            </a>
           </div>
 
           <button

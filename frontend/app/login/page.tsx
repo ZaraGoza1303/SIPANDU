@@ -30,8 +30,6 @@ export default function LoginPage() {
           headers: {
             "Content-Type":
               "application/json",
-            "ngrok-skip-browser-warning":
-              "true",
           },
           body: JSON.stringify({
             email,

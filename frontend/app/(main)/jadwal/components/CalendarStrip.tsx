@@ -1,118 +1,115 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
-export default function CalendarStrip() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+const DAYS_ID = ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"];
+const MONTHS_ID = [
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+];
 
-  const days = useMemo(() => {
-    const start = new Date(selectedDate);
+function getWeekDays(baseDate: Date) {
+  const day = baseDate.getDay(); // 0 = Sunday
+  const monday = new Date(baseDate);
+  monday.setDate(baseDate.getDate() - ((day + 6) % 7)); // shift to Monday
 
-    const day = start.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-
-    start.setDate(start.getDate() + diff);
-
-    return Array.from({ length: 7 }).map((_, i) => {
-      const date = new Date(start);
-      date.setDate(start.getDate() + i);
-
-      return date;
-    });
-  }, [selectedDate]);
-
-  const monthYear = selectedDate.toLocaleDateString("id-ID", {
-    month: "long",
-    year: "numeric",
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
   });
+}
 
-  const dayName = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+export default function CalendarStrip() {
+  const [selected, setSelected] = useState(new Date());
+  const [weekBase, setWeekBase] = useState(new Date());
+
+  const weekDays = getWeekDays(weekBase);
+  const today = new Date();
+
+  function prevWeek() {
+    const d = new Date(weekBase);
+    d.setDate(d.getDate() - 7);
+    setWeekBase(d);
+  }
+
+  function nextWeek() {
+    const d = new Date(weekBase);
+    d.setDate(d.getDate() + 7);
+    setWeekBase(d);
+  }
+
+  const monthLabel = `${MONTHS_ID[weekDays[0].getMonth()]} ${weekDays[0].getFullYear()}`;
 
   return (
-    <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-      {/* Header */}
-
-      <div className="mb-6 flex items-center justify-between">
-
-        <h2 className="text-2xl text-blue-500 font-semibold capitalize">
-          {monthYear}
-        </h2>
-
-        <div className="flex gap-2">
-
+    <div>
+      {/* Month row */}
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-800">{monthLabel}</h2>
+        <div className="flex items-center gap-1">
           <button
-            onClick={() =>
-              setSelectedDate(
-                new Date(
-                  selectedDate.setMonth(selectedDate.getMonth() - 1)
-                )
-              )
-            }
-            className="rounded-lg border p-2 hover:bg-gray-100"
+            onClick={prevWeek}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
           >
-            <FiChevronLeft />
+            <FiChevronLeft size={18} />
           </button>
-
           <button
-            onClick={() =>
-              setSelectedDate(
-                new Date(
-                  selectedDate.setMonth(selectedDate.getMonth() + 1)
-                )
-              )
-            }
-            className="rounded-lg border p-2 hover:bg-gray-100"
+            onClick={nextWeek}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
           >
-            <FiChevronRight />
+            <FiChevronRight size={18} />
           </button>
-
         </div>
-
       </div>
 
-      {/* Hari */}
-
-      <div className="grid grid-cols-7 gap-3">
-
-        {days.map((date, index) => {
-
-          const active =
-            date.toDateString() ===
-            selectedDate.toDateString();
+      {/* Days row */}
+      <div className="grid grid-cols-7 gap-1">
+        {weekDays.map((date, i) => {
+          const isToday =
+            date.toDateString() === today.toDateString();
+          const isSelected =
+            date.toDateString() === selected.toDateString();
+          const isSunday = date.getDay() === 0;
 
           return (
             <button
-              key={index}
-              onClick={() => setSelectedDate(date)}
-              className={`rounded-xl border p-4 transition ${
-                active
-                  ? "bg-blue-600 text-white border-blue-600 shadow-lg"
-                  : "hover:bg-gray-50"
-              }`}
+              key={i}
+              onClick={() => setSelected(date)}
+              className="flex flex-col items-center gap-1.5 rounded-xl py-3 transition"
             >
-
-              <p
-                className={`text-xs ${
-                  active
-                    ? "text-white"
-                    : "text-gray-400"
+              {/* Day label */}
+              <span
+                className={`text-xs font-semibold tracking-wide ${
+                  isSunday ? "text-red-400" : "text-gray-400"
                 }`}
               >
-                {dayName[index]}
-              </p>
+                {DAYS_ID[date.getDay()]}
+              </span>
 
-              <h3 className="mt-2 text-2xl font-bold">
+              {/* Date number */}
+              <span
+                className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition ${
+                  isSelected
+                    ? "bg-blue-600 text-white shadow"
+                    : isToday
+                    ? "bg-blue-50 text-blue-600"
+                    : isSunday
+                    ? "text-red-400 hover:bg-red-50"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
                 {date.getDate()}
-              </h3>
+              </span>
 
+              {/* Dot indicator — placeholder, bisa diganti dengan data nyata */}
+              {!isSelected && (i === 2 || i === 4) && (
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+              )}
             </button>
           );
         })}
-
       </div>
-
     </div>
   );
 }

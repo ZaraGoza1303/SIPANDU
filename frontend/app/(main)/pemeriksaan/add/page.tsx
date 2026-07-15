@@ -42,7 +42,6 @@ export default function AddPemeriksaanPage() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
           },
         }
       );
@@ -67,7 +66,6 @@ export default function AddPemeriksaanPage() {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "true",
           },
           body: JSON.stringify({
             exam_date: form.examination_date,

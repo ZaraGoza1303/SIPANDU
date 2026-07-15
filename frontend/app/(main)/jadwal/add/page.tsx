@@ -52,7 +52,6 @@ export default function AddSchedulePage() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
           },
         }
       );

@@ -38,7 +38,6 @@ export default function EditPatientPage() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
           },
         }
       );
@@ -108,7 +107,6 @@ export default function EditPatientPage() {
           method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
           },
           body: formData,
         }

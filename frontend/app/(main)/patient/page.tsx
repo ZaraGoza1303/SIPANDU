@@ -40,7 +40,6 @@ export default function PatientPage() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
           },
         }
       );
@@ -64,7 +63,6 @@ export default function PatientPage() {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
           },
         }
       );
@@ -217,7 +215,7 @@ export default function PatientPage() {
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <table className="w-full">
           <thead className="bg-gray-50">
-            <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-400">
+            <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
               <th className="px-5 py-4">Foto</th>
               <th className="px-5 py-4">Nama Anak</th>
               <th className="px-5 py-4">Tanggal Lahir</th>

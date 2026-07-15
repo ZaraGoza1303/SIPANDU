@@ -275,6 +275,11 @@ export default function LaporanReport({ token }: LaporanReportProps) {
   return (
     <div className="min-h-screen bg-slate-50 px-4 text-slate-900">
       {/* Header + filter actions */}
+      {/* Breadcrumb */}
+      <p className="text-sm text-gray-400">
+        Laporan /
+        <span className="ml-1 font-medium text-blue-600">Laporan Posyandu</span>
+      </p> 
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold">Laporan</h1>

@@ -34,7 +34,6 @@ export default function PemeriksaanPage() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
           },
         }
       );

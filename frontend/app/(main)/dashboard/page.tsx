@@ -13,7 +13,7 @@ import {
 } from "recharts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-const BASE_URL = "https://stylar-nonseverable-denver.ngrok-free.dev";
+const BASE_URL = "https://taps-quiet-subtly.ngrok-free.dev";
 
 interface TrendStuntingItem {
   month: string;
@@ -65,7 +65,6 @@ function authHeaders(token: string): Record<string, string> {
   return {
     "Content-Type":                "application/json",
     "Authorization":               `Bearer ${token}`,
-    "ngrok-skip-browser-warning":  "true",
   };
 }
 
@@ -440,7 +439,8 @@ export default function DashboardPage() {
   const [patients,        setPatients]        = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [allPatients,     setAllPatients]     = useState<Patient[]>([]); // for modal dropdown
-  const [trendFilter]     = useState("6 Bulan Terakhir");
+  const [trendFilter, setTrendFilter] = useState("6 Bulan Terakhir");
+  const [showPeriodMenu, setShowPeriodMenu] = useState(false);
 
   const [showModal,        setShowModal]        = useState(false);
   const [preselectedPatId, setPreselectedPatId] = useState<string | undefined>();
@@ -696,9 +696,46 @@ useEffect(() => {
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-800">Tren Stunting Bulanan</h2>
-            <button className="flex items-center gap-1 text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50">
-              {trendFilter}<FiChevronDown className="w-3 h-3" />
+            <div className="relative">
+            <button
+              onClick={() => setShowPeriodMenu(!showPeriodMenu)}
+              className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50"
+            >
+              {trendFilter}
+              <FiChevronDown className="h-3 w-3" />
             </button>
+
+            {showPeriodMenu && (
+              <div className="absolute right-0 top-10 z-20 w-52 rounded-xl border bg-white p-2 shadow-lg">
+                <p className="px-3 py-2 text-xs font-semibold uppercase text-gray-400">
+                  Periode
+                </p>
+
+                {[
+                  "Bulan Ini",
+                  "1 Bulan Sebelumnya",
+                  "3 Bulan Terakhir",
+                  "6 Bulan Terakhir",
+                  "Tahun Ini",
+                ].map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => {
+                      setTrendFilter(item);
+                      setShowPeriodMenu(false);
+                    }}
+                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
+                      trendFilter === item
+                        ? "bg-blue-50 text-blue-600"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           </div>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>

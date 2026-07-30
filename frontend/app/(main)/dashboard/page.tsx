@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearch } from "../layout";
+import { FaStethoscope } from "react-icons/fa6";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 import {
   FiUsers,
@@ -130,13 +132,27 @@ function StatCard({ icon: Icon, iconBg, iconColor, label, value, sub, badge, tre
         >
           <Icon size={18} style={{ color: iconColor }} strokeWidth={2} />
         </div>
-        {trend && (
-          <span className={`flex items-center gap-0.5 text-xs font-semibold ${trendUp ? "text-green-500" : "text-red-500"}`}>
-            {trendUp ? <FiTrendingUp size={11} /> : <FiChevronDown size={11} />}
-            {trend}
-          </span>
-        )}
-        {sub && !trend && <span className="text-xs text-gray-400">{sub}</span>}
+       {trend ? (
+  <span
+    className={`flex items-center gap-1 text-xs font-semibold ${
+      trendUp ? "text-green-600" : "text-red-600"
+    }`}
+  >
+    <span>{trend}</span>
+
+    {trendUp ? (
+      <TrendingUp size={13} strokeWidth={2.3} />
+    ) : (
+      <TrendingDown size={13} strokeWidth={2.3} />
+    )}
+  </span>
+) : (
+  sub && (
+    <span className="text-xs text-gray-400">
+      {sub}
+    </span>
+  )
+)}
       </div>
 
       <p className="text-sm text-gray-400">{label}</p>
@@ -521,7 +537,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Ringkasan</h1>
+          <h1 className="text-4xl font-bold text-gray-900">Dashboard Ringkasan</h1>
           <p className="text-sm text-gray-400 mt-1">Selamat datang kembali, berikut statistik kesehatan terkini.</p>
         </div>
         <button
@@ -541,18 +557,15 @@ export default function DashboardPage() {
     label="Total Pasien"
     value={stats.totalPasien.toLocaleString("id-ID")}
     trend="+4%" trendUp={true}
-    progress={Math.min((stats.totalPasien / 1500) * 100, 100)}
   />
 
-  <StatCard
-    icon={MdOutlineMonitorHeart}
-    iconBg="#EDE9FE"
-    iconColor="#7C3AED"
+    <StatCard
+    icon={FaStethoscope}
+    iconBg="#DCEFF8"
+    iconColor="#0F5E84"
     label="Pemeriksaan Bulan Ini"
     value={stats.pemeriksaanBulan}
     trend="+12%" trendUp={true}
-    progressLabel={`Target: ${pemTarget} pemeriksaan`}
-    progress={Math.min((stats.pemeriksaanBulan / pemTarget) * 100, 100)}
   />
 
   <StatCard

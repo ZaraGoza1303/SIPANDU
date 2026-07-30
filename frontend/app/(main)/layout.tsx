@@ -38,8 +38,8 @@ export function useSearch() {
 const navItems = [
   { href: "/dashboard", icon: FiGrid, label: "Dashboard" },
   { href: "/patient", icon: FiUsers, label: "Pasien" },
-  { href: "/pemeriksaan", icon: FiClipboard, label: "Pemeriksaan" },
   { href: "/jadwal", icon: FiCalendar, label: "Jadwal" },
+  { href: "/pemeriksaan", icon: FiClipboard, label: "Pemeriksaan" },
   { href: "/laporan", icon: FiBarChart2, label: "Laporan" },
 ];
 

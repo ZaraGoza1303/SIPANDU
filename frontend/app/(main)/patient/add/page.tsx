@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { FiArrowLeft, FiSave, FiUpload } from "react-icons/fi";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function AddPatientPage() {
   const router = useRouter();
@@ -29,15 +30,15 @@ export default function AddPatientPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      if (!token) { alert("Silakan login terlebih dahulu."); return; }
+      if (!token) { toast.error("Silakan login terlebih dahulu."); return; }
 
       if (!form.nik || !form.nik_parent || !form.name || !form.birth_date ||
           !form.gender || !form.mother_name || !form.address || !form.phone_parent) {
-        alert("Semua data wajib diisi.");
+        toast.error("Semua data wajib diisi.");
         return;
       }
 
-      if (!picture) { alert("Foto pasien wajib dipilih."); return; }
+      if (!picture) { toast.error("Foto pasien wajib dipilih."); return; }
 
       const formData = new FormData();
       Object.entries(form).forEach(([k, v]) => formData.append(k, v));
@@ -55,13 +56,13 @@ export default function AddPatientPage() {
       );
 
       const result = await response.json();
-      if (!response.ok) { alert(JSON.stringify(result, null, 2)); return; }
+      if (!response.ok) { toast.error(result.message); return; }
 
-      alert("Pasien berhasil ditambahkan.");
+      toast.success("Pasien berhasil ditambahkan.");
       router.push(from === "pemeriksaan" ? "/pemeriksaan/add" : "/patient");
     } catch (error) {
       console.error(error);
-      alert("Gagal terhubung ke server.");
+      toast.error("Gagal terhubung ke server.");
     } finally {
       setLoading(false);
     }

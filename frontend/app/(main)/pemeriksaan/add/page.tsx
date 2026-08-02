@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FiArrowLeft, FiSave } from "react-icons/fi";
+import { toast } from "sonner";
 
 export default function AddPemeriksaanPage() {
   const router = useRouter();
@@ -56,7 +57,7 @@ export default function AddPemeriksaanPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      if (!token) { alert("Silakan login terlebih dahulu."); return; }
+      if (!token) { toast.error("Silakan login terlebih dahulu."); return; }
 
       const user = JSON.parse(atob(token.split(".")[1]));
       const response = await fetch(
@@ -80,12 +81,12 @@ export default function AddPemeriksaanPage() {
         }
       );
       const result = await response.json();
-      if (!response.ok) { alert(result.message); return; }
-      alert("Pemeriksaan berhasil ditambahkan.");
+      if (!response.ok) { toast.error(result.message); return; }
+      toast.success("Pemeriksaan berhasil ditambahkan.");
       router.push("/pemeriksaan");
     } catch (error) {
       console.log(error);
-      alert("Terjadi kesalahan.");
+      toast.error("Terjadi kesalahan.");
     } finally {
       setLoading(false);
     }

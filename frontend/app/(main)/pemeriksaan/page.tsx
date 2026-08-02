@@ -116,7 +116,7 @@ export default function PemeriksaanPage() {
         {/* Kiri */}
         <div className="col-span-8 rounded-2xl bg-white border shadow-sm">
           <div className="flex items-center justify-between p-6">
-            <h2 className="text-xl text-black font-semibold">Daftar Antrian</h2>
+            <h2 className="text-xl text-black font-semibold">Riwayat Pemeriksaan</h2>
             <Link
               href="/patient/add?from=pemeriksaan"
               className="rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"

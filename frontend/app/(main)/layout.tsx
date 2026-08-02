@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import Link from "next/link";
+import { Toaster } from "sonner";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
@@ -212,8 +213,16 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 )}
 
         <main className="min-h-screen bg-gray-50 p-6">
-          {children}
-        </main>
+        {children}
+
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          theme="light"
+          duration={3000}
+        />
+      </main>
       </div>
     </div>
   );

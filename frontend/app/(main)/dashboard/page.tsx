@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearch } from "../layout";
 import { FaStethoscope } from "react-icons/fa6";
+import { toast } from "sonner";
 import { TrendingUp, TrendingDown } from "lucide-react";
-
 import {
   FiUsers,
   FiAlertTriangle,
@@ -17,11 +17,12 @@ import {
   FiMoreVertical,
   FiTrendingUp,
 } from "react-icons/fi";
-
 import { MdOutlineMonitorHeart } from "react-icons/md";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
+import { useRouter } from "next/navigation";
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,7 +46,6 @@ interface ExamForm {
   head_circumference: string; arm_circumference: string; notes: string;
 }
 interface AgeGroup { range: string; count: number; }
-interface ToastItem { id: number; type: "success" | "error" | "info"; message: string; }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -68,42 +68,6 @@ function buildDistribusi(dist: { range: string; count: number }[]): DistribusiIt
   return dist.map((d, i) => ({ label: d.range, pct: Math.round((d.count / total) * 100), color: colors[i % colors.length] }));
 }
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-function ToastContainer({ toasts, remove }: { toasts: ToastItem[]; remove: (id: number) => void }) {
-  return (
-    <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-2 w-80">
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          className={`flex items-start gap-3 rounded-xl px-4 py-3 shadow-lg text-sm font-medium text-white animate-in slide-in-from-right-5 fade-in duration-300 ${
-            t.type === "success" ? "bg-green-500" :
-            t.type === "error"   ? "bg-red-500"   : "bg-blue-500"
-          }`}
-        >
-          <span className="mt-0.5 text-base">
-            {t.type === "success" ? "✓" : t.type === "error" ? "✕" : "ℹ"}
-          </span>
-          <p className="flex-1 leading-snug">{t.message}</p>
-          <button onClick={() => remove(t.id)} className="opacity-70 hover:opacity-100 transition">
-            <FiX size={14} />
-          </button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function useToast() {
-  const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const add = useCallback((type: ToastItem["type"], message: string) => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, type, message }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
-  }, []);
-  const remove = useCallback((id: number) => setToasts(prev => prev.filter(t => t.id !== id)), []);
-  return { toasts, remove, toast: { success: (m: string) => add("success", m), error: (m: string) => add("error", m), info: (m: string) => add("info", m) } };
-}
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
@@ -235,188 +199,11 @@ function StatusBadge({ status }: { status: string }) {
   const s = statusMap[status] ?? { cls: "bg-gray-100 text-gray-500", label: status };
   return <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${s.cls}`}>{s.label}</span>;
 }
-
-// ─── Exam Modal ───────────────────────────────────────────────────────────────
-
-interface ExamModalProps {
-  patients: Patient[]; preselectedId?: string;
-  onClose: () => void; onSuccess: (patientId: string, examResult: any) => void;
-  toast: { success: (m: string) => void; error: (m: string) => void };
-}
-function ExamModal({ patients, preselectedId, onClose, onSuccess, toast }: ExamModalProps) {
-  const today = new Date().toISOString().split("T")[0];
-  const userId = localStorage.getItem("user_id") ?? "";
-  const [form, setForm] = useState<ExamForm>({
-    patient_id: preselectedId ?? "", exam_date: today,
-    weight: "", height: "", head_circumference: "", arm_circumference: "", notes: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any | null>(null);
-
-  const set = (field: keyof ExamForm) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-      setForm(prev => ({ ...prev, [field]: e.target.value }));
-
-  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = "unset"; }; }, []);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const token = getToken();
-    if (!token) { toast.error("Token tidak ditemukan. Silakan login ulang."); return; }
-    if (!form.patient_id) { toast.error("Pilih pasien terlebih dahulu."); return; }
-    setLoading(true);
-    try {
-      const res = await fetch(`${BASE_URL}/api/pemeriksaan/add`, {
-        method: "POST", headers: authHeaders(token),
-        body: JSON.stringify({
-          exam_date: form.exam_date, patient_id: form.patient_id, user_id: userId,
-          weight: parseFloat(form.weight), height: parseFloat(form.height),
-          head_circumference: parseFloat(form.head_circumference),
-          arm_circumference: parseFloat(form.arm_circumference),
-          notes: form.notes || null,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.message ?? "Gagal menyimpan pemeriksaan.");
-      setResult(json.data);
-      toast.success("Pemeriksaan berhasil disimpan!");
-    } catch (err: any) {
-      toast.error(err.message ?? "Terjadi kesalahan.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const selectedPatient = patients.find(p => p.id === form.patient_id);
-  const inputCls = "w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-blue-400 transition bg-white";
-
-  if (result) {
-    const stStatus = result.stunting_status ?? "-";
-    const stColor = stStatus.toLowerCase().includes("stunted") ? "text-red-600 font-bold" : "text-green-600 font-bold";
-    return (
-      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 px-4">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 flex flex-col gap-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-bold text-gray-900 text-lg">Hasil Pemeriksaan</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Data telah tersimpan</p>
-            </div>
-            <button onClick={() => { onSuccess(form.patient_id, result); onClose(); }} className="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-100 transition">
-              <FiX className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="bg-gray-50 rounded-xl p-4 space-y-2.5 text-sm">
-            {[
-              { label: "Usia", value: `${result.age_months} bulan` },
-              { label: "Z-Score TB/U", value: result.height_for_age_zscore?.toFixed(2) },
-              { label: "Z-Score BB/U", value: result.weight_for_age_zscore?.toFixed(2) },
-              { label: "Z-Score BB/TB", value: result.weight_for_height_zscore?.toFixed(2) },
-            ].map(row => (
-              <div key={row.label} className="flex justify-between">
-                <span className="text-gray-500">{row.label}</span>
-                <span className="font-semibold text-gray-800">{row.value}</span>
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-3 gap-3 text-xs text-center">
-            {[
-              { label: "Status Stunting", value: stStatus, cls: stColor },
-              { label: "Status Wasting",  value: result.wasting_status   ?? "-", cls: "font-semibold text-gray-700" },
-              { label: "Status BB",       value: result.underweight_status ?? "-", cls: "font-semibold text-gray-700" },
-            ].map(item => (
-              <div key={item.label} className="bg-gray-50 rounded-xl p-3">
-                <p className="text-gray-400 mb-1.5">{item.label}</p>
-                <p className={item.cls}>{item.value}</p>
-              </div>
-            ))}
-          </div>
-          <button onClick={() => { onSuccess(form.patient_id, result); onClose(); }}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition">
-            Selesai
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4 py-8">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[85vh] overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <div>
-            <h2 className="font-bold text-gray-900 text-lg">Tambah Pemeriksaan</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Isi data pengukuran balita</p>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 rounded-lg p-1.5 hover:bg-gray-100 transition">
-            <FiX className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Pasien *</label>
-            <select value={form.patient_id} onChange={set("patient_id")} required className={inputCls}>
-              <option value="">-- Pilih pasien --</option>
-              {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-            {selectedPatient && (
-              <p className="text-xs text-gray-400 mt-1.5">
-                Usia: {calcAgeMonths(selectedPatient.birth_date)} · {selectedPatient.gender}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Tanggal Pemeriksaan *</label>
-            <input type="date" value={form.exam_date} onChange={set("exam_date")} required className={inputCls} />
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold text-gray-600 mb-2">Data Antropometri *</p>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { field: "weight",             label: "Berat Badan (kg)",    placeholder: "cth: 8.5"  },
-                { field: "height",             label: "Tinggi Badan (cm)",   placeholder: "cth: 72.0" },
-                { field: "head_circumference", label: "Lingkar Kepala (cm)", placeholder: "cth: 44.0" },
-                { field: "arm_circumference",  label: "Lingkar Lengan (cm)", placeholder: "cth: 14.5" },
-              ].map(({ field, label, placeholder }) => (
-                <div key={field}>
-                  <label className="block text-xs text-gray-500 mb-1">{label}</label>
-                  <input type="number" step="0.1" min="0" placeholder={placeholder}
-                    value={form[field as keyof ExamForm]} onChange={set(field as keyof ExamForm)}
-                    required className={inputCls} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Catatan</label>
-            <textarea value={form.notes} onChange={set("notes")} rows={3}
-              placeholder="Catatan tambahan (opsional)..."
-              className={`${inputCls} resize-none`} />
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-600 text-sm font-semibold py-3 rounded-xl hover:bg-gray-50 transition">
-              Batal
-            </button>
-            <button type="submit" disabled={loading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
-              {loading ? <><FiLoader className="w-4 h-4 animate-spin" /> Menyimpan...</> : "Simpan Pemeriksaan"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
+  
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const { toasts, remove, toast } = useToast();
+  const router = useRouter();
   const { search } = useSearch();
 
   const [stats, setStats] = useState({ totalPasien: 0, pemeriksaanBulan: 0, kasusStunting: 0, pasienNormal: 0, jadwalHariIni: 0 });
@@ -427,8 +214,6 @@ export default function DashboardPage() {
   const [trendData, setTrendData] = useState<TrendStuntingItem[]>([]);
   const [trendFilter, setTrendFilter] = useState("6 Bulan Terakhir");
   const [showPeriodMenu, setShowPeriodMenu] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [preselectedPatId, setPreselectedPatId] = useState<string | undefined>();
   const [localSearch, setLocalSearch] = useState("");
 
   const filteredPatients = patients.filter(p =>
@@ -522,18 +307,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 pt-2">
-      <ToastContainer toasts={toasts} remove={remove} />
-
-      {showModal && (
-        <ExamModal
-          patients={allPatients.length > 0 ? allPatients : patients}
-          preselectedId={preselectedPatId}
-          onClose={() => setShowModal(false)}
-          onSuccess={handleExamSuccess}
-          toast={toast}
-        />
-      )}
-
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -541,7 +314,7 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-400 mt-1">Selamat datang kembali, berikut statistik kesehatan terkini.</p>
         </div>
         <button
-          onClick={() => { setPreselectedPatId(undefined); setShowModal(true); }}
+          onClick={() => {router.push("/pemeriksaan/add");}}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-3 rounded-xl transition shadow-sm shadow-blue-200"
         >
           <FiPlus className="w-4 h-4" /> Tambah Pemeriksaan
@@ -650,7 +423,7 @@ export default function DashboardPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div>
-            <h2 className="font-semibold text-gray-900">Antrean Hari Ini</h2>
+            <h2 className="font-semibold text-gray-900">Riwayat Pasien Hari ini</h2>
             <p className="text-xs text-gray-400 mt-0.5">
               {loadingPatients ? "Memuat..." : `Menampilkan ${filteredPatients.length} jadwal terdekat`}
             </p>
@@ -728,7 +501,7 @@ export default function DashboardPage() {
                       ) : (
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => { setPreselectedPatId(row.id); setShowModal(true); }}
+                            onClick={() => {router.push("/pemeriksaan/add");}}
                             className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition">
                             Periksa
                           </button>

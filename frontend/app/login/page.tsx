@@ -10,6 +10,7 @@ import {
   EyeOff,
   LogIn,
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,17 +50,15 @@ export default function LoginPage() {
           result.data.jwt_token
         );
 
-        alert("Login berhasil");
+        toast.success("Login berhasil");
 
         router.push("/dashboard");
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
     } catch (error) {
       console.error(error);
-      alert(
-        "Gagal terhubung ke server"
-      );
+      toast.error("Gagal terhubung ke server");
     }
   };
 

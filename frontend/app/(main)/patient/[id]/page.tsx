@@ -10,57 +10,114 @@ import {
   FiPrinter,
 } from "react-icons/fi";
 
+// ── DATA DUMMY PASIEN UNTUK FALLBACK PREVIEW ───────────────────────────
+const DUMMY_PATIENTS_DETAIL: Record<string, any> = {
+  "pasien-001": {
+    id: "pasien-001",
+    nik: "3273011205240001",
+    name: "Ahmad Rayhan",
+    birth_date: "2024-05-12",
+    gender: "Laki-laki",
+    mother_name: "Siti Nurhaliza",
+    father_name: "Budi Santoso",
+    phone_parent: "081234567890",
+    address: "Jl. Soekarno Hatta No. 123, RT 02/RW 01, Bandung",
+    picture: null,
+  },
+  "pasien-002": {
+    id: "pasien-002",
+    nik: "3273014108240002",
+    name: "Aisha Az-Zahra",
+    birth_date: "2024-08-15",
+    gender: "Perempuan",
+    mother_name: "Rina Astuti",
+    father_name: "Hendra Wijaya",
+    phone_parent: "085712345678",
+    address: "Jl. Asia Afrika No. 45, RT 01/RW 03, Bandung",
+    picture: null,
+  },
+  "pasien-003": {
+    id: "pasien-003",
+    nik: "3273012011250003",
+    name: "Muhammad Kenzie",
+    birth_date: "2025-11-20",
+    gender: "Laki-laki",
+    mother_name: "Dewi Lestari",
+    father_name: "Rizky Pratama",
+    phone_parent: "089698765432",
+    address: "Jl. Riau No. 88, RT 04/RW 02, Bandung",
+    picture: null,
+  },
+};
+
+const DEFAULT_DUMMY_PATIENT = DUMMY_PATIENTS_DETAIL["pasien-001"];
+
 export default function PatientDetailPage() {
   const { id } = useParams();
 
-const [patient, setPatient] = useState<any>(null);
-const [loading, setLoading] = useState(true);
+  const [patient, setPatient] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  async function getPatient() {
-    try {
-      const token = localStorage.getItem("token");
+  useEffect(() => {
+    async function getPatient() {
+      // PERBAIKAN TS2538: Memastikan patientId selalu bertipe string, tidak pernah undefined
+      const rawId = Array.isArray(id) ? id[0] : id;
+      const patientId = rawId ?? "";
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/detail/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      try {
+        const token = localStorage.getItem("token");
+
+        // Jika tidak ada token (belum login/offline), langsung gunakan dummy data
+        if (!token) {
+          setPatient(DUMMY_PATIENTS_DETAIL[patientId] || DEFAULT_DUMMY_PATIENT);
+          return;
         }
-      );
 
-      const result = await response.json();
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/detail/${patientId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      console.log(result);
+        const result = await response.json();
 
-      if (result.success) {
-        setPatient(result.data);
+        console.log(result);
+
+        if (result.success && result.data) {
+          setPatient(result.data);
+        } else {
+          // Fallback jika API mengembalikan success: false
+          setPatient(DUMMY_PATIENTS_DETAIL[patientId] || DEFAULT_DUMMY_PATIENT);
+        }
+      } catch (err) {
+        console.error(err);
+        // Fallback jika terjadi koneksi error ke server
+        setPatient(DUMMY_PATIENTS_DETAIL[patientId] || DEFAULT_DUMMY_PATIENT);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
     }
+
+    if (id) getPatient();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="p-10">
+        Memuat data pasien...
+      </div>
+    );
   }
 
-  if (id) getPatient();
-}, [id]);
+  const ageMonths = patient?.birth_date
+    ? dayjs().diff(dayjs(patient.birth_date), "month")
+    : 0;
 
-if (loading) {
-  return (
-    <div className="p-10">
-      Memuat data pasien...
-    </div>
-  );
-}
-
-const ageMonths = patient
-  ? dayjs().diff(dayjs(patient.birth_date), "month")
-  : 0;
-
-const years = Math.floor(ageMonths / 12);
-const months = ageMonths % 12;
+  const years = Math.floor(ageMonths / 12);
+  const months = ageMonths % 12;
 
   return (
     <div className="space-y-6">
@@ -115,7 +172,7 @@ const months = ageMonths % 12;
                     Nama Orang Tua
                   </p>
                   <p className="font-medium text-gray-700">
-                    {patient?.mother_name} / {patient?.father_name}
+                    {patient?.mother_name} / {patient?.father_name || "-"}
                   </p>
                 </div>
 
@@ -133,7 +190,7 @@ const months = ageMonths % 12;
                     Tanggal Lahir
                   </p>
                   <p className="font-medium text-gray-700">
-                    {dayjs(patient?.birth_date).format("DD MMMM YYYY")}
+                    {patient?.birth_date ? dayjs(patient.birth_date).format("DD MMMM YYYY") : "-"}
                   </p>
                 </div>
 
@@ -173,9 +230,10 @@ const months = ageMonths % 12;
           {/* kanan */}
           <div className="flex flex-col gap-3">
 
-           <Link
-              href={`/patient/${patient.id}/edit`}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700">
+            <Link
+              href={`/patient/${patient?.id || id}/edit`}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
+            >
               <FiEdit2 />
               Edit Profil
             </Link>
@@ -191,7 +249,7 @@ const months = ageMonths % 12;
 
       </div>
 
-            {/* Navigation Tab */}
+      {/* Navigation Tab */}
       <div className="border-b border-gray-200">
         <div className="flex gap-8 text-sm font-medium">
           <button className="border-b-2 border-blue-600 pb-3 text-blue-600">

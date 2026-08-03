@@ -1,32 +1,27 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearch } from "../layout";
 import { FaStethoscope } from "react-icons/fa6";
-import { toast } from "sonner";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import {
   FiUsers,
   FiAlertTriangle,
   FiCalendar,
   FiChevronDown,
-  FiX,
   FiLoader,
   FiPlus,
   FiSearch,
-  FiMoreVertical,
-  FiTrendingUp,
+  FiEye,
 } from "react-icons/fi";
-import { MdOutlineMonitorHeart } from "react-icons/md";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { useRouter } from "next/navigation";
 
+// ─── Types & Constants ────────────────────────────────────────────────────────
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-const BASE_URL = "https://taps-quiet-subtly.ngrok-free.dev";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 interface TrendStuntingItem { month: string; total: number; stunting: number; percentage: number; }
 interface DistribusiItem { label: string; pct: number; color: string; }
@@ -39,13 +34,9 @@ interface DashboardStats {
 }
 interface Patient {
   id: string; name: string; birth_date: string; gender: string;
+  service_type?: string;
   examination?: { id: string; stunting_status?: string }[];
 }
-interface ExamForm {
-  patient_id: string; exam_date: string; weight: string; height: string;
-  head_circumference: string; arm_circumference: string; notes: string;
-}
-interface AgeGroup { range: string; count: number; }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -68,13 +59,12 @@ function buildDistribusi(dist: { range: string; count: number }[]): DistribusiIt
   return dist.map((d, i) => ({ label: d.range, pct: Math.round((d.count / total) * 100), color: colors[i % colors.length] }));
 }
 
-
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
 interface StatCardProps {
   icon: React.ElementType;
   iconBg: string;
-  iconColor: string;   
+  iconColor: string;    
   label: string;
   value: string | number;
   sub?: string;
@@ -86,7 +76,7 @@ interface StatCardProps {
   avatarCount?: number;
 }
 
-function StatCard({ icon: Icon, iconBg, iconColor, label, value, sub, badge, trend, trendUp, progress, progressLabel, avatarCount }: StatCardProps)  {
+function StatCard({ icon: Icon, iconBg, iconColor, label, value, sub, badge, trend, trendUp, progress, progressLabel, avatarCount }: StatCardProps) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-2 min-w-0">
       <div className="flex items-start justify-between mb-1">
@@ -96,27 +86,26 @@ function StatCard({ icon: Icon, iconBg, iconColor, label, value, sub, badge, tre
         >
           <Icon size={18} style={{ color: iconColor }} strokeWidth={2} />
         </div>
-       {trend ? (
-  <span
-    className={`flex items-center gap-1 text-xs font-semibold ${
-      trendUp ? "text-green-600" : "text-red-600"
-    }`}
-  >
-    <span>{trend}</span>
-
-    {trendUp ? (
-      <TrendingUp size={13} strokeWidth={2.3} />
-    ) : (
-      <TrendingDown size={13} strokeWidth={2.3} />
-    )}
-  </span>
-) : (
-  sub && (
-    <span className="text-xs text-gray-400">
-      {sub}
-    </span>
-  )
-)}
+        {trend ? (
+          <span
+            className={`flex items-center gap-1 text-xs font-semibold ${
+              trendUp ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            <span>{trend}</span>
+            {trendUp ? (
+              <TrendingUp size={13} strokeWidth={2.3} />
+            ) : (
+              <TrendingDown size={13} strokeWidth={2.3} />
+            )}
+          </span>
+        ) : (
+          sub && (
+            <span className="text-xs text-gray-400">
+              {sub}
+            </span>
+          )
+        )}
       </div>
 
       <p className="text-sm text-gray-400">{label}</p>
@@ -206,11 +195,17 @@ export default function DashboardPage() {
   const router = useRouter();
   const { search } = useSearch();
 
-  const [stats, setStats] = useState({ totalPasien: 0, pemeriksaanBulan: 0, kasusStunting: 0, pasienNormal: 0, jadwalHariIni: 0 });
+  const [stats, setStats] = useState({ 
+    totalPasien: 0, 
+    pemeriksaanBulan: 0, 
+    kasusStunting: 0, 
+    pasienNormal: 0, 
+    jadwalHariIni: 0 
+  });
   const [distribusiUmur, setDistribusiUmur] = useState<DistribusiItem[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [allPatients, setAllPatients] = useState<Patient[]>([]);
-  const [loadingPatients, setLoadingPatients] = useState(true);
+  const [, setAllPatients] = useState<Patient[]>([]);
+  const [loadingPatients, setLoadingPatients] = useState(false);
   const [trendData, setTrendData] = useState<TrendStuntingItem[]>([]);
   const [trendFilter, setTrendFilter] = useState("6 Bulan Terakhir");
   const [showPeriodMenu, setShowPeriodMenu] = useState(false);
@@ -220,20 +215,29 @@ export default function DashboardPage() {
     p.name.toLowerCase().includes((search || localSearch).toLowerCase())
   );
 
+  // Fetch Trend Stunting Data
   useEffect(() => {
     const token = getToken(); if (!token) return;
     fetch(`${BASE_URL}/api/dashboard/trend-stunting`, { headers: authHeaders(token) })
-      .then(r => r.json()).then(json => { if (json.success) setTrendData(json.data ?? []); })
+      .then(r => r.json())
+      .then(json => { if (json.success) setTrendData(json.data ?? []); })
       .catch(console.error);
   }, []);
 
+  // Fetch Dashboard Stats
   useEffect(() => {
     const token = getToken(); if (!token) return;
     fetch(`${BASE_URL}/api/dashboard/stats`, { headers: authHeaders(token) })
-      .then(r => r.json()).then(json => {
+      .then(r => r.json())
+      .then(json => {
         if (!json.success) return;
         const d: DashboardStats = json.data;
-        const targets = { totalPasien: d.totalPatients, pemeriksaanBulan: d.totalExaminationsThisMonth, kasusStunting: d.stuntingCount, pasienNormal: d.normalCount, jadwalHariIni: 0 };
+        const targets = { 
+          totalPasien: d.totalPatients ?? 0, 
+          pemeriksaanBulan: d.totalExaminationsThisMonth ?? 0, 
+          kasusStunting: d.stuntingCount ?? 0, 
+          pasienNormal: d.normalCount ?? 0 
+        };
         let step = 0; const steps = 40;
         const timer = setInterval(() => {
           step++; const ease = 1 - Math.pow(1 - step / steps, 3);
@@ -247,63 +251,44 @@ export default function DashboardPage() {
           if (step >= steps) clearInterval(timer);
         }, 900 / steps);
         if (d.ageGroupDistribution?.length) setDistribusiUmur(buildDistribusi(d.ageGroupDistribution));
-      }).catch(console.error);
+      })
+      .catch(console.error);
   }, []);
 
+  // Fetch Today's Scheduled Patients
   useEffect(() => {
     const token = getToken(); if (!token) return;
     setLoadingPatients(true);
     fetch(`${BASE_URL}/api/pasien/all-today-patients`, { headers: authHeaders(token) })
-      .then(r => r.json()).then(json => {
-        if (json.success) {
-          const items: Patient[] = json.data.items ?? [];
+      .then(r => r.json())
+      .then(json => {
+        if (json.success && json.data?.items) {
+          const items: Patient[] = json.data.items;
           setPatients(items);
           setStats(prev => ({ ...prev, jadwalHariIni: items.length }));
+        } else {
+          setPatients([]);
+          setStats(prev => ({ ...prev, jadwalHariIni: 0 }));
         }
-      }).catch(console.error).finally(() => setLoadingPatients(false));
+      })
+      .catch(err => {
+        console.error(err);
+        setPatients([]);
+        setStats(prev => ({ ...prev, jadwalHariIni: 0 }));
+      })
+      .finally(() => setLoadingPatients(false));
   }, []);
 
+  // Fetch All Patients (Master list)
   useEffect(() => {
     const token = getToken(); if (!token) return;
     fetch(`${BASE_URL}/api/pasien/all`, { headers: authHeaders(token) })
-      .then(r => r.json()).then(json => { if (json.success) setAllPatients(json.data.items ?? []); })
+      .then(r => r.json())
+      .then(json => { if (json.success) setAllPatients(json.data.items ?? []); })
       .catch(console.error);
   }, []);
 
-  function refreshStats() {
-    const token = getToken(); if (!token) return;
-    fetch(`${BASE_URL}/api/dashboard/stats`, { headers: authHeaders(token) })
-      .then(r => r.json()).then(json => {
-        if (!json.success) return;
-        const d: DashboardStats = json.data;
-        setStats(prev => ({ ...prev, totalPasien: d.totalPatients, pemeriksaanBulan: d.totalExaminationsThisMonth, kasusStunting: d.stuntingCount, pasienNormal: d.normalCount }));
-        if (d.ageGroupDistribution?.length) setDistribusiUmur(buildDistribusi(d.ageGroupDistribution));
-      }).catch(console.error);
-  }
-
-  function refreshTrend() {
-    const token = getToken(); if (!token) return;
-    fetch(`${BASE_URL}/api/dashboard/trend-stunting`, { headers: authHeaders(token) })
-      .then(r => r.json()).then(json => { if (json.success) setTrendData(json.data ?? []); })
-      .catch(console.error);
-  }
-
-  function handleExamSuccess(patientId: string, examResult: any) {
-    setPatients(prev => {
-      const exists = prev.find(p => p.id === patientId);
-      if (exists) {
-        return prev.map(p => p.id === patientId
-          ? { ...p, examination: [{ id: examResult.examination_id, stunting_status: examResult.stunting_status }] }
-          : p);
-      }
-      const pat = allPatients.find(p => p.id === patientId);
-      return pat ? [...prev, { ...pat, examination: [{ id: examResult.examination_id, stunting_status: examResult.stunting_status }] }] : prev;
-    });
-    refreshStats(); refreshTrend();
-  }
-
   const todayStr = new Date().toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
-  const pemTarget = 100;
 
   return (
     <div className="space-y-6 pt-2">
@@ -314,7 +299,7 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-400 mt-1">Selamat datang kembali, berikut statistik kesehatan terkini.</p>
         </div>
         <button
-          onClick={() => {router.push("/pemeriksaan/add");}}
+          onClick={() => router.push("/pemeriksaan/add")}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-3 rounded-xl transition shadow-sm shadow-blue-200"
         >
           <FiPlus className="w-4 h-4" /> Tambah Pemeriksaan
@@ -322,45 +307,46 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat Cards */}
-<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-  <StatCard
-    icon={FiUsers}
-    iconBg="#DBEAFE"
-    iconColor="#2563EB"
-    label="Total Pasien"
-    value={stats.totalPasien.toLocaleString("id-ID")}
-    trend="+4%" trendUp={true}
-  />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          icon={FiUsers}
+          iconBg="#DBEAFE"
+          iconColor="#2563EB"
+          label="Total Pasien"
+          value={stats.totalPasien.toLocaleString("id-ID")}
+          trend="+4%" trendUp={true}
+        />
 
-    <StatCard
-    icon={FaStethoscope}
-    iconBg="#DCEFF8"
-    iconColor="#0F5E84"
-    label="Pemeriksaan Bulan Ini"
-    value={stats.pemeriksaanBulan}
-    trend="+12%" trendUp={true}
-  />
+        <StatCard
+          icon={FaStethoscope}
+          iconBg="#DCEFF8"
+          iconColor="#0F5E84"
+          label="Pemeriksaan Bulan Ini"
+          value={stats.pemeriksaanBulan}
+          trend="+12%" trendUp={true}
+        />
 
-  <StatCard
-    icon={FiAlertTriangle}
-    iconBg="#FEE2E2"
-    iconColor="#DC2626"
-    label="Kasus Stunting Aktif"
-    value={stats.kasusStunting}
-    trend="-2%" trendUp={false}
-    badge={stats.kasusStunting > 0 ? "PERLU INTERVENSI" : undefined}
-  />
+        <StatCard
+          icon={FiAlertTriangle}
+          iconBg="#FEE2E2"
+          iconColor="#DC2626"
+          label="Kasus Stunting Aktif"
+          value={stats.kasusStunting}
+          trend="-2%" trendUp={false}
+          badge={stats.kasusStunting > 0 ? "PERLU INTERVENSI" : undefined}
+        />
 
-  <StatCard
-    icon={FiCalendar}
-    iconBg="#DBEAFE"
-    iconColor="#2563EB"
-    label="Jadwal Hari Ini"
-    value={stats.jadwalHariIni}
-    sub={todayStr}
-    avatarCount={stats.jadwalHariIni}
-  />
-</div>
+        <StatCard
+          icon={FiCalendar}
+          iconBg="#DBEAFE"
+          iconColor="#2563EB"
+          label="Jadwal Hari Ini"
+          value={stats.jadwalHariIni}
+          sub={todayStr}
+          avatarCount={stats.jadwalHariIni}
+        />
+      </div>
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Trend */}
@@ -428,7 +414,10 @@ export default function DashboardPage() {
               {loadingPatients ? "Memuat..." : `Menampilkan ${filteredPatients.length} jadwal terdekat`}
             </p>
           </div>
-          <button className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition">
+          <button 
+            onClick={() => router.push("/pemeriksaan")}
+            className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition"
+          >
             Lihat Semua
           </button>
         </div>
@@ -452,7 +441,7 @@ export default function DashboardPage() {
             <tr className="text-left text-xs font-semibold text-gray-400 border-b border-gray-100">
               <th className="px-6 py-3">Nama Pasien</th>
               <th className="px-6 py-3">Usia</th>
-              <th className="px-6 py-3">Jenis Pemeriksaan</th>
+              <th className="px-6 py-3">Jenis Layanan</th>
               <th className="px-6 py-3">Status Kesehatan</th>
               <th className="px-6 py-3">Aksi</th>
             </tr>
@@ -486,7 +475,7 @@ export default function DashboardPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-gray-500">{calcAgeMonths(row.birth_date)}</td>
-                    <td className="px-6 py-4 text-gray-600">Rutin Bulanan</td>
+                    <td className="px-6 py-4 text-gray-600">{row.service_type ?? "Rutin Bulanan"}</td>
                     <td className="px-6 py-4">
                       {isChecked
                         ? <StatusBadge status={examStatus ?? "Normal"} />
@@ -494,22 +483,12 @@ export default function DashboardPage() {
                       }
                     </td>
                     <td className="px-6 py-4">
-                      {isChecked ? (
-                        <button disabled className="text-xs bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg cursor-not-allowed">
-                          Selesai
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {router.push("/pemeriksaan/add");}}
-                            className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition">
-                            Periksa
-                          </button>
-                          <button className="text-gray-400 hover:text-gray-600 transition">
-                            <FiMoreVertical size={16} />
-                          </button>
-                        </div>
-                      )}
+                      <button
+                        onClick={() => router.push(`/pasien/${row.id}`)}
+                        className="flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition"
+                      >
+                        <FiEye size={14} /> Detail
+                      </button>
                     </td>
                   </tr>
                 );

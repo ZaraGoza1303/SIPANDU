@@ -9,8 +9,11 @@ import {
   FiClock,
   FiMapPin,
   FiFileText,
-  FiActivity
+  FiActivity,
+  FiCheckCircle,
+  FiUserCheck,
 } from "react-icons/fi";
+import { apiFetch, ApiError } from "@/lib/api";
 
 export default function AddSchedulePage() {
   const router = useRouter();
@@ -22,6 +25,8 @@ export default function AddSchedulePage() {
     startTime: "",
     endTime: "",
     location: "",
+    status: "akan_datang", // 👈 Default status pelaksanaan
+    petugasPJ: "",          // 👈 Penanggung jawab (Kader/Bidan)
     services: {
       penimbangan: false,
       imunisasi: false,
@@ -56,23 +61,17 @@ export default function AddSchedulePage() {
         waktu_mulai: formData.startTime,
         waktu_selesai: formData.endTime,
         lokasi: formData.location,
+        status: formData.status,         // 👈 Masuk payload
+        petugas_pj: formData.petugasPJ,  // 👈 Masuk payload
         layanan_tersedia: selectedServices,
         keterangan: formData.notes,
       };
 
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/jadwal/create`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      // Menggunakan apiFetch (Otomatis membawa Bearer Token & Header Ngrok)
+      const response = await apiFetch("/api/jadwal/create", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
 
       const result = await response.json();
 
@@ -83,9 +82,14 @@ export default function AddSchedulePage() {
 
       alert("Jadwal berhasil ditambahkan!");
       router.push("/jadwal");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Terjadi kesalahan koneksi saat menyimpan jadwal.");
+      if (err instanceof ApiError) {
+        if (err.status === 401) return; // Ditangani otomatis oleh apiFetch (redirect login)
+        alert(err.message);
+      } else {
+        alert("Terjadi kesalahan koneksi saat menyimpan jadwal.");
+      }
     } finally {
       setLoading(false);
     }
@@ -107,7 +111,7 @@ export default function AddSchedulePage() {
           Tambah Jadwal Posyandu
         </h1>
         <p className="mt-1 text-gray-500">
-          Buat jadwal kegiatan rutin posyandu balita untuk bulan ini.
+          Buat jadwal kegiatan rutin posyandu balita beserta penanggung jawabnya.
         </p>
       </div>
 
@@ -182,6 +186,39 @@ export default function AddSchedulePage() {
             value={formData.location}
             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
           />
+        </div>
+
+        {/* Status Pelaksanaan & Penanggung Jawab */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <FiCheckCircle className="text-gray-400"/> Status Pelaksanaan
+            </label>
+            <select
+              className="w-full rounded-xl border border-gray-300 bg-white py-3 px-4 text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            >
+              <option value="akan_datang">Akan Datang (Upcoming)</option>
+              <option value="berlangsung">Sedang Berlangsung (Ongoing)</option>
+              <option value="selesai">Selesai (Completed)</option>
+              <option value="dibatalkan">Dibatalkan (Cancelled)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <FiUserCheck className="text-gray-400"/> Penanggung Jawab (Kader/Bidan)
+            </label>
+            <input
+              required
+              type="text"
+              placeholder="Misal: Bidan Siti & Kader RW 05"
+              className="w-full rounded-xl border border-gray-300 bg-white py-3 px-4 text-gray-900 placeholder:text-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              value={formData.petugasPJ}
+              onChange={(e) => setFormData({ ...formData, petugasPJ: e.target.value })}
+            />
+          </div>
         </div>
 
         {/* Jenis Layanan */}

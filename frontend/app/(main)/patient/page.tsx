@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import {
   FiSearch,
@@ -28,8 +27,6 @@ interface Patient {
 }
 
 export default function PatientPage() {
-  const router = useRouter();
-
   const [patients, setPatients] = useState<Patient[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -38,27 +35,29 @@ export default function PatientPage() {
   useEffect(() => {
     async function fetchPatients() {
       try {
-        const token = localStorage.getItem("token");
+        const token =
+          localStorage.getItem("token") ||
+          localStorage.getItem("access_token") ||
+          localStorage.getItem("authToken");
 
         if (!token) {
-          setError("Sesi telah berakhir. Silakan login kembali.");
-          router.push("/login");
+          setError("Token tidak ditemukan. Silakan pastikan Anda sudah login.");
+          setLoading(false);
           return;
         }
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/all`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+        const response = await fetch(`${baseUrl}/api/pasien/all`, {
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "69420",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (response.status === 401) {
-          localStorage.removeItem("token");
-          router.push("/login");
+          setError("Sesi Anda tidak valid atau telah berakhir (401 Unauthorized).");
+          setLoading(false);
           return;
         }
 
@@ -77,16 +76,17 @@ export default function PatientPage() {
       } catch (err: any) {
         console.error("Fetch Patients Error:", err);
         setError(
-          err.message || "Gagal terhubung ke server. Periksa koneksi backend atau CORS Anda."
+          err.message ||
+            "Gagal terhubung ke server Express. Pastikan backend Anda sudah menyala."
         );
-        setPatients([]); // Tetap kosongkan data, JANGAN isi dummy
+        setPatients([]);
       } finally {
         setLoading(false);
       }
     }
 
     fetchPatients();
-  }, [router]);
+  }, []);
 
   // Filter pencarian berdasarkan Nama atau NIK
   const filteredPatients = patients.filter((patient) => {

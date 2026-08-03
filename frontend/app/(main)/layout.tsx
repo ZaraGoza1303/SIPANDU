@@ -62,7 +62,12 @@ function getInitials(name: string): string {
 
 function getUserFromToken(): UserInfo {
   try {
-    const token = localStorage.getItem("token");
+    // Cek berbagai kemungkinan nama key token di localStorage
+    const token = 
+      localStorage.getItem("token") || 
+      localStorage.getItem("access_token") || 
+      localStorage.getItem("authToken");
+
     if (!token) throw new Error("no token");
 
     const payload = JSON.parse(atob(token.split(".")[1]));
@@ -71,7 +76,7 @@ function getUserFromToken(): UserInfo {
 
     return { name, role, initials: getInitials(name) };
   } catch {
-    return { name: "Pengguna", role: "Kader Posyandu", initials: "KP" };
+    return { name: "Kader Posyandu", role: "Posyandu Kliningan 04", initials: "KP" };
   }
 }
 
@@ -103,8 +108,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/patient/");
 
   const [user, setUser] = useState<UserInfo>({
-    name: "Pengguna",
-    role: "Kader Posyandu",
+    name: "Kader Posyandu",
+    role: "Posyandu Kliningan 04",
     initials: "KP",
   });
 
@@ -113,6 +118,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Ambil data user dari token tanpa melakukan redirect paksa
     setUser(getUserFromToken());
 
     // Event listener untuk menutup card jika diklik di luar area card/profil
@@ -131,13 +137,15 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   // Fungsi Eksekusi Logout
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("authToken");
     router.push("/login");
   };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="fixed h-screen w-60 border-r bg-white px-4 py-5 flex flex-col justify-between">
+      <aside className="fixed h-screen w-60 border-r bg-white px-4 py-5 flex flex-col justify-between z-40">
         <div>
           <div className="pb-8">
             <div className="flex items-center gap-3">
@@ -181,7 +189,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
               </div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-xl transition text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-xl transition text-left cursor-pointer"
               >
                 <FiLogOut size={16} />
                 <span>Logout</span>

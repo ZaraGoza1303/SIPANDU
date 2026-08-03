@@ -2,7 +2,6 @@
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-// Custom Error Class untuk menangani error HTTP dengan rapi
 export class ApiError extends Error {
   status: number;
   data: any;
@@ -28,15 +27,12 @@ export async function apiFetch(endpoint: string, options: CustomFetchOptions = {
   const isClient = typeof window !== "undefined";
   const token = isClient ? localStorage.getItem("token") : null;
 
-  // Header Standar
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    // 1. Header wajib melewati cegatan warning Ngrok
     "ngrok-skip-browser-warning": "69420",
     ...(fetchOptions.headers as Record<string, string>),
   };
 
-  // 2. Otomatis pasang Bearer Token jika ada
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -51,29 +47,28 @@ export async function apiFetch(endpoint: string, options: CustomFetchOptions = {
 
     // 3. Penanganan HTTP 401 (Unauthorized / Token Kadaluarsa)
     if (response.status === 401) {
-      if (isClient && !skipAuthRedirect) {
+      // Pastikan HANYA redirect jika token benar-benar ada tapi ditolak server (expired/invalid)
+      // Jika token memang tidak ada dari awal, atau server mati, jangan asal tendang ke login
+      if (isClient && !skipAuthRedirect && token) {
         localStorage.removeItem("token");
-        window.location.href = "/login"; // Otomatis balik ke halaman login
+        window.location.href = "/login";
       }
-      throw new ApiError("Sesi Anda telah berakhir. Silakan login kembali.", 401);
+      throw new ApiError("Sesi Anda telah berakhir atau token tidak valid.", 401);
     }
 
-    // 4. Penanganan HTTP 403 (Forbidden / Role Ditolak Backend)
+    // 4. Penanganan HTTP 403 (Forbidden)
     if (response.status === 403) {
       const errorData = await response.json().catch(() => null);
       const message =
-        errorData?.message ||
-        "Akses Ditolak (403): Akun Anda tidak memiliki izin untuk fitur ini.";
-
+        errorData?.message || "Akses Ditolak (403): Akun Anda tidak memiliki izin untuk fitur ini.";
       throw new ApiError(message, 403, errorData);
     }
 
-    // 5. Penanganan status error HTTP lainnya (400, 404, 500, dll)
+    // 5. Penanganan error HTTP lainnya
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
       const message =
         errorData?.message || `Gagal memuat data dari server (HTTP ${response.status})`;
-
       throw new ApiError(message, response.status, errorData);
     }
 
@@ -82,9 +77,11 @@ export async function apiFetch(endpoint: string, options: CustomFetchOptions = {
     if (error instanceof ApiError) {
       throw error;
     }
-    // Error jaringan / CORS failure / Server down
+    
+    // 🔥 PENTING: Jika server mati (status 0 / gagal koneksi), JANGAN redirect ke login!
+    // Cukup lempar error biasa agar halaman menampilkan pesan "Gagal terhubung ke server" saja.
     throw new ApiError(
-      error.message || "Gagal terhubung ke server. Periksa koneksi backend Anda.",
+      "Gagal terhubung ke server Express. Pastikan server backend Anda sudah menyala.",
       0
     );
   }

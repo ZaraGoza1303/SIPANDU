@@ -974,7 +974,7 @@ paths:
       tags:
         - Pemeriksaan
       summary: Daftar semua pemeriksaan
-      description: "**Akses:** admin, bidan\n\nMengembalikan daftar semua pemeriksaan dengan pagination. Setiap pemeriksaan menyertakan data pasien dan hasil stunting."
+      description: "**Akses:** admin, bidan, kader\n\nMengembalikan daftar semua pemeriksaan dengan pagination. Setiap pemeriksaan menyertakan data pasien dan hasil stunting."
       security:
         - BearerAuth: []
       parameters:

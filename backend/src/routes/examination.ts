@@ -25,7 +25,7 @@ const examinationController = new ExaminationController(examinationsService);
 
 examinationRouter.use(verifyJWTToken);
 examinationRouter.use(verifyPosyanduAccess);
-examinationRouter.get('/all', authorizeRole('admin', 'bidan'), (req, res) => examinationController.getAllExaminations(req, res));
+examinationRouter.get('/all', authorizeRole('admin', 'bidan', 'kader'), (req, res) => examinationController.getAllExaminations(req, res));
 examinationRouter.get('/jadwal', authorizeRole('admin', 'bidan', 'kader'), (req, res) => examinationController.getAllSchedules(req, res));
 examinationRouter.post('/add', authorizeRole('admin', 'bidan', 'kader'), (req, res) => examinationController.addExamination(req, res));
 examinationRouter.post('/schedule', authorizeRole('admin', 'kader'), (req, res) => examinationController.addSchedule(req, res));

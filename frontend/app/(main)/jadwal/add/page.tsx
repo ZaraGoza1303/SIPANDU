@@ -25,50 +25,30 @@ export default function AddSchedulePage() {
     startTime: "",
     endTime: "",
     location: "",
-    status: "akan_datang", // 👈 Default status pelaksanaan
-    petugasPJ: "",          // 👈 Penanggung jawab (Kader/Bidan)
-    services: {
-      penimbangan: false,
-      imunisasi: false,
-      vitamin: false,
-      konsultasi: false,
-    },
+    status: "akan_datang", // Default status lokal form
+    petugasPJ: "",          // Penanggung jawab (Kader/Bidan)
     notes: "",
   });
-
-  const handleServiceChange = (service: keyof typeof formData.services) => {
-    setFormData((prev) => ({
-      ...prev,
-      services: {
-        ...prev.services,
-        [service]: !prev.services[service],
-      },
-    }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const selectedServices = Object.keys(formData.services).filter(
-        (key) => formData.services[key as keyof typeof formData.services]
-      );
-
+      // Disesuaikan dengan struktur field dari Backend baru
       const payload = {
-        judul_kegiatan: formData.title,
-        tanggal: formData.date,
-        waktu_mulai: formData.startTime,
-        waktu_selesai: formData.endTime,
-        lokasi: formData.location,
-        status: formData.status,         // 👈 Masuk payload
-        petugas_pj: formData.petugasPJ,  // 👈 Masuk payload
-        layanan_tersedia: selectedServices,
-        keterangan: formData.notes,
+        title: formData.title,
+        description: formData.notes,
+        scheduled_date: formData.date,
+        time_start: `${formData.date}T${formData.startTime}:00Z`,
+        time_end: `${formData.date}T${formData.endTime}:00Z`,
+        location: formData.location,
+        status: formData.status,
+        petugas_pj: formData.petugasPJ,
       };
 
       // Menggunakan apiFetch (Otomatis membawa Bearer Token & Header Ngrok)
-      const response = await apiFetch("/api/jadwal/create", {
+      const response = await apiFetch("/api/pemeriksaan/schedule", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -76,7 +56,13 @@ export default function AddSchedulePage() {
       const result = await response.json();
 
       if (!response.ok) {
-        alert(result.message || "Gagal menyimpan jadwal");
+        // === DEBUGGING ERROR 400 (BAD REQUEST) ===
+        console.log("=== DETAIL ERROR DARI BACKEND ===");
+        console.log("Status:", response.status);
+        console.log("Response Body:", result);
+        console.log("==================================");
+
+        alert(result.message || result.error || "Gagal menyimpan jadwal. Cek Console browser untuk detail.");
         return;
       }
 
@@ -200,6 +186,7 @@ export default function AddSchedulePage() {
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
             >
               <option value="akan_datang">Akan Datang (Upcoming)</option>
+              <option value="aktif">Aktif</option>
               <option value="berlangsung">Sedang Berlangsung (Ongoing)</option>
               <option value="selesai">Selesai (Completed)</option>
               <option value="dibatalkan">Dibatalkan (Cancelled)</option>
@@ -218,28 +205,6 @@ export default function AddSchedulePage() {
               value={formData.petugasPJ}
               onChange={(e) => setFormData({ ...formData, petugasPJ: e.target.value })}
             />
-          </div>
-        </div>
-
-        {/* Jenis Layanan */}
-        <div>
-          <label className="mb-3 block text-sm font-semibold text-gray-700">
-            Fasilitas / Layanan Tersedia
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {Object.keys(formData.services).map((key) => (
-              <label key={key} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition">
-                <input
-                  type="checkbox"
-                  className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  checked={formData.services[key as keyof typeof formData.services]}
-                  onChange={() => handleServiceChange(key as keyof typeof formData.services)}
-                />
-                <span className="capitalize text-gray-800 font-medium">
-                  {key === "vitamin" ? "Pemberian Vitamin A" : key}
-                </span>
-              </label>
-            ))}
           </div>
         </div>
 

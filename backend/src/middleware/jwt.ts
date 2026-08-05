@@ -3,8 +3,9 @@ import { sendErrorResponse } from "../utils/response.js";
 import jwt from 'jsonwebtoken'
 
 export const verifyJWTToken = (req: Request, res: Response, next: NextFunction) => {
+    const cookieToken = req.cookies?.token;
     const authHeader = req.headers['authorization'];
-    const token = authHeader?.split(' ')[1];
+    const token = cookieToken || authHeader?.split(' ')[1];
     if(!token) return res.status(401).json(sendErrorResponse("Unauthorized"));
 
     const secret = process.env.JWT_TOKEN;

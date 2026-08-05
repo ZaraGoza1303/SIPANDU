@@ -24,6 +24,12 @@ export class AuthController {
             }
 
             const response = await this.authService.login(validate.data);
+            res.cookie('token', response.jwt_token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'lax',
+                maxAge: 3 * 60 * 60 * 1000,
+            });
             return res.status(200).json(sendSuccessfullResponse("Login Berhasil", response))
         } catch (err: unknown) {
             return res.status(400).json(sendErrorResponse("Login Gagal", (err as Error).message))

@@ -8,6 +8,7 @@ import examinationRouter from './src/routes/examination.js';
 import dashboardRouter from './src/routes/dashboard.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import path from 'node:path';
 import YAML from 'yamljs';
@@ -37,6 +38,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '5mb' }));
+app.use(cookieParser());
 
 const initRouter = () => {
     app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

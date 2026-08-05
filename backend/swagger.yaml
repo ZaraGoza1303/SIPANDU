@@ -1343,7 +1343,7 @@ paths:
         '404':
           description: Jadwal tidak ditemukan
 
-  /api/pemeriksaan/jadwal/{id}/selesai:
+  /api/pemeriksaan/jadwal/{exam_id}/selesai:
     patch:
       tags:
         - Pemeriksaan
@@ -1352,7 +1352,7 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-        - name: id
+        - name: exam_id
           in: path
           required: true
           schema:

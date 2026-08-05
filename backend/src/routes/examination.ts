@@ -31,7 +31,7 @@ examinationRouter.post('/add', authorizeRole('admin', 'bidan', 'kader'), (req, r
 examinationRouter.post('/schedule', authorizeRole('admin', 'kader'), (req, res) => examinationController.addSchedule(req, res));
 examinationRouter.patch('/update/:exam_id', authorizeRole('admin', 'bidan'), (req, res) => examinationController.updateExamination(req, res));
 examinationRouter.patch('/update/schedule/:exam_id', authorizeRole('admin', 'kader'), (req, res) => examinationController.updateExamSchedule(req, res));
-examinationRouter.patch('/jadwal/:id/selesai', authorizeRole('admin'), (req, res) => examinationController.markAsCompleted(req, res));
+examinationRouter.patch('/jadwal/:exam_id/selesai', authorizeRole('admin'), (req, res) => examinationController.markAsCompleted(req, res));
 examinationRouter.get('/today-pending-count', authorizeRole('admin', 'bidan', 'kader'), (req, res) => examinationController.getTodayPendingCount(req, res));
 examinationRouter.get('/patient/:patient_id', authorizeRole('admin', 'bidan', 'kader'), (req, res) => examinationController.getPatientExaminationLog(req, res));
 

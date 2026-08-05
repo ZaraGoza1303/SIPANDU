@@ -2,11 +2,10 @@ import type { Request, Response } from "express";
 import type { IPatientService } from "../services/patient_service.interface.js";
 import { sendErrorResponse, sendSuccessfullResponse } from "../utils/response.js";
 import { AppError } from "../utils/error.js";
-import { CreatePatientSchema, UpdatePatientSchema } from "../dto/patient.js";
+import { CreatePatientSchema, UpdatePatientSchema, PatientIdParamSchema } from "../dto/patient.js";
 import type { ISupabase } from "../services/supabase.interface.js";
 import { getFilePathWithFolder } from "../utils/format_url.js";
 import { validateImageFile } from "../utils/validateFile.js";
-import { isValidUUID } from "../utils/validate_uuid.js";
 
 export class PatientController {
     private supabase: ISupabase;
@@ -60,11 +59,12 @@ export class PatientController {
     async getByID(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const patient_id = req.params.patient_id as string;
-
-            if (!isValidUUID(patient_id)) {
-                return res.status(400).json(sendErrorResponse("ID pasien tidak valid"));
+            const validateParams = PatientIdParamSchema.safeParse(req.params);
+            if (!validateParams.success) {
+                const formattedErr = validateParams.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formattedErr));
             }
+            const patient_id = validateParams.data.patient_id;
 
             const patient = await this.patientService.getByID(posyandu_id, patient_id);
             return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patient))
@@ -120,11 +120,12 @@ export class PatientController {
     async updatePatient(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const patient_id = req.params.patient_id as string;
-
-            if (!isValidUUID(patient_id)) {
-                return res.status(400).json(sendErrorResponse("ID pasien tidak valid"));
+            const validateParams = PatientIdParamSchema.safeParse(req.params);
+            if (!validateParams.success) {
+                const formattedErr = validateParams.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formattedErr));
             }
+            const patient_id = validateParams.data.patient_id;
 
             let pictureUrl: string | undefined;
 
@@ -175,11 +176,12 @@ export class PatientController {
     async deletePatient(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const patient_id = req.params.patient_id as string;
-
-            if (!isValidUUID(patient_id)) {
-                return res.status(400).json(sendErrorResponse("ID pasien tidak valid"));
+            const validateParams = PatientIdParamSchema.safeParse(req.params);
+            if (!validateParams.success) {
+                const formattedErr = validateParams.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formattedErr));
             }
+            const patient_id = validateParams.data.patient_id;
 
             const currentPatient = await this.patientService.getByID(posyandu_id, patient_id);
             if (currentPatient && currentPatient.picture) {

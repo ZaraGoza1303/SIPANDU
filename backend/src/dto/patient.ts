@@ -29,8 +29,8 @@ export const UpdatePatientSchema = CreatePatientSchema.partial().extend({
 
 export const CreatePatientExaminationSchema = z.object({
     exam_date: z.string().date(),
-    patient_id: z.string().min(1, "Nama pasien wajib diisi"),
-    user_id: z.string().min(1, "Nama pemeriksa wajib diisi"),
+    patient_id: z.string().uuid("Format patient_id harus UUID yang valid"),
+    user_id: z.string().uuid("Format user_id harus UUID yang valid"),
     weight: z.number(),
     height: z.number(),
     head_circumference: z.number(),
@@ -52,6 +52,14 @@ export const CreateExamScheduleSchema = z.object({
 })
 
 export const UpdateExamScheduleReqSchema = CreateExamScheduleSchema.partial().extend({
+});
+
+export const PatientIdParamSchema = z.object({
+    patient_id: z.string().trim().uuid("Format patient_id harus UUID yang valid"),
+});
+
+export const ExamIdParamSchema = z.object({
+    exam_id: z.string().trim().uuid("Format exam_id harus UUID yang valid"),
 });
 
 export interface TodayPatientItem {

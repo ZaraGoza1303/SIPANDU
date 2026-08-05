@@ -1,8 +1,7 @@
 import type { Request, Response } from "express";
 import { sendErrorResponse, sendSuccessfullResponse } from "../utils/response.js";
 import { AppError } from "../utils/error.js";
-import { isValidUUID } from "../utils/validate_uuid.js";
-import { CreateExamScheduleSchema, CreatePatientExaminationSchema, UpdateExamScheduleReqSchema, UpdatePatientExamReqSchema } from "../dto/patient.js";
+import { CreateExamScheduleSchema, CreatePatientExaminationSchema, UpdateExamScheduleReqSchema, UpdatePatientExamReqSchema, ExamIdParamSchema, PatientIdParamSchema } from "../dto/patient.js";
 import type { IExaminationsService } from "../services/examinations.interface.js";
 
 export class ExaminationController {
@@ -68,11 +67,12 @@ export class ExaminationController {
     async updateExamination(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const exam_id = req.params.exam_id as string;
-
-            if (!isValidUUID(exam_id)) {
-                return res.status(400).json(sendErrorResponse("ID pemeriksaan tidak valid"));
+            const validateParams = ExamIdParamSchema.safeParse(req.params);
+            if (!validateParams.success) {
+                const formattedErr = validateParams.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formattedErr));
             }
+            const exam_id = validateParams.data.exam_id;
 
             if (!req.body) {
                 return res.status(400).json(sendErrorResponse("Request body empty"))
@@ -99,11 +99,12 @@ export class ExaminationController {
     async updateExamSchedule(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const exam_id = req.params.exam_id as string;
-
-            if (!isValidUUID(exam_id)) {
-                return res.status(400).json(sendErrorResponse("ID jadwal tidak valid"));
+            const validateParams = ExamIdParamSchema.safeParse(req.params);
+            if (!validateParams.success) {
+                const formattedErr = validateParams.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formattedErr));
             }
+            const exam_id = validateParams.data.exam_id;
 
             if (!req.body) {
                 return res.status(400).json(sendErrorResponse("Request body empty"))
@@ -169,11 +170,12 @@ export class ExaminationController {
     async markAsCompleted(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const exam_id = req.params.id as string;
-
-            if (!isValidUUID(exam_id)) {
-                return res.status(400).json(sendErrorResponse("ID jadwal tidak valid"));
+            const validateParams = ExamIdParamSchema.safeParse(req.params);
+            if (!validateParams.success) {
+                const formattedErr = validateParams.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formattedErr));
             }
+            const exam_id = validateParams.data.exam_id;
 
             await this.examinationsService.markScheduleAsCompleted(posyandu_id, exam_id);
             return res.status(200).json(sendSuccessfullResponse("Jadwal berhasil ditandai selesai"));
@@ -210,15 +212,17 @@ export class ExaminationController {
     async getPatientExaminationLog(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const patient_id = req.params.patient_id as string;
 
             if (!posyandu_id) {
                 return res.status(400).json(sendErrorResponse("posyandu_id tidak ditemukan"));
             }
 
-            if (!isValidUUID(patient_id)) {
-                return res.status(400).json(sendErrorResponse("ID pasien tidak valid"));
+            const validateParams = PatientIdParamSchema.safeParse(req.params);
+            if (!validateParams.success) {
+                const formattedErr = validateParams.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formattedErr));
             }
+            const patient_id = validateParams.data.patient_id;
 
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;

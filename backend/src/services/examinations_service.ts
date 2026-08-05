@@ -85,6 +85,14 @@ export class ExaminationsService implements IExaminationsService {
 
     async addExamSchedule(posyandu_id: string, user_id: string, newSchedule: CreateExamScheduleReq): Promise<void> {
         try {
+            let location: string | null = newSchedule.location?.trim() || null;
+            if (!location) {
+                const posyandu = await this.prismaClient.posyandu.findUnique({
+                    where: { id: posyandu_id }
+                });
+                location = posyandu?.address ?? null;
+            }
+
             const newScheduleReq: ScheduleCreateInput = {
                 posyandu: {
                     connect: { id: posyandu_id }
@@ -92,6 +100,9 @@ export class ExaminationsService implements IExaminationsService {
                 user: {
                     connect: { id: user_id }
                 },
+                title: newSchedule.title,
+                description: newSchedule.description ?? null,
+                location: location,
                 scheduled_date: newSchedule.scheduled_date,
                 time_start: newSchedule.time_start,
                 time_end: newSchedule.time_end,
@@ -109,6 +120,9 @@ export class ExaminationsService implements IExaminationsService {
         try {
             const updateData: ScheduleUpdateInput = {};
 
+            if (newSchedule.title !== undefined) updateData.title = newSchedule.title;
+            if (newSchedule.description !== undefined) updateData.description = newSchedule.description;
+            if (newSchedule.location !== undefined) updateData.location = newSchedule.location;
             if (newSchedule.scheduled_date !== undefined) updateData.scheduled_date = new Date(newSchedule.scheduled_date);
             if (newSchedule.time_start !== undefined) updateData.time_start = newSchedule.time_start;
             if (newSchedule.time_end !== undefined) updateData.time_end = newSchedule.time_end;

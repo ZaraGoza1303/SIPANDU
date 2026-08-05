@@ -162,9 +162,12 @@ export class ExaminationsRepository implements IExaminationsRepository {
             where.scheduled_date = filterDate;
         }
 
-        // Search by status or user name
+        // Search by status, title, description, location or user name
         if (search) {
             where.OR = [
+                { title: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+                { location: { contains: search, mode: 'insensitive' } },
                 { status: { contains: search, mode: 'insensitive' } },
                 { user: { name: { contains: search, mode: 'insensitive' } } },
             ];

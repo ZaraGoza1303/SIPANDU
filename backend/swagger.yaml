@@ -437,6 +437,17 @@ components:
         created_by:
           type: string
           format: uuid
+        title:
+          type: string
+          example: "Posyandu Balita Rutin"
+        description:
+          type: string
+          nullable: true
+          example: "Pemeriksaan tumbuh kembang dan pemberian vitamin A di Balai RW 02"
+        location:
+          type: string
+          nullable: true
+          example: "Balai RW 02, Jl. Mawar No. 10"
         scheduled_date:
           type: string
           format: date
@@ -461,11 +472,24 @@ components:
     CreateScheduleRequest:
       type: object
       required:
+        - title
         - scheduled_date
         - time_start
         - time_end
         - status
       properties:
+        title:
+          type: string
+          example: "Posyandu Balita Rutin"
+        description:
+          type: string
+          nullable: true
+          example: "Pemeriksaan tumbuh kembang dan pemberian vitamin A di Balai RW 02"
+        location:
+          type: string
+          nullable: true
+          description: "Lokasi kegiatan (opsional). Jika tidak diisi, otomatis menggunakan alamat Posyandu."
+          example: "Balai RW 02, Jl. Mawar No. 10"
         scheduled_date:
           type: string
           format: date
@@ -485,6 +509,17 @@ components:
     UpdateScheduleRequest:
       type: object
       properties:
+        title:
+          type: string
+          example: "Posyandu Balita Rutin"
+        description:
+          type: string
+          nullable: true
+          example: "Pemeriksaan tumbuh kembang dan pemberian vitamin A di Balai RW 02"
+        location:
+          type: string
+          nullable: true
+          example: "Balai RW 02, Jl. Mawar No. 10"
         scheduled_date:
           type: string
           format: date

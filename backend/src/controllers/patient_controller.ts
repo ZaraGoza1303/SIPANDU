@@ -6,6 +6,7 @@ import { CreatePatientSchema, UpdatePatientSchema } from "../dto/patient.js";
 import type { ISupabase } from "../services/supabase.interface.js";
 import { getFilePathWithFolder } from "../utils/format_url.js";
 import { validateImageFile } from "../utils/validateFile.js";
+import { isValidUUID } from "../utils/validate_uuid.js";
 
 export class PatientController {
     private supabase: ISupabase;
@@ -60,6 +61,10 @@ export class PatientController {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
             const patient_id = req.params.patient_id as string;
+
+            if (!isValidUUID(patient_id)) {
+                return res.status(400).json(sendErrorResponse("ID pasien tidak valid"));
+            }
 
             const patient = await this.patientService.getByID(posyandu_id, patient_id);
             return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patient))
@@ -116,6 +121,11 @@ export class PatientController {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
             const patient_id = req.params.patient_id as string;
+
+            if (!isValidUUID(patient_id)) {
+                return res.status(400).json(sendErrorResponse("ID pasien tidak valid"));
+            }
+
             let pictureUrl: string | undefined;
 
             if (req.file) {
@@ -166,6 +176,10 @@ export class PatientController {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
             const patient_id = req.params.patient_id as string;
+
+            if (!isValidUUID(patient_id)) {
+                return res.status(400).json(sendErrorResponse("ID pasien tidak valid"));
+            }
 
             const currentPatient = await this.patientService.getByID(posyandu_id, patient_id);
             if (currentPatient && currentPatient.picture) {

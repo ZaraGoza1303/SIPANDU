@@ -42,6 +42,9 @@ export const UpdatePatientExamReqSchema = CreatePatientExaminationSchema.partial
 });
 
 export const CreateExamScheduleSchema = z.object({
+    title: z.string().min(1, "Judul kegiatan wajib diisi"),
+    description: z.string().nullable().optional(),
+    location: z.string().nullable().optional(),
     scheduled_date: z.string().date(),
     time_start: z.string().date(),
     time_end: z.string().date(),

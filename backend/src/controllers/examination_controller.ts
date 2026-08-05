@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { sendErrorResponse, sendSuccessfullResponse } from "../utils/response.js";
 import { AppError } from "../utils/error.js";
+import { isValidUUID } from "../utils/validate_uuid.js";
 import { CreateExamScheduleSchema, CreatePatientExaminationSchema, UpdateExamScheduleReqSchema, UpdatePatientExamReqSchema } from "../dto/patient.js";
 import type { IExaminationsService } from "../services/examinations.interface.js";
 
@@ -69,6 +70,10 @@ export class ExaminationController {
             const posyandu_id = req.user?.posyandu_id as string;
             const exam_id = req.params.exam_id as string;
 
+            if (!isValidUUID(exam_id)) {
+                return res.status(400).json(sendErrorResponse("ID pemeriksaan tidak valid"));
+            }
+
             if (!req.body) {
                 return res.status(400).json(sendErrorResponse("Request body empty"))
             };
@@ -95,6 +100,10 @@ export class ExaminationController {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
             const exam_id = req.params.exam_id as string;
+
+            if (!isValidUUID(exam_id)) {
+                return res.status(400).json(sendErrorResponse("ID jadwal tidak valid"));
+            }
 
             if (!req.body) {
                 return res.status(400).json(sendErrorResponse("Request body empty"))
@@ -162,6 +171,10 @@ export class ExaminationController {
             const posyandu_id = req.user?.posyandu_id as string;
             const exam_id = req.params.id as string;
 
+            if (!isValidUUID(exam_id)) {
+                return res.status(400).json(sendErrorResponse("ID jadwal tidak valid"));
+            }
+
             await this.examinationsService.markScheduleAsCompleted(posyandu_id, exam_id);
             return res.status(200).json(sendSuccessfullResponse("Jadwal berhasil ditandai selesai"));
 
@@ -203,8 +216,8 @@ export class ExaminationController {
                 return res.status(400).json(sendErrorResponse("posyandu_id tidak ditemukan"));
             }
 
-            if (!patient_id) {
-                return res.status(400).json(sendErrorResponse("patient_id diperlukan"));
+            if (!isValidUUID(patient_id)) {
+                return res.status(400).json(sendErrorResponse("ID pasien tidak valid"));
             }
 
             const page = parseInt(req.query.page as string) || 1;

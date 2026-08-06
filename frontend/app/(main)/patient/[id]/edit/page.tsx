@@ -31,104 +31,90 @@ export default function EditPatientPage() {
   }, []);
 
   async function getPatient() {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/detail/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        alert(result.message);
-        return;
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/detail/${id}`,
+      {
+        credentials: "include",
       }
+    );
 
-      const patient = result.data;
+    const result = await response.json();
 
-      setForm({
-        nik: patient.nik || "",
-        nik_parent: patient.nik_parent || "",
-        name: patient.name || "",
-        birth_date: patient.birth_date?.slice(0, 10) || "",
-        gender: patient.gender || "",
-        mother_name: patient.mother_name || "",
-        father_name: patient.father_name || "",
-        address: patient.address || "",
-        phone_parent: patient.phone_parent || "",
-      });
-
-      if (patient.picture) {
-        setOldPicture(patient.picture);
-      }
-    } catch (err) {
-      console.log(err);
-      toast.error("Gagal mengambil data pasien.");
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      toast.error(result.message);
+      return;
     }
+
+    const patient = result.data;
+
+    setForm({
+      nik: patient.nik || "",
+      nik_parent: patient.nik_parent || "",
+      name: patient.name || "",
+      birth_date: patient.birth_date?.slice(0, 10) || "",
+      gender: patient.gender || "",
+      mother_name: patient.mother_name || "",
+      father_name: patient.father_name || "",
+      address: patient.address || "",
+      phone_parent: patient.phone_parent || "",
+    });
+
+    if (patient.picture) {
+      setOldPicture(patient.picture);
+    }
+  } catch (err) {
+    console.log(err);
+    toast.error("Gagal mengambil data pasien.");
+  } finally {
+    setLoading(false);
   }
+}
 
   async function updatePatient() {
-    try {
-      setSaving(true);
+  try {
+    setSaving(true);
 
-      const token = localStorage.getItem("token");
+    const formData = new FormData();
 
-      if (!token) {
-        toast.error("Silakan login.");
-        return;
-      }
+    formData.append("nik", form.nik);
+    formData.append("nik_parent", form.nik_parent);
+    formData.append("name", form.name);
+    formData.append("birth_date", form.birth_date);
+    formData.append("gender", form.gender);
+    formData.append("mother_name", form.mother_name);
+    formData.append("father_name", form.father_name);
+    formData.append("address", form.address);
+    formData.append("phone_parent", form.phone_parent);
 
-      const formData = new FormData();
-
-      formData.append("nik", form.nik);
-      formData.append("nik_parent", form.nik_parent);
-      formData.append("name", form.name);
-      formData.append("birth_date", form.birth_date);
-      formData.append("gender", form.gender);
-      formData.append("mother_name", form.mother_name);
-      formData.append("father_name", form.father_name);
-      formData.append("address", form.address);
-      formData.append("phone_parent", form.phone_parent);
-
-      if (picture) {
-        formData.append("picture", picture);
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/update/${id}`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        toast.error(result.message);
-        return;
-      }
-
-      toast.success("Data pasien berhasil diperbarui.");
-      router.push(`/patient/${id}`);
-    } catch (err) {
-      console.log(err);
-      toast.error("Terjadi kesalahan.");
-    } finally {
-      setSaving(false);
+    if (picture) {
+      formData.append("picture", picture);
     }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/update/${id}`,
+      {
+        method: "PATCH",
+        credentials: "include",
+        body: formData,
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success("Data pasien berhasil diperbarui.");
+  } catch (err) {
+    console.log(err);
+    toast.error("Gagal memperbarui data pasien.");
+  } finally {
+    setSaving(false);
   }
+}
 
   if (loading) {
     return (

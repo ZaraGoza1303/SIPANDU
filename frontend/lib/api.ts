@@ -1,5 +1,3 @@
-// lib/api.ts
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 export class ApiError extends Error {
@@ -18,14 +16,13 @@ interface CustomFetchOptions extends RequestInit {
   skipAuthRedirect?: boolean;
 }
 
-/**
- * Main fetch wrapper
- */
-export async function apiFetch(endpoint: string, options: CustomFetchOptions = {}) {
+export async function apiFetch(
+  endpoint: string,
+  options: CustomFetchOptions = {}
+) {
   const { skipAuthRedirect = false, ...fetchOptions } = options;
 
   const isClient = typeof window !== "undefined";
-  const token = isClient ? localStorage.getItem("token") : null;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -33,66 +30,66 @@ export async function apiFetch(endpoint: string, options: CustomFetchOptions = {
     ...(fetchOptions.headers as Record<string, string>),
   };
 
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  const fullUrl = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const fullUrl = `${API_BASE_URL}${
+    endpoint.startsWith("/") ? endpoint : `/${endpoint}`
+  }`;
 
   try {
     const response = await fetch(fullUrl, {
       ...fetchOptions,
+      credentials: "include", // <-- tambah ini
       headers,
     });
 
-    // 3. Penanganan HTTP 401 (Unauthorized / Token Kadaluarsa)
     if (response.status === 401) {
-      // Pastikan HANYA redirect jika token benar-benar ada tapi ditolak server (expired/invalid)
-      // Jika token memang tidak ada dari awal, atau server mati, jangan asal tendang ke login
-      if (isClient && !skipAuthRedirect && token) {
-        localStorage.removeItem("token");
+      if (isClient && !skipAuthRedirect) {
         window.location.href = "/login";
       }
-      throw new ApiError("Sesi Anda telah berakhir atau token tidak valid.", 401);
+
+      throw new ApiError(
+        "Sesi Anda telah berakhir atau belum login.",
+        401
+      );
     }
 
-    // 4. Penanganan HTTP 403 (Forbidden)
     if (response.status === 403) {
       const errorData = await response.json().catch(() => null);
-      const message =
-        errorData?.message || "Akses Ditolak (403): Akun Anda tidak memiliki izin untuk fitur ini.";
-      throw new ApiError(message, 403, errorData);
+
+      throw new ApiError(
+        errorData?.message ||
+          "Akses ditolak (403).",
+        403,
+        errorData
+      );
     }
 
-    // 5. Penanganan error HTTP lainnya
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      const message =
-        errorData?.message || `Gagal memuat data dari server (HTTP ${response.status})`;
-      throw new ApiError(message, response.status, errorData);
+
+      throw new ApiError(
+        errorData?.message ||
+          `HTTP ${response.status}`,
+        response.status,
+        errorData
+      );
     }
 
     return response;
   } catch (error: any) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    
-    // 🔥 PENTING: Jika server mati (status 0 / gagal koneksi), JANGAN redirect ke login!
-    // Cukup lempar error biasa agar halaman menampilkan pesan "Gagal terhubung ke server" saja.
+    if (error instanceof ApiError) throw error;
+
     throw new ApiError(
-      "Gagal terhubung ke server Express. Pastikan server backend Anda sudah menyala.",
+      "Gagal terhubung ke server.",
       0
     );
   }
 }
-
-/**
- * Short-hand Helper Methods (GET, POST, PUT, DELETE)
- */
 export const api = {
   get: async <T = any>(endpoint: string, options?: CustomFetchOptions): Promise<T> => {
-    const res = await apiFetch(endpoint, { method: "GET", ...options });
+    const res = await apiFetch(endpoint, {
+      method: "GET",
+      ...options,
+    });
     return res.json();
   },
 
@@ -122,8 +119,14 @@ export const api = {
     return res.json();
   },
 
-  delete: async <T = any>(endpoint: string, options?: CustomFetchOptions): Promise<T> => {
-    const res = await apiFetch(endpoint, { method: "DELETE", ...options });
+  delete: async <T = any>(
+    endpoint: string,
+    options?: CustomFetchOptions
+  ): Promise<T> => {
+    const res = await apiFetch(endpoint, {
+      method: "DELETE",
+      ...options,
+    });
     return res.json();
   },
 };

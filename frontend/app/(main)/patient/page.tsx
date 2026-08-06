@@ -35,23 +35,14 @@ export default function PatientPage() {
   useEffect(() => {
     async function fetchPatients() {
       try {
-        const token =
-          localStorage.getItem("token") ||
-          localStorage.getItem("access_token") ||
-          localStorage.getItem("authToken");
-
-        if (!token) {
-          setError("Token tidak ditemukan. Silakan pastikan Anda sudah login.");
-          setLoading(false);
-          return;
-        }
 
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+
         const response = await fetch(`${baseUrl}/api/pasien/all`, {
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
             "ngrok-skip-browser-warning": "69420",
-            Authorization: `Bearer ${token}`,
           },
         });
 

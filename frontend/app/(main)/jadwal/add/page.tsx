@@ -11,7 +11,6 @@ import {
   FiFileText,
   FiActivity,
   FiCheckCircle,
-  FiUserCheck,
 } from "react-icons/fi";
 import { apiFetch, ApiError } from "@/lib/api";
 
@@ -26,7 +25,6 @@ export default function AddSchedulePage() {
     endTime: "",
     location: "",
     status: "akan_datang", // Default status lokal form
-    petugasPJ: "",          // Penanggung jawab (Kader/Bidan)
     notes: "",
   });
 
@@ -35,7 +33,7 @@ export default function AddSchedulePage() {
     setLoading(true);
 
     try {
-      // Disesuaikan dengan struktur field dari Backend baru
+      // Disesuaikan dengan struktur field dari Backend baru (tanpa penanggung jawab)
       const payload = {
         title: formData.title,
         description: formData.notes,
@@ -44,7 +42,6 @@ export default function AddSchedulePage() {
         time_end: `${formData.date}T${formData.endTime}:00Z`,
         location: formData.location,
         status: formData.status,
-        petugas_pj: formData.petugasPJ,
       };
 
       // Menggunakan apiFetch (Otomatis membawa Bearer Token & Header Ngrok)
@@ -97,7 +94,7 @@ export default function AddSchedulePage() {
           Tambah Jadwal Posyandu
         </h1>
         <p className="mt-1 text-gray-500">
-          Buat jadwal kegiatan rutin posyandu balita beserta penanggung jawabnya.
+          Buat jadwal kegiatan rutin posyandu balita.
         </p>
       </div>
 
@@ -174,38 +171,22 @@ export default function AddSchedulePage() {
           />
         </div>
 
-        {/* Status Pelaksanaan & Penanggung Jawab */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <FiCheckCircle className="text-gray-400"/> Status Pelaksanaan
-            </label>
-            <select
-              className="w-full rounded-xl border border-gray-300 bg-white py-3 px-4 text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            >
-              <option value="akan_datang">Akan Datang (Upcoming)</option>
-              <option value="aktif">Aktif</option>
-              <option value="berlangsung">Sedang Berlangsung (Ongoing)</option>
-              <option value="selesai">Selesai (Completed)</option>
-              <option value="dibatalkan">Dibatalkan (Cancelled)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <FiUserCheck className="text-gray-400"/> Penanggung Jawab (Kader/Bidan)
-            </label>
-            <input
-              required
-              type="text"
-              placeholder="Misal: Bidan Siti & Kader RW 05"
-              className="w-full rounded-xl border border-gray-300 bg-white py-3 px-4 text-gray-900 placeholder:text-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              value={formData.petugasPJ}
-              onChange={(e) => setFormData({ ...formData, petugasPJ: e.target.value })}
-            />
-          </div>
+        {/* Status Pelaksanaan */}
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <FiCheckCircle className="text-gray-400"/> Status Pelaksanaan
+          </label>
+          <select
+            className="w-full rounded-xl border border-gray-300 bg-white py-3 px-4 text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+          >
+            <option value="akan_datang">Akan Datang (Upcoming)</option>
+            <option value="aktif">Aktif</option>
+            <option value="berlangsung">Sedang Berlangsung (Ongoing)</option>
+            <option value="selesai">Selesai (Completed)</option>
+            <option value="dibatalkan">Dibatalkan (Cancelled)</option>
+          </select>
         </div>
 
         {/* Keterangan */}

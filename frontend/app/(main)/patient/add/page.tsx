@@ -27,46 +27,61 @@ export default function AddPatientPage() {
   });
 
   async function savePatient() {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) { toast.error("Silakan login terlebih dahulu."); return; }
+  try {
+    setLoading(true);
 
-      if (!form.nik || !form.nik_parent || !form.name || !form.birth_date ||
-          !form.gender || !form.mother_name || !form.address || !form.phone_parent) {
-        toast.error("Semua data wajib diisi.");
-        return;
-      }
-
-      if (!picture) { toast.error("Foto pasien wajib dipilih."); return; }
-
-      const formData = new FormData();
-      Object.entries(form).forEach(([k, v]) => formData.append(k, v));
-      formData.append("picture", picture);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/add`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      const result = await response.json();
-      if (!response.ok) { toast.error(result.message); return; }
-
-      toast.success("Pasien berhasil ditambahkan.");
-      router.push(from === "pemeriksaan" ? "/pemeriksaan/add" : "/patient");
-    } catch (error) {
-      console.error(error);
-      toast.error("Gagal terhubung ke server.");
-    } finally {
-      setLoading(false);
+    if (
+      !form.nik ||
+      !form.nik_parent ||
+      !form.name ||
+      !form.birth_date ||
+      !form.gender ||
+      !form.mother_name ||
+      !form.address ||
+      !form.phone_parent
+    ) {
+      toast.error("Semua data wajib diisi.");
+      return;
     }
+
+    if (!picture) {
+      toast.error("Foto pasien wajib dipilih.");
+      return;
+    }
+
+    const formData = new FormData();
+
+    Object.entries(form).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    formData.append("picture", picture);
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/add`,
+      {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success("Pasien berhasil ditambahkan.");
+    router.push(from === "pemeriksaan" ? "/pemeriksaan/add" : "/patient");
+  } catch (error) {
+    console.error(error);
+    toast.error("Gagal terhubung ke server.");
+  } finally {
+    setLoading(false);
   }
+}
 
   const inputCls = "w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-blue-400 transition";
   const labelCls = "mb-1.5 block text-sm font-medium text-gray-700";

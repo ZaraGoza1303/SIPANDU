@@ -35,62 +35,64 @@ export default function AddPemeriksaanPage() {
   }, []);
 
   async function fetchPatients() {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/all?page=1&limit=100`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const result = await response.json();
-      if (result.success) setPatients(result.data.items);
-    } catch (error) {
-      console.log(error);
-    }
-  }
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/pasien/all?page=1&limit=100`,
+      {
+        credentials: "include",
+      }
+    );
 
-  async function saveExamination() {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) { toast.error("Silakan login terlebih dahulu."); return; }
+    const result = await response.json();
 
-      const user = JSON.parse(atob(token.split(".")[1]));
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/pemeriksaan/add`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            exam_date: form.examination_date,
-            patient_id: form.patient_id,
-            user_id: user.id,
-            weight: Number(form.weight),
-            height: Number(form.height),
-            head_circumference: Number(form.head_circumference),
-            arm_circumference: Number(form.arm_circumference),
-            notes: form.note || null,
-          }),
-        }
-      );
-      const result = await response.json();
-      if (!response.ok) { toast.error(result.message); return; }
-      toast.success("Pemeriksaan berhasil ditambahkan.");
-      router.push("/pemeriksaan");
-    } catch (error) {
-      console.log(error);
-      toast.error("Terjadi kesalahan.");
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      setPatients(result.data.items);
     }
+  } catch (error) {
+    console.log(error);
   }
+}
+
+async function saveExamination() {
+  try {
+    setLoading(true);
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/pemeriksaan/add`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          exam_date: form.examination_date,
+          patient_id: form.patient_id,
+          weight: Number(form.weight),
+          height: Number(form.height),
+          head_circumference: Number(form.head_circumference),
+          arm_circumference: Number(form.arm_circumference),
+          notes: form.note || null,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success("Pemeriksaan berhasil ditambahkan.");
+    router.push("/pemeriksaan");
+  } catch (error) {
+    console.log(error);
+    toast.error("Terjadi kesalahan.");
+  } finally {
+    setLoading(false);
+  }
+}
 
   // Reusable class strings
   const inputCls = "w-full rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition";

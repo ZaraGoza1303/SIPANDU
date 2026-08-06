@@ -140,10 +140,8 @@ export default function PemeriksaanPage() {
       )}
 
       {/* Statistik Dinamis */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <Card title="Total Antrian" value={String(examinations.length)} subtitle="Anak" icon={<FiUsers />} color="blue" />
-        <Card title="Sudah Diperiksa" value={String(examinations.filter((e) => e.status === "Selesai" || e.stunting_status).length)} subtitle="Anak" icon={<FiCheckCircle />} color="emerald" />
-        <Card title="Belum Diperiksa" value={String(examinations.filter((e) => e.status === "Menunggu").length)} subtitle="Anak" icon={<FiAlertCircle />} color="amber" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-5">
+        <Card title="Total Pemeriksaan" value={String(examinations.length)} subtitle="Anak" icon={<FiUsers />} color="blue" />
         <Card title="Rata-rata Waktu" value="12" subtitle="Menit" icon={<FiClock />} color="indigo" />
       </div>
 

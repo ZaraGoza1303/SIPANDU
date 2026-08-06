@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearch } from "../layout";
 import { FaStethoscope } from "react-icons/fa6";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import {
@@ -13,6 +12,7 @@ import {
   FiPlus,
   FiSearch,
   FiEye,
+  FiHome,
 } from "react-icons/fi";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -40,23 +40,43 @@ interface Patient {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getToken(): string | null { return localStorage.getItem("token"); }
-function authHeaders(token: string): Record<string, string> {
-  return { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
+function authHeaders(): Record<string, string> {
+  return {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "69420",
+  };
 }
+
 function calcAgeMonths(birthDate: string): string {
   if (!birthDate) return "-";
-  const birth = new Date(birthDate); const now = new Date();
-  const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+
+  const birth = new Date(birthDate);
+  const now = new Date();
+
+  const months =
+    (now.getFullYear() - birth.getFullYear()) * 12 +
+    (now.getMonth() - birth.getMonth());
+
   if (months < 1) return "< 1 bln";
   if (months < 12) return `${months} bln`;
-  const years = Math.floor(months / 12); const rem = months % 12;
+
+  const years = Math.floor(months / 12);
+  const rem = months % 12;
+
   return rem > 0 ? `${years} thn ${rem} bln` : `${years} thn`;
 }
-function buildDistribusi(dist: { range: string; count: number }[]): DistribusiItem[] {
+
+function buildDistribusi(
+  dist: { range: string; count: number }[]
+): DistribusiItem[] {
   const colors = ["#3B82F6", "#60A5FA", "#BFDBFE", "#93C5FD", "#E5E7EB"];
-  const total = dist.reduce((s, d) => s + d.count, 0) || 1;
-  return dist.map((d, i) => ({ label: d.range, pct: Math.round((d.count / total) * 100), color: colors[i % colors.length] }));
+  const total = dist.reduce((sum, item) => sum + item.count, 0) || 1;
+
+  return dist.map((item, index) => ({
+    label: item.range,
+    pct: Math.round((item.count / total) * 100),
+    color: colors[index % colors.length],
+  }));
 }
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
@@ -178,10 +198,10 @@ function DonutChart({ data, total }: { data: DistribusiItem[]; total: number }) 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 const statusMap: Record<string, { cls: string; label: string }> = {
-  Normal:          { cls: "bg-green-100 text-green-700",  label: "Normal"           },
-  Stunted:         { cls: "bg-red-100 text-red-600",      label: "Stunting"         },
+  Normal:          { cls: "bg-green-100 text-green-700",  label: "Normal"          },
+  Stunted:         { cls: "bg-red-100 text-red-600",      label: "Stunting"        },
   SeverelyStunted: { cls: "bg-red-200 text-red-700",      label: "Severely Stunted" },
-  Stunting:        { cls: "bg-red-100 text-red-600",      label: "Stunting"         },
+  Stunting:        { cls: "bg-red-100 text-red-600",      label: "Stunting"        },
   Risiko:          { cls: "bg-yellow-100 text-yellow-700", label: "Risiko"          },
 };
 function StatusBadge({ status }: { status: string }) {
@@ -193,8 +213,6 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { search } = useSearch();
-
   const [stats, setStats] = useState({ 
     totalPasien: 0, 
     pemeriksaanBulan: 0, 
@@ -212,13 +230,15 @@ export default function DashboardPage() {
   const [localSearch, setLocalSearch] = useState("");
 
   const filteredPatients = patients.filter(p =>
-    p.name.toLowerCase().includes((search || localSearch).toLowerCase())
+    p.name.toLowerCase().includes(localSearch.toLowerCase())
   );
 
   // Fetch Trend Stunting Data
   useEffect(() => {
-    const token = getToken(); if (!token) return;
-    fetch(`${BASE_URL}/api/dashboard/trend-stunting`, { headers: authHeaders(token) })
+    fetch(`${BASE_URL}/api/dashboard/trend-stunting`, {
+      credentials: "include",
+      headers: authHeaders(),
+    })
       .then(r => r.json())
       .then(json => { if (json.success) setTrendData(json.data ?? []); })
       .catch(console.error);
@@ -226,8 +246,10 @@ export default function DashboardPage() {
 
   // Fetch Dashboard Stats
   useEffect(() => {
-    const token = getToken(); if (!token) return;
-    fetch(`${BASE_URL}/api/dashboard/stats`, { headers: authHeaders(token) })
+    fetch(`${BASE_URL}/api/dashboard/stats`, {
+      credentials: "include",
+      headers: authHeaders(),
+    })
       .then(r => r.json())
       .then(json => {
         if (!json.success) return;
@@ -257,9 +279,12 @@ export default function DashboardPage() {
 
   // Fetch Today's Scheduled Patients
   useEffect(() => {
-    const token = getToken(); if (!token) return;
     setLoadingPatients(true);
-    fetch(`${BASE_URL}/api/pasien/all-today-patients`, { headers: authHeaders(token) })
+
+    fetch(`${BASE_URL}/api/pasien/all-today-patients`, {
+      credentials: "include",
+      headers: authHeaders(),
+    })
       .then(r => r.json())
       .then(json => {
         if (json.success && json.data?.items) {
@@ -281,8 +306,10 @@ export default function DashboardPage() {
 
   // Fetch All Patients (Master list)
   useEffect(() => {
-    const token = getToken(); if (!token) return;
-    fetch(`${BASE_URL}/api/pasien/all`, { headers: authHeaders(token) })
+    fetch(`${BASE_URL}/api/pasien/all`, {
+      credentials: "include",
+      headers: authHeaders(),
+    })
       .then(r => r.json())
       .then(json => { if (json.success) setAllPatients(json.data.items ?? []); })
       .catch(console.error);
@@ -292,18 +319,42 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 pt-2">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900">Dashboard Ringkasan</h1>
-          <p className="text-sm text-gray-400 mt-1">Selamat datang kembali, berikut statistik kesehatan terkini.</p>
+      
+      {/* ─── CUSTOM HEADER DASHBOARD ─── */}
+      <div className="space-y-4">
+        {/* Baris Atas: Judul Dashboard & Info Posyandu (Tanpa Background) */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard Ringkasan</h1>
+            <p className="text-sm text-gray-400 mt-1">Selamat datang kembali, berikut statistik kesehatan terkini.</p>
+          </div>
+          
+          <div className="flex items-center gap-2 text-gray-700 font-medium text-sm">
+            <FiHome size={18} className="text-gray-500" />
+            <span>Posyandu Antapani</span>
+          </div>
         </div>
-        <button
-          onClick={() => router.push("/pemeriksaan/add")}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-3 rounded-xl transition shadow-sm shadow-blue-200"
-        >
-          <FiPlus className="w-4 h-4" /> Tambah Pemeriksaan
-        </button>
+
+        {/* Baris Bawah: Search Bar & Tombol Tambah Pemeriksaan */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1">
+            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              placeholder="Cari data pasien atau jadwal..."
+              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm outline-none focus:border-blue-500 shadow-sm"
+            />
+          </div>
+          
+          <button
+            onClick={() => router.push("/pemeriksaan/add")}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-sm font-medium shadow-sm shadow-blue-200 transition cursor-pointer shrink-0"
+          >
+            <FiPlus className="w-4 h-4" /> Tambah Pemeriksaan
+          </button>
+        </div>
       </div>
 
       {/* Stat Cards */}
@@ -420,20 +471,6 @@ export default function DashboardPage() {
           >
             Lihat Semua
           </button>
-        </div>
-
-        {/* Search */}
-        <div className="px-6 py-4 border-b border-gray-50">
-          <div className="relative">
-            <FiSearch className="absolute left-4 top-3 text-gray-400" size={15} />
-            <input
-              type="text"
-              placeholder="Cari data pasien atau jadwal..."
-              value={localSearch}
-              onChange={e => setLocalSearch(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-700 placeholder:text-gray-400 outline-none focus:border-blue-400 transition"
-            />
-          </div>
         </div>
 
         <table className="w-full text-sm">

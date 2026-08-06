@@ -45,10 +45,10 @@ export default function LoginPage() {
       console.log(result);
 
       if (result.success) {
-        localStorage.setItem(
-          "token",
-          result.data.jwt_token
-        );
+        if (result.success) {
+  toast.success("Login berhasil");
+  router.push("/dashboard");
+}
 
         toast.success("Login berhasil");
 

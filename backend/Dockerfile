@@ -1,4 +1,4 @@
-# BUILD
+# BUILD STAGE
 FROM node:26.5.0-alpine3.24 AS builder
 
 WORKDIR /app
@@ -9,21 +9,19 @@ RUN npm install
 
 COPY . .
 
-# Generate custom Prisma client path for TS compilation
 RUN npx prisma generate
 
 RUN npm run build
 
-# RUN
+# RUN STAGE
 FROM node:26.5.0-alpine3.24
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --omit=dev
-
-# Copy generated prisma files & compiled files
+# Salin node_modules hasil install dari builder (di dalam container Railway)
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/src/generated /app/src/generated
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma

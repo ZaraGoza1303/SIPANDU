@@ -1,5 +1,6 @@
 import { AppError } from "../utils/error.js";
-import type { ExaminationWithPatient } from "../dto/patient.js";
+import type { ExaminationWithPatient, ExaminationWithStunting, ScheduleWithUser } from "../dto/patient.js";
+import type { PaginatedResponse } from "../dto/response.js";
 import type { Examination, Prisma, PrismaClient, Schedule } from "../generated/prisma/client.js";
 import type { ExaminationCreateInput, ExaminationUpdateInput } from "../generated/prisma/models.js";
 import type { IExaminationsRepository } from "./examinations.interface.js";
@@ -98,6 +99,167 @@ export class ExaminationsRepository implements IExaminationsRepository {
         })
 
         return isScheduleExists > 0;
+    }
+
+    async getAllExaminations(posyandu_id: string, page: number, limit: number, search?: string | null): Promise<PaginatedResponse<ExaminationWithStunting>> {
+        const offset = (page - 1) * limit;
+        const search_filter: Record<string, unknown> = search ? {
+            OR: [
+            { patient: { name: { contains: search, mode: 'insensitive' } } },
+            { notes: { contains: search, mode: 'insensitive' } },
+            ]
+        } : {};
+
+        const [examinations, total_examinations] = await Promise.all([
+            this.db.examination.findMany({
+                where: {
+                    patient: {
+                        posyandu_id: posyandu_id,
+                    },
+                    ...search_filter,
+                },
+                skip: offset,
+                take: limit,
+                orderBy: { exam_date: 'desc' },
+                include: {
+                    patient: true,
+                    stunting_result: true,
+                },
+            }),
+            this.db.examination.count({
+                where: {
+                    patient: {
+                        posyandu_id: posyandu_id,
+                    },
+                    ...search_filter,
+                },
+            })
+        ]);
+
+        const res: PaginatedResponse<ExaminationWithStunting> = {
+            items: examinations,
+            next_cursor: null,
+            meta: {
+                total_items: total_examinations,
+                current_page: page,
+                limit,
+                total_pages: Math.ceil(total_examinations / limit)
+            }
+        }
+
+        return res;
+    }
+
+    async getAllSchedules(posyandu_id: string, page: number, limit: number, search?: string | null, tanggal?: string | null): Promise<PaginatedResponse<ScheduleWithUser>> {
+        const offset = (page - 1) * limit;
+        const where: Prisma.ScheduleWhereInput = {
+            posyandu_id: posyandu_id,
+        };
+
+        // Filter by date
+        if (tanggal) {
+            const filterDate = new Date(tanggal);
+            where.scheduled_date = filterDate;
+        }
+
+        // Search by status, title, description, location or user name
+        if (search) {
+            where.OR = [
+                { title: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+                { location: { contains: search, mode: 'insensitive' } },
+                { status: { contains: search, mode: 'insensitive' } },
+                { user: { name: { contains: search, mode: 'insensitive' } } },
+            ];
+        }
+
+        const [schedules, total_schedules] = await Promise.all([
+            this.db.schedule.findMany({
+                where,
+                skip: offset,
+                take: limit,
+                orderBy: { scheduled_date: 'desc' },
+                include: {
+                    user: true,
+                },
+            }),
+            this.db.schedule.count({ where }),
+        ]);
+
+        const res: PaginatedResponse<ScheduleWithUser> = {
+            items: schedules,
+            next_cursor: null,
+            meta: {
+                total_items: total_schedules,
+                current_page: page,
+                limit,
+                total_pages: Math.ceil(total_schedules / limit)
+            }
+        }
+
+        return res;
+    }
+
+    async countTodayPendingExaminations(posyandu_id: string, today: Date, tomorrow: Date): Promise<{ total_patients: number; examined_count: number; pending_count: number }> {
+        const [total_patients, examined_count] = await Promise.all([
+            this.db.patient.count({
+                where: { posyandu_id },
+            }),
+            this.db.examination.groupBy({
+                by: ['patient_id'],
+                where: {
+                    patient: { posyandu_id },
+                    exam_date: { gte: today, lt: tomorrow },
+                },
+            }),
+        ])
+
+        const pending_count = total_patients - examined_count.length;
+
+        return { total_patients, examined_count: examined_count.length, pending_count };
+    }
+
+    async getExaminationsByPatient(posyandu_id: string, patient_id: string, page: number, limit: number): Promise<PaginatedResponse<ExaminationWithStunting>> {
+        const offset = (page - 1) * limit;
+
+        const [examinations, total_examinations] = await Promise.all([
+            this.db.examination.findMany({
+                where: {
+                    patient_id,
+                    patient: {
+                        posyandu_id,
+                    },
+                },
+                skip: offset,
+                take: limit,
+                orderBy: { exam_date: 'desc' },
+                include: {
+                    patient: true,
+                    stunting_result: true,
+                },
+            }),
+            this.db.examination.count({
+                where: {
+                    patient_id,
+                    patient: {
+                        posyandu_id,
+                    },
+                },
+            }),
+        ])
+
+        const res: PaginatedResponse<ExaminationWithStunting> = {
+            items: examinations,
+            next_cursor: null,
+            meta: {
+                total_items: total_examinations,
+                current_page: page,
+                limit,
+                total_pages: Math.ceil(total_examinations / limit),
+            },
+        }
+
+        return res;
     }
     
 }

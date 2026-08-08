@@ -1,3 +1,5 @@
+export type Periode = 'bulan_ini' | 'bulan_lalu';
+
 export interface AgeGroupCount {
   range: string;
   count: number;
@@ -5,7 +7,7 @@ export interface AgeGroupCount {
 
 export interface DashboardStats {
   totalPatients: number;
-  totalExaminationsThisMonth: number;
+  totalExaminations: number;
   stuntingCount: number;
   normalCount: number;
   ageGroupDistribution: AgeGroupCount[];

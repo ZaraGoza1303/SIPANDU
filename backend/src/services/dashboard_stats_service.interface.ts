@@ -1,6 +1,6 @@
-import type { DashboardStats, MonthlyTrendItem } from "../dto/dashboard_stats.js";
+import type { DashboardStats, MonthlyTrendItem, Periode } from "../dto/dashboard_stats.js";
 
 export interface IDashboardStatsService {
-    getStats(posyandu_id: string): Promise<DashboardStats>;
-    getMonthlyTrend(posyandu_id: string): Promise<MonthlyTrendItem[]>;
+    getStats(posyandu_id: string, periode: Periode): Promise<DashboardStats>;
+    getMonthlyTrend(posyandu_id: string, periode?: Periode): Promise<MonthlyTrendItem[]>;
 }

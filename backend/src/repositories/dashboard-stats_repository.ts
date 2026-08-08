@@ -1,6 +1,25 @@
-import type { AgeGroupCount, MonthlyTrendItem } from "../dto/dashboard_stats.js";
+import type { AgeGroupCount, MonthlyTrendItem, Periode } from "../dto/dashboard_stats.js";
 import { PrismaClient, StuntingStatus, Prisma } from "../generated/prisma/client.js";
 import type { IDashboardStatsRepository } from "./dashboard-stats.interface.js";
+
+function getPeriodeRange(periode: Periode): { start: Date; end: Date } {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+
+    if (periode === 'bulan_ini') {
+        return {
+            start: new Date(year, month, 1),
+            end: new Date(year, month + 1, 1),
+        };
+    }
+
+    // bulan_lalu
+    return {
+        start: new Date(year, month - 1, 1),
+        end: new Date(year, month, 1),
+    };
+}
 
 export class DashboardStatsRepository implements IDashboardStatsRepository {
     private db: PrismaClient;
@@ -15,16 +34,14 @@ export class DashboardStatsRepository implements IDashboardStatsRepository {
         });
     }
 
-    async countTotalExaminationsThisMonth(posyandu_id: string): Promise<number> {
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    async countTotalExaminations(posyandu_id: string, periode: Periode): Promise<number> {
+        const { start, end } = getPeriodeRange(periode);
 
         return await this.db.examination.count({
             where: {
                 exam_date: {
-                    gte: startOfMonth,
-                    lt: startOfNextMonth,
+                    gte: start,
+                    lt: end,
                 },
                 patient: {
                     posyandu_id
@@ -88,7 +105,17 @@ export class DashboardStatsRepository implements IDashboardStatsRepository {
         }));
     }
 
-    async getMonthlyTrend(posyandu_id: string): Promise<MonthlyTrendItem[]> {
+    async getMonthlyTrend(posyandu_id: string, periode?: Periode): Promise<MonthlyTrendItem[]> {
+        let intervalFilter: string;
+        if (periode === 'bulan_ini') {
+            intervalFilter = "AND e.exam_date >= DATE_TRUNC('month', CURRENT_DATE)";
+        } else if (periode === 'bulan_lalu') {
+            intervalFilter = `AND e.exam_date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+                AND e.exam_date < DATE_TRUNC('month', CURRENT_DATE)`;
+        } else {
+            intervalFilter = "AND e.exam_date >= (CURRENT_DATE - INTERVAL '6 months')";
+        }
+
         const rows: { month: string; total: bigint; stunting: bigint }[] = await this.db.$queryRaw(Prisma.sql`
             SELECT
                 TO_CHAR(DATE_TRUNC('month', e.exam_date), 'Mon YYYY') as month,
@@ -98,7 +125,7 @@ export class DashboardStatsRepository implements IDashboardStatsRepository {
             LEFT JOIN stunting_results sr ON sr.examination_id = e.id
             JOIN patients p ON p.id = e.patient_id
             WHERE p.posyandu_id = ${posyandu_id}::uuid
-                AND e.exam_date >= (CURRENT_DATE - INTERVAL '6 months')
+                ${Prisma.raw(intervalFilter)}
             GROUP BY DATE_TRUNC('month', e.exam_date)
             ORDER BY DATE_TRUNC('month', e.exam_date) ASC
         `);

@@ -10,6 +10,7 @@ import {
   EyeOff,
   LogIn,
 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,8 +31,6 @@ export default function LoginPage() {
           headers: {
             "Content-Type":
               "application/json",
-            "ngrok-skip-browser-warning":
-              "true",
           },
           body: JSON.stringify({
             email,
@@ -46,22 +45,20 @@ export default function LoginPage() {
       console.log(result);
 
       if (result.success) {
-        localStorage.setItem(
-          "token",
-          result.data.jwt_token
-        );
+        if (result.success) {
+  toast.success("Login berhasil");
+  router.push("/dashboard");
+}
 
-        alert("Login berhasil");
+        toast.success("Login berhasil");
 
-        router.push("/patient");
+        router.push("/dashboard");
       } else {
-        alert(result.message);
+        toast.error(result.message);
       }
     } catch (error) {
       console.error(error);
-      alert(
-        "Gagal terhubung ke server"
-      );
+      toast.error("Gagal terhubung ke server");
     }
   };
 
@@ -145,12 +142,21 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="mb-6 flex items-center gap-2">
-            <input type="checkbox" />
+          <div className="mb-6 flex items-center justify-between">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" />
 
-            <span className="text-sm text-gray-600">
-              Ingat Saya
-            </span>
+              <span className="text-sm text-gray-600">
+                Ingat Saya
+              </span>
+            </label>
+
+            <a
+              href="/forgotPW"
+              className="text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              Lupa Kata Sandi?
+            </a>
           </div>
 
           <button

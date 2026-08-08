@@ -3,8 +3,7 @@ import { sendErrorResponse } from "../utils/response.js";
 import jwt from 'jsonwebtoken'
 
 export const verifyJWTToken = (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader?.split(' ')[1];
+    const token = req.cookies?.token;
     if(!token) return res.status(401).json(sendErrorResponse("Unauthorized"));
 
     const secret = process.env.JWT_TOKEN;
@@ -19,7 +18,7 @@ export const verifyJWTToken = (req: Request, res: Response, next: NextFunction) 
     }
 }
 
-export const authorizeRole = (allowedRoles: string) => {
+export const authorizeRole = (...allowedRoles: string[]) => {
     return(req: Request, res: Response, next: NextFunction) => {
         if(!req.user || !allowedRoles.includes(req.user.role)){
             return res.status(403).json(sendErrorResponse("Forbidden"));

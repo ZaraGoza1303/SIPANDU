@@ -1,6 +1,16 @@
 import z from "zod";
 import type { Prisma } from "../generated/prisma/client.js";
 
+export type PatientWithLatestExamination = Prisma.PatientGetPayload<{
+    include: {
+        examination: {
+            take: 1,
+            orderBy: { exam_date: 'desc' },
+            include: { stunting_result: true }
+        }
+    }
+}>
+
 export const CreatePatientSchema = z.object({
     nik: z.string().min(16, "Panjang NIK minimal 16 karakter"),
     picture: z.string().nullable().optional(),
@@ -19,8 +29,8 @@ export const UpdatePatientSchema = CreatePatientSchema.partial().extend({
 
 export const CreatePatientExaminationSchema = z.object({
     exam_date: z.string().date(),
-    patient_id: z.string().min(1, "Nama pasien wajib diisi"),
-    user_id: z.string().min(1, "Nama pemeriksa wajib diisi"),
+    patient_id: z.string().uuid("Format patient_id harus UUID yang valid"),
+    user_id: z.string().uuid("Format user_id harus UUID yang valid"),
     weight: z.number(),
     height: z.number(),
     head_circumference: z.number(),
@@ -32,6 +42,9 @@ export const UpdatePatientExamReqSchema = CreatePatientExaminationSchema.partial
 });
 
 export const CreateExamScheduleSchema = z.object({
+    title: z.string().min(1, "Judul kegiatan wajib diisi"),
+    description: z.string().nullable().optional(),
+    location: z.string().nullable().optional(),
     scheduled_date: z.string().date(),
     time_start: z.string().date(),
     time_end: z.string().date(),
@@ -39,6 +52,14 @@ export const CreateExamScheduleSchema = z.object({
 })
 
 export const UpdateExamScheduleReqSchema = CreateExamScheduleSchema.partial().extend({
+});
+
+export const PatientIdParamSchema = z.object({
+    patient_id: z.string().trim().uuid("Format patient_id harus UUID yang valid"),
+});
+
+export const ExamIdParamSchema = z.object({
+    exam_id: z.string().trim().uuid("Format exam_id harus UUID yang valid"),
 });
 
 export interface TodayPatientItem {
@@ -49,9 +70,8 @@ export interface TodayPatientItem {
     gender: string;
     mother_name: string;
     phone_parent: string;
-    examination: {
-        id: string;
-    }[];
+    is_examined_today: boolean;
+    today_examination_count: number;
 }
 
 export interface PatientBirthAndGenderOnly {
@@ -63,9 +83,20 @@ export type ExaminationWithPatient = Prisma.ExaminationGetPayload<{
     include: { patient: true }
 }>;
 
+export type ExaminationWithStunting = Prisma.ExaminationGetPayload<{
+    include: { 
+        patient: true,
+        stunting_result: true,
+    }
+}>;
+
 export type CreatePatientReq = z.infer<typeof CreatePatientSchema>;
 export type UpdatePatientReq = z.infer<typeof UpdatePatientSchema>;
 export type UpdatePatientExamReqSchema = z.infer<typeof UpdatePatientExamReqSchema>;
 export type CreatePatientExamReq = z.infer<typeof CreatePatientExaminationSchema>;
 export type CreateExamScheduleReq = z.infer<typeof CreateExamScheduleSchema>;
 export type UpdateExamScheduleReq = z.infer<typeof UpdateExamScheduleReqSchema>;
+
+export type ScheduleWithUser = Prisma.ScheduleGetPayload<{
+    include: { user: true }
+}>;

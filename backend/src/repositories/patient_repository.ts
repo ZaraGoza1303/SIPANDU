@@ -1,4 +1,5 @@
 import type { IPatientsRepository } from "./patient_repository.interface.js";
+import type { PatientWithLatestExamination } from "../dto/patient.js";
 import type { Patient, PrismaClient } from "../generated/prisma/client.js";
 import type { PatientCreateInput, PatientUpdateInput } from "../generated/prisma/models.js";
 import type { PaginatedResponse } from "../dto/response.js";
@@ -14,14 +15,14 @@ export class PatientsRepository implements IPatientsRepository {
 
     async getAllTodayPatients(posyandu_id: string, page: number, limit: number, today: Date, tomorrow: Date, search?: string | null): Promise<PaginatedResponse<TodayPatientItem>> {
         const offset = (page - 1) * limit;
-        const search_filter: any = search ? {
+        const search_filter: Record<string, unknown> = search ? {
             OR: [
             { name: { contains: search, mode: 'insensitive' } },
             { nik: { contains: search, mode: 'insensitive' } },
             ]
         } : {};
 
-        const[patients, total_patients] = await Promise.all([
+        const [patientRows, total_patients] = await Promise.all([
             this.db.patient.findMany({
                 where: {
                     posyandu_id: posyandu_id,
@@ -59,8 +60,20 @@ export class PatientsRepository implements IPatientsRepository {
             })
         ])
 
+        const todayPatientItems: TodayPatientItem[] = patientRows.map((p) => ({
+            id: p.id,
+            nik: p.nik,
+            name: p.name,
+            birth_date: p.birth_date,
+            gender: p.gender,
+            mother_name: p.mother_name,
+            phone_parent: p.phone_parent,
+            is_examined_today: p.examination.length > 0,
+            today_examination_count: p.examination.length,
+        }))
+
         const res: PaginatedResponse<TodayPatientItem> = {
-            items: patients,
+            items: todayPatientItems,
             next_cursor: null,
             meta: {
                 total_items: total_patients,
@@ -114,11 +127,20 @@ export class PatientsRepository implements IPatientsRepository {
         return res
     }
 
-    async getByID(posyandu_id: string, patient_id: string): Promise<Patient | null> {
+    async getByID(posyandu_id: string, patient_id: string): Promise<PatientWithLatestExamination | null> {
         const patient = await this.db.patient.findFirst({
             where: {
                 id: patient_id,
                 posyandu_id: posyandu_id
+            },
+            include: {
+                examination: {
+                    orderBy: { exam_date: 'desc' },
+                    take: 1,
+                    include: {
+                        stunting_result: true
+                    }
+                }
             }
         })
 

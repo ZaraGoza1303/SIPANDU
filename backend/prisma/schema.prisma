@@ -26,8 +26,9 @@ enum UnderweightStatus {
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider      = "prisma-client"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -145,6 +146,9 @@ model Schedule {
   posyandu_id String @db.Uuid
   created_by String @db.Uuid
 
+  title String @default("Jadwal Pemeriksaan") @db.VarChar()
+  description String? @db.Text
+  location String? @db.VarChar()
   scheduled_date DateTime @db.Date
   time_start DateTime @db.Timestamp()
   time_end DateTime @db.Timestamp()

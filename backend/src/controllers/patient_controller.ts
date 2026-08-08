@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import type { IPatientService } from "../services/patient_service.interface.js";
 import { sendErrorResponse, sendSuccessfullResponse } from "../utils/response.js";
 import { AppError } from "../utils/error.js";
-import { CreatePatientSchema, UpdatePatientSchema } from "../dto/patient.js";
+import { CreatePatientSchema, UpdatePatientSchema, PatientIdParamSchema } from "../dto/patient.js";
 import type { ISupabase } from "../services/supabase.interface.js";
 import { getFilePathWithFolder } from "../utils/format_url.js";
 import { validateImageFile } from "../utils/validateFile.js";
@@ -28,12 +28,12 @@ export class PatientController {
             const patients = await this.patientService.getAll(posyandu_id, page, limit, search);
             return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patients))
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menampilkan data pasien", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menampilkan data pasien", (err as Error).message))
         }
     }
 
@@ -47,29 +47,34 @@ export class PatientController {
             const patients = await this.patientService.getAllTodayPatients(posyandu_id, page, limit, search);
             return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patients))
             
-        } catch(err: any){
+        } catch(err: unknown){
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal mengambil data pasien hari ini", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal mengambil data pasien hari ini", (err as Error).message))
         }
     }
 
     async getByID(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const patient_id = req.params.patient_id as string;
+            const validateParams = PatientIdParamSchema.safeParse(req.params);
+            if (!validateParams.success) {
+                const formattedErr = validateParams.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formattedErr));
+            }
+            const patient_id = validateParams.data.patient_id;
 
             const patient = await this.patientService.getByID(posyandu_id, patient_id);
             return res.status(200).json(sendSuccessfullResponse("Berhasil menampilkan data pasien", patient))
 
-        } catch (err:any) {
+        } catch (err: unknown) {
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menampilkan data pasien", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menampilkan data pasien", (err as Error).message))
         }
     }
 
@@ -103,19 +108,25 @@ export class PatientController {
             await this.patientService.insertPatient(posyandu_id, patientData);
             return res.status(201).json(sendSuccessfullResponse("Patient berhasil ditambahkan"))
 
-        } catch (err: any){
+        } catch (err: unknown){
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menambahkan data pasien", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menambahkan data pasien", (err as Error).message))
         }
     }
 
     async updatePatient(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const patient_id = req.params.patient_id as string;
+            const validateParams = PatientIdParamSchema.safeParse(req.params);
+            if (!validateParams.success) {
+                const formattedErr = validateParams.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formattedErr));
+            }
+            const patient_id = validateParams.data.patient_id;
+
             let pictureUrl: string | undefined;
 
             if (req.file) {
@@ -153,19 +164,24 @@ export class PatientController {
             await this.patientService.updatePatient(posyandu_id, patient_id, updatedData);
             return res.status(200).json(sendSuccessfullResponse("Data Patient berhasil diupdate"))
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal mengubah data pasien", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal mengubah data pasien", (err as Error).message))
         }
     }
 
     async deletePatient(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
-            const patient_id = req.params.patient_id as string;
+            const validateParams = PatientIdParamSchema.safeParse(req.params);
+            if (!validateParams.success) {
+                const formattedErr = validateParams.error.flatten().fieldErrors;
+                return res.status(400).json(sendErrorResponse("Validation Failed", formattedErr));
+            }
+            const patient_id = validateParams.data.patient_id;
 
             const currentPatient = await this.patientService.getByID(posyandu_id, patient_id);
             if (currentPatient && currentPatient.picture) {
@@ -179,12 +195,12 @@ export class PatientController {
             await this.patientService.deletePatient(posyandu_id, patient_id);
             return res.status(200).json(sendSuccessfullResponse("Patient berhasil dihapus"))
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             if(err instanceof AppError){
                 return res.status(err.statusCode).json(sendErrorResponse(err.message, err.message))
             }
 
-            return res.status(500).json(sendErrorResponse("Gagal menghapus data pasien", err.message))
+            return res.status(500).json(sendErrorResponse("Gagal menghapus data pasien", (err as Error).message))
         }
     }
 }

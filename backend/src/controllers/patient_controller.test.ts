@@ -240,7 +240,7 @@ describe('getByID', () => {
     it('Return data pasien dengan id 520c9474-0e76-4002-9593-cf4142282081', async () => {
         const fakePatient = {id: '520c9474-0e76-4002-9593-cf4142282081', name: 'yua'};
         mockPatientService.getByID.mockResolvedValue(fakePatient);
-        mockReq.params = {id: '520c9474-0e76-4002-9593-cf4142282081'}
+        mockReq.params = {patient_id: '520c9474-0e76-4002-9593-cf4142282081'}
 
         await controller.getByID(mockReq as Request, mockRes as Response);
 
@@ -256,7 +256,7 @@ describe('getByID', () => {
     it('Return not found data pasien dengan id 520c9474-0e76-4002-9593-cf4142282081', async () => {
         const err = new AppError("Patient not found", 404);
         mockPatientService.getByID.mockRejectedValue(err);
-        mockReq.params = {id: '520c9474-0e76-4002-9593-cf4142282081'}
+        mockReq.params = {patient_id: '520c9474-0e76-4002-9593-cf4142282081'}
 
         await controller.getByID(mockReq as Request, mockRes as Response);
 
@@ -271,7 +271,7 @@ describe('getByID', () => {
     it('Return unexpected internal error', async () => {
         const err = new Error("Internal server Error");
         mockPatientService.getByID.mockRejectedValue(err);
-        mockReq.params = {id: '520c9474-0e76-4002-9593-cf4142282081'}
+        mockReq.params = {patient_id: '520c9474-0e76-4002-9593-cf4142282081'}
 
         await controller.getByID(mockReq as Request, mockRes as Response);
 

@@ -38,6 +38,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
+app.set("trust proxy", 1);
 
 const initRouter = () => {
     app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

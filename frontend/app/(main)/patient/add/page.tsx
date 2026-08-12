@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { FiArrowLeft, FiSave, FiUpload } from "react-icons/fi";
 import Link from "next/link";
 import { toast } from "sonner";
 
-export default function AddPatientPage() {
+function AddPatientPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
@@ -280,5 +280,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <label className="mb-1.5 block text-sm font-medium text-gray-700">{label}</label>
       {children}
     </div>
+  );
+}
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddPatientPage />
+    </Suspense>
   );
 }

@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense,useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FiArrowLeft, FiSave } from "react-icons/fi";
 import { toast } from "sonner";
 
-export default function AddPemeriksaanPage() {
+function AddPemeriksaanPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
@@ -376,5 +376,12 @@ function AnalysisCard({
       <p className="text-xs font-medium text-gray-500">{label}</p>
       <p className={`mt-3 text-xl font-bold ${text}`}>{value}</p>
     </div>
+  );
+}
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddPemeriksaanPage />
+    </Suspense>
   );
 }

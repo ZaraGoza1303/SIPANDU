@@ -12,9 +12,9 @@ export type PatientWithLatestExamination = Prisma.PatientGetPayload<{
 }>
 
 export const CreatePatientSchema = z.object({
-    nik: z.string().min(16, "Panjang NIK minimal 16 karakter"),
+    nik: z.string().trim().min(16, "Panjang NIK minimal 16 karakter").max(16, "Panjang NIK maksimal 16 karakter"),
     picture: z.string().nullable().optional(),
-    nik_parent: z.string().min(16, "Panjang NIK minimal 16 karakter"),
+    nik_parent: z.string().trim().min(16, "Panjang NIK minimal 16 karakter").max(16, "Panjang NIK maksimal 16 karakter"),
     name: z.string().min(1, "Nama wajib diisi"),
     birth_date: z.string().date(),
     gender: z.enum(["Laki-Laki", "Perempuan"]),

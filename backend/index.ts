@@ -26,7 +26,7 @@ const upload = multer();
 const corsOptions = {
     origin: [
         'http://localhost:3000',
-        'https://mbgsipandu-odtthc5o2-zaragoza55s-projects.vercel.app'
+        'https://mbgsipandu.vercel.app'
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [

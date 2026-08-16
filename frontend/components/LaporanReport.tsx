@@ -50,14 +50,6 @@ import type {
  *      data, PDF via print-to-PDF.
  */
 
-interface LaporanReportProps {
-  /** Bisa `undefined` sesaat (misalnya saat auth masih dicek). Komponen
-   * tetap memanggil API asli begitu token tersedia — tidak ada mode
-   * dummy/demo di sini. Kalau token belum ada / server belum jalan,
-   * request akan gagal secara wajar dan errornya ditampilkan di UI. */
-  token?: string;
-}
-
 const DEFAULT_META: PaginationMeta = {
   total_items: 0,
   current_page: 1,
@@ -108,7 +100,7 @@ function downloadFile(filename: string, content: string, mime: string) {
   URL.revokeObjectURL(url);
 }
 
-export default function LaporanReport({ token }: LaporanReportProps) {
+export default function LaporanReport() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -135,66 +127,57 @@ export default function LaporanReport({ token }: LaporanReportProps) {
   );
 
   const loadStats = useCallback(async () => {
-    if (!token) {
-      setStatsError("Belum login / token tidak ditemukan.");
-      return;
-    }
-    setStatsLoading(true);
-    setStatsError(null);
-    try {
-      setStats(await apiGet<DashboardStats>("/api/dashboard/stats", token));
-    } catch (e) {
-      setStatsError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setStatsLoading(false);
-    }
-  }, [token]);
+  setStatsLoading(true);
+  setStatsError(null);
+
+  try {
+    setStats(await apiGet<DashboardStats>("/api/dashboard/stats"));
+  } catch (e) {
+    setStatsError(e instanceof Error ? e.message : String(e));
+  } finally {
+    setStatsLoading(false);
+  }
+}, []);
 
   const loadTrend = useCallback(async () => {
-    if (!token) {
-      setTrendError("Belum login / token tidak ditemukan.");
-      return;
-    }
-    setTrendLoading(true);
-    setTrendError(null);
-    try {
-      const data = await apiGet<TrendStuntingItem[]>(
-        "/api/dashboard/trend-stunting",
-        token
-      );
-      setTrend(Array.isArray(data) ? data : []);
-    } catch (e) {
-      setTrendError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setTrendLoading(false);
-    }
-  }, [token]);
+  setTrendLoading(true);
+  setTrendError(null);
 
-  const loadPatients = useCallback(async () => {
-    if (!token) {
-      setPatientsError("Belum login / token tidak ditemukan.");
-      return;
-    }
-    setPatientsLoading(true);
-    setPatientsError(null);
-    try {
-      const qs = new URLSearchParams({
-        page: String(page),
-        limit: String(meta.limit || 10),
-        search,
-      });
-      const data = await apiGet<{ items: Patient[]; meta: PaginationMeta }>(
-        `/api/pasien/all?${qs.toString()}`,
-        token
-      );
-      setPatients(data.items || []);
-      setMeta(data.meta || DEFAULT_META);
-    } catch (e) {
-      setPatientsError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setPatientsLoading(false);
-    }
-  }, [token, page, search]);
+  try {
+    const data = await apiGet<TrendStuntingItem[]>(
+      "/api/dashboard/trend-stunting"
+    );
+    setTrend(Array.isArray(data) ? data : []);
+  } catch (e) {
+    setTrendError(e instanceof Error ? e.message : String(e));
+  } finally {
+    setTrendLoading(false);
+  }
+}, []);
+
+ const loadPatients = useCallback(async () => {
+  setPatientsLoading(true);
+  setPatientsError(null);
+
+  try {
+    const qs = new URLSearchParams({
+      page: String(page),
+      limit: String(meta.limit || 10),
+      search,
+    });
+
+    const data = await apiGet<{ items: Patient[]; meta: PaginationMeta }>(
+      `/api/pasien/all?${qs.toString()}`
+    );
+
+    setPatients(data.items || []);
+    setMeta(data.meta || DEFAULT_META);
+  } catch (e) {
+    setPatientsError(e instanceof Error ? e.message : String(e));
+  } finally {
+    setPatientsLoading(false);
+  }
+}, [page, search]);
 
   useEffect(() => {
     loadStats();

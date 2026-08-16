@@ -42,7 +42,6 @@ export default function PatientPage() {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "69420",
           },
         });
 
@@ -57,10 +56,11 @@ export default function PatientPage() {
         }
 
         const result = await response.json();
-        const data = result.data ?? result;
 
-        if (Array.isArray(data)) {
-          setPatients(data);
+        const patientsData = result.data?.items ?? result.data ?? result;
+
+        if (Array.isArray(patientsData)) {
+          setPatients(patientsData);
         } else {
           setPatients([]);
         }

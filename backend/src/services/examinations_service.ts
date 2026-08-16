@@ -28,7 +28,7 @@ export class ExaminationsService implements IExaminationsService {
         this.examinationsRepo = examinationsRepo;
     }
 
-    async addPatientExamination(posyandu_id: string, newExamination: CreatePatientExamReq): Promise<StuntingResult> {
+    async addPatientExamination(posyandu_id: string, user_id: string, newExamination: CreatePatientExamReq): Promise<StuntingResult> {
         try {
             const patientInfo = await this.patientsRepo.getByID(posyandu_id, newExamination.patient_id);
             if (!patientInfo) throw new AppError("Pasien tidak ditemukan", 404);
@@ -48,7 +48,7 @@ export class ExaminationsService implements IExaminationsService {
                         connect: { id: newExamination.patient_id }
                     },
                     user: {
-                        connect: { id: newExamination.user_id }
+                        connect: { id: user_id }
                     },
 
                     weight: newExamination.weight,

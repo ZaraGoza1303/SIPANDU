@@ -30,7 +30,6 @@ export const UpdatePatientSchema = CreatePatientSchema.partial().extend({
 export const CreatePatientExaminationSchema = z.object({
     exam_date: z.string().date(),
     patient_id: z.string().uuid("Format patient_id harus UUID yang valid"),
-    user_id: z.string().uuid("Format user_id harus UUID yang valid"),
     weight: z.number(),
     height: z.number(),
     head_circumference: z.number(),

@@ -14,6 +14,7 @@ export class ExaminationController {
     async addExamination(req: Request, res: Response) {
         try {
             const posyandu_id = req.user?.posyandu_id as string;
+            const user_id = req.user?.id as string;
 
             if (!req.body) {
                 return res.status(400).json(sendErrorResponse("Request body empty"))
@@ -25,7 +26,7 @@ export class ExaminationController {
                 return res.status(400).json(sendErrorResponse("Validation Failed", formatedErr));
             }
 
-            const result = await this.examinationsService.addPatientExamination(posyandu_id, validate.data);
+            const result = await this.examinationsService.addPatientExamination(posyandu_id, user_id, validate.data);
             return res.status(201).json(sendSuccessfullResponse("Pemeriksaan berhasil ditambahkan", result))
 
         } catch (err: unknown) {

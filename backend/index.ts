@@ -1,7 +1,6 @@
 import connectDB from './src/databases/db.js';
 import express from 'express';
 import helmet from 'helmet';
-import multer from 'multer';
 import authRouter from './src/routes/auth.js';
 import patientRouter from './src/routes/patient.js';
 import examinationRouter from './src/routes/examination.js';
@@ -21,7 +20,6 @@ const __dirname = path.dirname(__filename);
 const swaggerDocument = YAML.load(path.join(__dirname, 'swagger.yaml'));
 
 const app = express();
-const upload = multer();
 
 const corsOptions = {
     origin: [
@@ -46,7 +44,7 @@ app.set("trust proxy", 1);
 const initRouter = () => {
     app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     app.use('/api/auth', authRouter);
-    app.use('/api/pasien', upload.single('picture'), patientRouter);
+    app.use('/api/pasien', patientRouter);
     app.use('/api/pemeriksaan', examinationRouter);
     app.use('/api/examination', examinationRouter);
     app.use('/api/dashboard', dashboardRouter);

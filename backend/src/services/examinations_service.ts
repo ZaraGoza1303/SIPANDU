@@ -93,6 +93,13 @@ export class ExaminationsService implements IExaminationsService {
                 location = posyandu?.address ?? null;
             }
 
+            // Combine date with time if time only (HH:mm or HH:mm:ss)
+            const baseDate = newSchedule.scheduled_date;
+            const parseTime = (timeStr: string): Date => {
+                const fullISO = timeStr.includes('T') ? timeStr : `${baseDate}T${timeStr}:00`;
+                return new Date(fullISO);
+            };
+
             const newScheduleReq: ScheduleCreateInput = {
                 posyandu: {
                     connect: { id: posyandu_id }
@@ -103,9 +110,9 @@ export class ExaminationsService implements IExaminationsService {
                 title: newSchedule.title,
                 description: newSchedule.description ?? null,
                 location: location,
-                scheduled_date: newSchedule.scheduled_date,
-                time_start: newSchedule.time_start,
-                time_end: newSchedule.time_end,
+                scheduled_date: new Date(baseDate),
+                time_start: parseTime(newSchedule.time_start),
+                time_end: parseTime(newSchedule.time_end),
                 status: newSchedule.status,
             }
 

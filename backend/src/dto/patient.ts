@@ -45,8 +45,8 @@ export const CreateExamScheduleSchema = z.object({
     description: z.string().nullable().optional(),
     location: z.string().nullable().optional(),
     scheduled_date: z.string().date(),
-    time_start: z.string().date(),
-    time_end: z.string().date(),
+    time_start: z.string().datetime({ offset: true }).or(z.string().time()),
+    time_end: z.string().datetime({ offset: true }).or(z.string().time()),
     status: z.string().min(1, "Status wajib diisi"),
 })
 

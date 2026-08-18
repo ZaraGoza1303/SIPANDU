@@ -118,8 +118,8 @@ export default function MainLayout({
                 <Image
                   src="/pandulog.png"
                   alt="Logo SIPANDU"
-                  width={60}
-                  height={60}
+                  width={40}
+                  height={40}
                   className="object-contain scale-[1.3] transition-transform hover:scale-[1.4]"
                 />
               </div>

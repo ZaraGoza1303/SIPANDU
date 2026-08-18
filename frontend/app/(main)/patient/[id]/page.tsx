@@ -30,19 +30,22 @@ interface Patient {
 
 interface Examination {
   id: string | number;
-  date?: string;
+  exam_date?: string;
   created_at?: string;
-  tanggal?: string;
   weight?: number;
-  bb?: number;
   height?: number;
-  tb?: number;
-  lila?: number;
-  z_score?: string | number;
-  status?: string;
-  examiner_name?: string;
-  pemeriksa?: string;
-  [key: string]: any;
+  head_circumference?: number;
+  arm_circumference?: number;
+  notes?: string;
+  stunting_result?: {
+    age_months?: number;
+    weight_for_age_zscore?: number;
+    height_for_age_zscore?: number;
+    weight_for_height_zscore?: number;
+    stunting_status?: string;
+    wasting_status?: string;
+    underweight_status?: string;
+  };
 }
 
 export default function PatientDetailPage() {
@@ -84,12 +87,22 @@ export default function PatientDetailPage() {
 
         // 2. Fetch Riwayat Pemeriksaan Pasien
         try {
-          const examRes = await apiFetch(`/api/pemeriksaan/patient/${patientId}`);
+          const examRes = await apiFetch(
+            `/api/pemeriksaan/patient/${patientId}`
+          );
+
           const examResult = await examRes.json();
-          const examData = examResult.data ?? examResult;
-          setExaminations(Array.isArray(examData) ? examData : []);
+
+          console.log("EXAM RESULT:", examResult);
+          console.log("EXAM DATA:", examResult.data);
+          console.log("EXAM ITEMS:", examResult.data?.items);
+
+          const examData = examResult.data?.items ?? [];
+
+          setExaminations(
+            Array.isArray(examData) ? examData : []
+          );
         } catch (examErr) {
-          // Jika pemeriksaan gagal/kosong, jangan ganti error utama
           console.warn("Gagal memuat riwayat pemeriksaan:", examErr);
           setExaminations([]);
         }
@@ -270,11 +283,11 @@ export default function PatientDetailPage() {
         <div className="rounded-2xl bg-blue-600 p-6 text-white shadow-sm">
           <p className="text-xs uppercase tracking-wider text-blue-100 font-medium">BB Terakhir</p>
           <h2 className="mt-3 text-3xl font-bold">
-            {latestExam?.bb ?? latestExam?.weight ? `${latestExam.bb ?? latestExam.weight} Kg` : "-"}
+            {latestExam?.weight != null ? `${latestExam.weight} Kg` : "-"}
           </h2>
           <p className="mt-2 text-sm text-blue-100">
-            {latestExam
-              ? `Pemeriksaan ${dayjs(latestExam.tanggal ?? latestExam.created_at ?? latestExam.date).format("DD/MM/YYYY")}`
+            {latestExam?.exam_date
+              ? `Pemeriksaan ${dayjs(latestExam.exam_date).format("DD/MM/YYYY")}`
               : "Belum ada riwayat pemeriksaan"}
           </p>
         </div>
@@ -282,7 +295,7 @@ export default function PatientDetailPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <p className="text-xs uppercase tracking-wider text-gray-400 font-medium">TB / Tinggi Terakhir</p>
           <h2 className="mt-3 text-xl font-semibold text-gray-800">
-            {latestExam?.tb ?? latestExam?.height ? `${latestExam.tb ?? latestExam.height} Cm` : "-"}
+           {latestExam?.height != null ? `${latestExam.height} Cm` : "-"}
           </h2>
           <p className="mt-2 text-sm text-gray-500">
             {latestExam ? "Tinggi badan terakhir" : "Belum ada riwayat pemeriksaan"}
@@ -292,10 +305,10 @@ export default function PatientDetailPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <p className="text-xs uppercase tracking-wider text-gray-400 font-medium">Status Terakhir</p>
           <h2 className="mt-3 text-xl font-semibold text-gray-800">
-            {latestExam?.status || "-"}
+            {latestExam?.stunting_result?.stunting_status || "-"}
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            {latestExam?.z_score ? `Z-Score: ${latestExam.z_score}` : "Belum ada riwayat status"}
+            {latestExam?.stunting_result?.height_for_age_zscore ?? "-"}
           </p>
         </div>
       </div>
@@ -327,32 +340,50 @@ export default function PatientDetailPage() {
               </tr>
             ) : (
               examinations.map((exam, index) => {
-                const examDate = exam.tanggal || exam.created_at || exam.date;
+                const examDate = exam.exam_date || exam.created_at;
                 return (
-                  <tr key={exam.id || index} className="hover:bg-gray-50/50 transition">
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {examDate ? dayjs(examDate).format("DD MMMM YYYY") : "-"}
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">{exam.bb ?? exam.weight ?? "-"}</td>
-                    <td className="px-6 py-4 text-gray-700">{exam.tb ?? exam.height ?? "-"}</td>
-                    <td className="px-6 py-4 text-gray-700">{exam.lila ?? "-"}</td>
-                    <td className="px-6 py-4 text-gray-700">{exam.z_score ?? "-"}</td>
-                    <td className="px-6 py-4">
-                      {exam.status ? (
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-                          {exam.status}
-                        </span>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {exam.examiner_name || exam.pemeriksa || "-"}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+                <tr
+                  key={exam.id || index}
+                  className="hover:bg-gray-50/50 transition"
+                >
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    {examDate
+                      ? dayjs(examDate).format("DD MMMM YYYY")
+                      : "-"}
+                  </td>
+
+                  <td className="px-6 py-4 text-gray-700">
+                    {exam.weight ?? "-"}
+                  </td>
+
+                  <td className="px-6 py-4 text-gray-700">
+                    {exam.height ?? "-"}
+                  </td>
+
+                  <td className="px-6 py-4 text-gray-700">
+                    {exam.arm_circumference ?? "-"}
+                  </td>
+
+                  <td className="px-6 py-4 text-gray-700">
+                    {exam.stunting_result?.height_for_age_zscore ?? "-"}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    {exam.stunting_result?.stunting_status ? (
+                      <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                        {exam.stunting_result.stunting_status}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+
+                  <td className="px-6 py-4 text-gray-600">
+                    -
+                  </td>
+                </tr>
+              );
+            }))}
           </tbody>
         </table>
 

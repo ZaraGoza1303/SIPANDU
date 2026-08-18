@@ -27,15 +27,22 @@ interface TrendStuntingItem { month: string; total: number; stunting: number; pe
 interface DistribusiItem { label: string; pct: number; color: string; }
 interface DashboardStats {
   totalPatients: number;
-  totalExaminationsThisMonth: number;
+  totalExaminations: number;
   stuntingCount: number;
   normalCount: number;
   ageGroupDistribution: { range: string; count: number }[];
 }
 interface Patient {
-  id: string; name: string; birth_date: string; gender: string;
+  id: string;
+  nik?: string;
+  name: string;
+  birth_date: string;
+  gender: string;
+  mother_name?: string;
+  phone_parent?: string;
   service_type?: string;
-  examination?: { id: string; stunting_status?: string }[];
+  is_examined_today?: boolean;
+  today_examination_count?: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -43,7 +50,6 @@ interface Patient {
 function authHeaders(): Record<string, string> {
   return {
     "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "69420",
   };
 }
 
@@ -254,11 +260,11 @@ export default function DashboardPage() {
       .then(json => {
         if (!json.success) return;
         const d: DashboardStats = json.data;
-        const targets = { 
-          totalPasien: d.totalPatients ?? 0, 
-          pemeriksaanBulan: d.totalExaminationsThisMonth ?? 0, 
-          kasusStunting: d.stuntingCount ?? 0, 
-          pasienNormal: d.normalCount ?? 0 
+        const targets = {
+          totalPasien: d.totalPatients ?? 0,
+          pemeriksaanBulan: d.totalExaminations ?? 0,
+          kasusStunting: d.stuntingCount ?? 0,
+          pasienNormal: d.normalCount ?? 0,
         };
         let step = 0; const steps = 40;
         const timer = setInterval(() => {
@@ -278,31 +284,89 @@ export default function DashboardPage() {
   }, []);
 
   // Fetch Today's Scheduled Patients
-  useEffect(() => {
-    setLoadingPatients(true);
+useEffect(() => {
+  async function fetchTodayExaminations() {
+    try {
+      setLoadingPatients(true);
 
-    fetch(`${BASE_URL}/api/pasien/all-today-patients`, {
-      credentials: "include",
-      headers: authHeaders(),
-    })
-      .then(r => r.json())
-      .then(json => {
-        if (json.success && json.data?.items) {
-          const items: Patient[] = json.data.items;
-          setPatients(items);
-          setStats(prev => ({ ...prev, jadwalHariIni: items.length }));
-        } else {
-          setPatients([]);
-          setStats(prev => ({ ...prev, jadwalHariIni: 0 }));
+      const response = await fetch(
+        `${BASE_URL}/api/pemeriksaan/all?page=1&limit=100`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
         }
-      })
-      .catch(err => {
-        console.error(err);
-        setPatients([]);
-        setStats(prev => ({ ...prev, jadwalHariIni: 0 }));
-      })
-      .finally(() => setLoadingPatients(false));
-  }, []);
+      );
+
+      const json = await response.json();
+
+      console.log("TODAY EXAM STATUS:", response.status);
+      console.log("TODAY EXAM RESPONSE:", json);
+
+      if (!response.ok || !json.success) {
+        throw new Error(
+          json?.message ||
+            `Gagal mengambil data pemeriksaan (HTTP ${response.status})`
+        );
+      }
+
+      const items = Array.isArray(json.data?.items)
+        ? json.data.items
+        : [];
+
+      // Format tanggal lokal: YYYY-MM-DD
+      const today = new Date().toISOString().split("T")[0];
+
+      const todayExaminations = items.filter((exam: any) => {
+        if (!exam.exam_date) return false;
+
+        return exam.exam_date.split("T")[0] === today;
+      });
+
+      console.log("TODAY:", today);
+      console.log("TODAY EXAMINATIONS:", todayExaminations);
+
+      // Mapping examination → format yang dipakai tabel dashboard
+      const patientsToday: Patient[] = todayExaminations
+        .filter((exam: any) => exam.patient)
+        .map((exam: any) => ({
+          id: exam.patient.id,
+          nik: exam.patient.nik,
+          name: exam.patient.name,
+          birth_date: exam.patient.birth_date,
+          gender: exam.patient.gender,
+          mother_name: exam.patient.mother_name,
+          phone_parent: exam.patient.phone_parent,
+          is_examined_today: true,
+          today_examination_count: 1,
+          service_type: "Pemeriksaan Rutin",
+        }));
+
+      setPatients(patientsToday);
+
+      setStats((prev) => ({
+        ...prev,
+        jadwalHariIni: patientsToday.length,
+      }));
+    } catch (err) {
+      console.error("Fetch Today Examinations Error:", err);
+
+      setPatients([]);
+
+      setStats((prev) => ({
+        ...prev,
+        jadwalHariIni: 0,
+      }));
+    } finally {
+      setLoadingPatients(false);
+    }
+  }
+
+  fetchTodayExaminations();
+}, []);
 
   // Fetch All Patients (Master list)
   useEffect(() => {
@@ -331,7 +395,7 @@ export default function DashboardPage() {
           
           <div className="flex items-center gap-2 text-gray-700 font-medium text-sm">
             <FiHome size={18} className="text-gray-500" />
-            <span>Posyandu Antapani</span>
+            <span>Posyandu Kliningan</span>
           </div>
         </div>
 
@@ -344,7 +408,7 @@ export default function DashboardPage() {
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
               placeholder="Cari data pasien atau jadwal..."
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm outline-none focus:border-blue-500 shadow-sm"
+              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm text-gray-600 outline-none focus:border-blue-500 shadow-sm"
             />
           </div>
           
@@ -479,7 +543,7 @@ export default function DashboardPage() {
               <th className="px-6 py-3">Nama Pasien</th>
               <th className="px-6 py-3">Usia</th>
               <th className="px-6 py-3">Jenis Layanan</th>
-              <th className="px-6 py-3">Status Kesehatan</th>
+              <th className="px-6 py-3">Status</th>
               <th className="px-6 py-3">Aksi</th>
             </tr>
           </thead>
@@ -495,8 +559,8 @@ export default function DashboardPage() {
               </td></tr>
             ) : (
               filteredPatients.map(row => {
-                const isChecked  = row.examination && row.examination.length > 0;
-                const examStatus = row.examination?.[0]?.stunting_status;
+                const isChecked = row.is_examined_today === true;
+                const examStatus = isChecked ? "Sudah Diperiksa" : "Belum Diperiksa";
                 const initials   = row.name ? row.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() : "PS";
                 const colors     = ["bg-blue-500", "bg-purple-500", "bg-green-500", "bg-orange-500", "bg-pink-500"];
                 const colorCls   = colors[row.name.charCodeAt(0) % colors.length];
@@ -514,14 +578,19 @@ export default function DashboardPage() {
                     <td className="px-6 py-4 text-gray-500">{calcAgeMonths(row.birth_date)}</td>
                     <td className="px-6 py-4 text-gray-600">{row.service_type ?? "Rutin Bulanan"}</td>
                     <td className="px-6 py-4">
-                      {isChecked
-                        ? <StatusBadge status={examStatus ?? "Normal"} />
-                        : <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">Belum Diperiksa</span>
-                      }
+                      {isChecked ? (
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
+                          Sudah Diperiksa
+                        </span>
+                      ) : (
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
+                          Belum Diperiksa
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <button
-                        onClick={() => router.push(`/pasien/${row.id}`)}
+                        onClick={() => router.push(`/patient/${row.id}`)}
                         className="flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition"
                       >
                         <FiEye size={14} /> Detail

@@ -26,7 +26,6 @@ export async function apiFetch(
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "ngrok-skip-browser-warning": "69420",
     ...(fetchOptions.headers as Record<string, string>),
   };
 
@@ -37,13 +36,24 @@ export async function apiFetch(
   try {
     const response = await fetch(fullUrl, {
       ...fetchOptions,
-      credentials: "include", // <-- tambah ini
+      credentials: "include",
       headers,
     });
 
+    // =========================================================
+    // 401 UNAUTHORIZED
+    // User belum login / cookie tidak valid / session expired
+    // =========================================================
     if (response.status === 401) {
       if (isClient && !skipAuthRedirect) {
-        window.location.href = "/login";
+        const currentPath =
+          window.location.pathname +
+          window.location.search;
+
+        const loginUrl =
+          `/login?redirect=${encodeURIComponent(currentPath)}`;
+
+        window.location.href = loginUrl;
       }
 
       throw new ApiError(
@@ -52,23 +62,32 @@ export async function apiFetch(
       );
     }
 
+    // =========================================================
+    // 403 FORBIDDEN
+    // User sudah login tetapi tidak punya permission
+    // =========================================================
     if (response.status === 403) {
       const errorData = await response.json().catch(() => null);
 
+      if (isClient && !skipAuthRedirect) {
+        window.location.href = "/403";
+      }
+
       throw new ApiError(
-        errorData?.message ||
-          "Akses ditolak (403).",
+        errorData?.message || "Akses ditolak (403).",
         403,
         errorData
       );
     }
 
+    // =========================================================
+    // ERROR LAIN
+    // =========================================================
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
 
       throw new ApiError(
-        errorData?.message ||
-          `HTTP ${response.status}`,
+        errorData?.message || `HTTP ${response.status}`,
         response.status,
         errorData
       );
@@ -76,7 +95,9 @@ export async function apiFetch(
 
     return response;
   } catch (error: any) {
-    if (error instanceof ApiError) throw error;
+    if (error instanceof ApiError) {
+      throw error;
+    }
 
     throw new ApiError(
       "Gagal terhubung ke server.",
@@ -84,15 +105,26 @@ export async function apiFetch(
     );
   }
 }
+
 export const api = {
-  get: async <T = any>(endpoint: string, options?: CustomFetchOptions): Promise<T> => {
+  // =========================================================
+  // GET
+  // =========================================================
+  get: async <T = any>(
+    endpoint: string,
+    options?: CustomFetchOptions
+  ): Promise<T> => {
     const res = await apiFetch(endpoint, {
       method: "GET",
       ...options,
     });
+
     return res.json();
   },
 
+  // =========================================================
+  // POST
+  // =========================================================
   post: async <T = any>(
     endpoint: string,
     body?: any,
@@ -103,9 +135,13 @@ export const api = {
       body: body ? JSON.stringify(body) : undefined,
       ...options,
     });
+
     return res.json();
   },
 
+  // =========================================================
+  // PUT
+  // =========================================================
   put: async <T = any>(
     endpoint: string,
     body?: any,
@@ -116,9 +152,30 @@ export const api = {
       body: body ? JSON.stringify(body) : undefined,
       ...options,
     });
+
     return res.json();
   },
 
+  // =========================================================
+  // PATCH
+  // =========================================================
+  patch: async <T = any>(
+    endpoint: string,
+    body?: any,
+    options?: CustomFetchOptions
+  ): Promise<T> => {
+    const res = await apiFetch(endpoint, {
+      method: "PATCH",
+      body: body ? JSON.stringify(body) : undefined,
+      ...options,
+    });
+
+    return res.json();
+  },
+
+  // =========================================================
+  // DELETE
+  // =========================================================
   delete: async <T = any>(
     endpoint: string,
     options?: CustomFetchOptions
@@ -127,6 +184,7 @@ export const api = {
       method: "DELETE",
       ...options,
     });
+
     return res.json();
   },
 };

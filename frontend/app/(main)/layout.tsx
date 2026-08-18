@@ -110,16 +110,13 @@ export default function MainLayout({
               <div
                 className="
                   flex h-13 w-13 shrink-0 items-center justify-center
-                  rounded-xl bg-white
-                  ring-3 ring-blue-100 overflow-hidden
-                  shadow-[0_8px_16px_rgba(59,130,246,0.3)]
                 "
               >
                 <Image
                   src="/pandulog.png"
                   alt="Logo SIPANDU"
-                  width={40}
-                  height={40}
+                  width={45}
+                  height={45}
                   className="object-contain scale-[1.3] transition-transform hover:scale-[1.4]"
                 />
               </div>

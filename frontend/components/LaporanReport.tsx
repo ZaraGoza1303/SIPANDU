@@ -113,12 +113,12 @@ interface CsvColumn<T> {
 function calcUsia(
   birthDateStr: string | null | undefined
 ): string {
-  if (!birthDateStr) return "-";
+  if (!birthDateStr) return "0";
 
   const birth = new Date(birthDateStr);
 
   if (Number.isNaN(birth.getTime())) {
-    return "-";
+    return "0";
   }
 
   const now = new Date();
@@ -155,7 +155,7 @@ function toCsv<T>(
       columns
         .map((column) =>
           `"${String(
-            column.value(row) ?? ""
+            column.value(row) ?? "0"
           ).replace(/"/g, '""')}"`
         )
         .join(",")
@@ -215,6 +215,74 @@ function getStatusClass(status?: string) {
   }
 
   return "bg-slate-100 text-slate-600";
+}
+
+/* =========================================================
+   STAT CARD COMPONENT
+========================================================= */
+
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  icon: React.ReactNode;
+  accent: "blue" | "red" | "amber" | "green";
+  badge?: {
+    text: string;
+    positive: boolean;
+  };
+  footnote?: string;
+}
+
+function StatCard({
+  label,
+  value,
+  icon,
+  accent,
+  badge,
+  footnote,
+}: StatCardProps) {
+  const accentClasses = {
+    blue: "bg-blue-50 text-blue-600 border-blue-100",
+    red: "bg-red-50 text-red-600 border-red-100",
+    amber: "bg-amber-50 text-amber-600 border-amber-100",
+    green: "bg-green-50 text-green-600 border-green-100",
+  };
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-slate-500">
+          {label}
+        </span>
+        <div
+          className={`flex h-8 w-8 items-center justify-center rounded-lg border ${accentClasses[accent]}`}
+        >
+          {icon}
+        </div>
+      </div>
+      <div className="mt-2 flex items-baseline gap-2">
+        <div className="text-2xl font-bold text-slate-900">
+          {value}
+        </div>
+        {badge && (
+          <span
+            className={`rounded-md px-1.5 py-0.5 text-xs font-semibold ${
+              badge.positive
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {badge.text}
+          </span>
+        )}
+      </div>
+      {footnote && (
+        <p className="mt-1 text-xs text-slate-400">
+          {footnote}
+        </p>
+      )}
+    </div>
+  );
 }
 
 /* =========================================================
@@ -377,12 +445,6 @@ export default function LaporanReport() {
             ? result.data.items
             : [];
 
-        /*
-         * Satu pasien bisa punya banyak pemeriksaan.
-         * Kita hanya mengambil pemeriksaan terbaru
-         * untuk setiap patient_id.
-         */
-
         const latestByPatient =
           new Map<
             string,
@@ -443,24 +505,24 @@ export default function LaporanReport() {
 
             nik:
               exam.patient!.nik ??
-              "",
+              "0",
 
             name:
               exam.patient!.name ??
-              "-",
+              "0",
 
             birth_date:
               exam.patient!.birth_date ??
-              "",
+              "0",
 
             gender:
               exam.patient!.gender ??
-              "-",
+              "0",
 
             mother_name:
               exam.patient!
                 .mother_name ??
-              "-",
+              "0",
 
             father_name:
               exam.patient!
@@ -661,12 +723,12 @@ export default function LaporanReport() {
           {
             label: "Nama",
             value: (row) =>
-              row.name,
+              row.name ?? "0",
           },
           {
             label: "NIK",
             value: (row) =>
-              row.nik,
+              row.nik ?? "0",
           },
           {
             label: "Usia",
@@ -679,32 +741,32 @@ export default function LaporanReport() {
             label:
               "Jenis Kelamin",
             value: (row) =>
-              row.gender,
+              row.gender ?? "0",
           },
           {
             label: "Nama Ibu",
             value: (row) =>
-              row.mother_name,
+              row.mother_name ?? "0",
           },
           {
             label: "BB (Kg)",
             value: (row) =>
-              row.latest_weight,
+              row.latest_weight ?? 0,
           },
           {
             label: "TB (cm)",
             value: (row) =>
-              row.latest_height,
+              row.latest_height ?? 0,
           },
           {
             label: "Z-Score",
             value: (row) =>
-              row.latest_zscore,
+              row.latest_zscore ?? 0,
           },
           {
             label: "Status",
             value: (row) =>
-              row.latest_status,
+              row.latest_status ?? "0",
           },
           {
             label:
@@ -716,7 +778,7 @@ export default function LaporanReport() {
                   ).toLocaleDateString(
                     "id-ID"
                   )
-                : "-",
+                : "0",
           },
         ];
 
@@ -792,23 +854,6 @@ export default function LaporanReport() {
 
           <button
             onClick={
-              handleReset
-            }
-            className="
-              flex items-center gap-1.5
-              rounded-lg border border-slate-200
-              bg-white px-3.5 py-2
-              text-sm
-              hover:bg-slate-50
-              print:hidden
-            "
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </button>
-
-          <button
-            onClick={
               handleExportPdf
             }
             title="Simpan sebagai PDF"
@@ -878,7 +923,7 @@ export default function LaporanReport() {
             statsLoading
               ? "…"
               : stats?.totalExaminationsThisMonth ??
-                "-"
+                0
           }
           icon={
             <ClipboardList className="h-4 w-4" />
@@ -943,7 +988,7 @@ export default function LaporanReport() {
               ? "…"
               : `${
                   stats?.stuntingCount ??
-                  "-"
+                  0
                 } Anak`
           }
           icon={
@@ -966,7 +1011,7 @@ export default function LaporanReport() {
 
         <StatCard
           label="Coverage Rate"
-          value="-"
+          value="0"
           icon={<CheckCircle2 className="h-4 w-4" />}
           accent="green"
           footnote="Data coverage belum tersedia"
@@ -1363,7 +1408,7 @@ export default function LaporanReport() {
                     >
                       <td className="whitespace-nowrap border-b border-slate-100 px-3 py-2.5 font-medium">
                         {
-                          patient.name
+                          patient.name ?? "0"
                         }
                       </td>
 
@@ -1376,60 +1421,45 @@ export default function LaporanReport() {
                       <td className="whitespace-nowrap border-b border-slate-100 px-3 py-2.5">
                         {
                           patient.latest_weight ??
-                          "-"
+                          "0"
                         }
                       </td>
 
                       <td className="whitespace-nowrap border-b border-slate-100 px-3 py-2.5">
                         {
                           patient.latest_height ??
-                          "-"
+                          "0"
                         }
                       </td>
 
                       <td className="whitespace-nowrap border-b border-slate-100 px-3 py-2.5">
                         {
                           patient.latest_zscore ??
-                          "-"
+                          "0"
                         }
                       </td>
 
                       <td className="whitespace-nowrap border-b border-slate-100 px-3 py-2.5">
-                        {patient.latest_status ? (
-                          <span
-                            className={`
-                              rounded-full
-                              px-2.5 py-1
-                              text-xs font-medium
-                              ${getStatusClass(
-                                patient.latest_status
-                              )}
-                            `}
-                          >
-                            {
-                              patient.latest_status
-                            }
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">
-                            -
-                          </span>
-                        )}
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${getStatusClass(
+                            patient.latest_status
+                          )}`}
+                        >
+                          {
+                            patient.latest_status ??
+                            "0"
+                          }
+                        </span>
                       </td>
 
                       <td className="whitespace-nowrap border-b border-slate-100 px-3 py-2.5">
-                        {patient.latest_exam_date
-                          ? new Date(
-                              patient.latest_exam_date
-                            ).toLocaleDateString(
-                              "id-ID",
-                              {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                              }
-                            )
-                          : "-"}
+                        {
+                          patient.latest_exam_date
+                            ? new Date(
+                                patient.latest_exam_date
+                              ).toLocaleDateString("id-ID")
+                            : "0"
+                        }
                       </td>
                     </tr>
                   )
@@ -1437,185 +1467,7 @@ export default function LaporanReport() {
             </tbody>
           </table>
         </div>
-
-        {/* ================= TABLE FOOTER ================= */}
-
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2.5">
-          <span className="text-xs text-slate-500">
-            Menampilkan{" "}
-            {patients.length}{" "}
-            dari{" "}
-            {meta.total_items}{" "}
-            data pemeriksaan
-          </span>
-
-          <div className="flex gap-1.5 print:hidden">
-            <button
-              className="
-                rounded-md
-                border border-slate-200
-                bg-white
-                px-3 py-1.5
-                text-xs
-                disabled:opacity-40
-              "
-              disabled={
-                page <= 1
-              }
-              onClick={() =>
-                setPage(
-                  (currentPage) =>
-                    Math.max(
-                      1,
-                      currentPage -
-                        1
-                    )
-                )
-              }
-            >
-              Prev
-            </button>
-
-            <span className="px-1 py-1.5 text-xs text-slate-600">
-              {
-                meta.current_page
-              }{" "}
-              /{" "}
-              {meta.total_pages ||
-                1}
-            </span>
-
-            <button
-              className="
-                rounded-md
-                border border-slate-200
-                bg-white
-                px-3 py-1.5
-                text-xs
-                disabled:opacity-40
-              "
-              disabled={
-                page >=
-                (meta.total_pages ||
-                  1)
-              }
-              onClick={() =>
-                setPage(
-                  (currentPage) =>
-                    currentPage +
-                    1
-                )
-              }
-            >
-              Next
-            </button>
-          </div>
-        </div>
       </div>
-
-      {/* ================= FOOTER ================= */}
-
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 print:hidden">
-        <span>
-          ©{" "}
-          {new Date().getFullYear()}{" "}
-          Posyandu Digital.
-          All data encrypted
-          and secured.
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   STAT CARD
-========================================================= */
-
-type Accent =
-  | "blue"
-  | "red"
-  | "amber"
-  | "green";
-
-const ACCENT_CLASSES: Record<
-  Accent,
-  string
-> = {
-  blue: "bg-blue-100 text-blue-600",
-  red: "bg-red-100 text-red-600",
-  amber: "bg-amber-100 text-amber-600",
-  green:
-    "bg-green-100 text-green-600",
-};
-
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  icon: React.ReactNode;
-  accent: Accent;
-  badge?: {
-    text: string;
-    positive: boolean;
-  };
-  footnote?: string;
-}
-
-function StatCard({
-  label,
-  value,
-  icon,
-  accent,
-  badge,
-  footnote,
-}: StatCardProps) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <div className="flex items-start justify-between">
-        <div
-          className={`
-            flex h-10 w-10
-            items-center justify-center
-            rounded-[10px]
-            text-lg
-            ${ACCENT_CLASSES[accent]}
-          `}
-        >
-          {icon}
-        </div>
-
-        {badge && (
-          <span
-            className={`
-              rounded-full
-              px-2 py-0.5
-              text-xs
-              font-medium
-              ${
-                badge.positive
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
-              }
-            `}
-          >
-            {badge.text}
-          </span>
-        )}
-      </div>
-
-      <div className="mt-3 text-xl font-bold">
-        {value}
-      </div>
-
-      <div className="mt-0.5 text-xs text-slate-500">
-        {label}
-      </div>
-
-      {footnote && (
-        <div className="mt-1.5 text-xs text-slate-400">
-          {footnote}
-        </div>
-      )}
     </div>
   );
 }

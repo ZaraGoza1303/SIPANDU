@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import {
   User,
   Lock,
@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -206,5 +206,20 @@ export default function LoginPage() {
         />
       </div>
     </main>
+  );
+}
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[#f5f6f8]">
+          <p className="text-sm text-gray-500">
+            Memuat halaman login...
+          </p>
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

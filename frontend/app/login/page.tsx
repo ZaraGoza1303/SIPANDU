@@ -42,21 +42,36 @@ function LoginForm() {
 
     const result = await response.json();
 
+    
+
     console.log(result);
 
     if (result.success) {
-      toast.success("Login berhasil");
+  const token = result.data?.jwt_token;
 
-      const redirect = searchParams.get("redirect");
+  if (!token) {
+    toast.error("Token login tidak ditemukan.");
+    console.error("LOGIN RESULT:", result);
+    return;
+  }
 
-      const destination =
-        redirect && redirect.startsWith("/")
-          ? redirect
-          : "/dashboard";
+  // Simpan JWT untuk dipakai FE
+  localStorage.setItem("token", token);
 
-      router.replace(destination);
-      return;
-    }
+  console.log("JWT berhasil disimpan:", token);
+
+  toast.success("Login berhasil");
+
+  const redirect = searchParams.get("redirect");
+
+  const destination =
+    redirect && redirect.startsWith("/")
+      ? redirect
+      : "/dashboard";
+
+  router.replace(destination);
+  return;
+}
 
     toast.error(
       result.message || "Email atau kata sandi salah."

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Toaster } from "sonner";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { api, apiFetch, ApiError } from "@/lib/api";
 import {
   FiGrid,
   FiUsers,
@@ -15,6 +16,7 @@ import {
   FiChevronUp,
 } from "react-icons/fi";
 
+
 const navItems = [
   { href: "/dashboard", icon: FiGrid, label: "Dashboard" },
   { href: "/patient", icon: FiUsers, label: "Pasien" },
@@ -24,17 +26,56 @@ const navItems = [
 ];
 
 interface UserInfo {
-  name: string;
   role: string;
+  posyandu: string;
   initials: string;
 }
 
 function getUserFromToken(): UserInfo {
-  return {
-    name: "Kader Posyandu",
-    role: "Posyandu Kliningan 04",
-    initials: "KP",
+  const defaultUser: UserInfo = {
+    role: "Kader",
+    posyandu: "Posyandu Kliningan 04",
+    initials: "KA",
   };
+
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      return defaultUser;
+    }
+
+    const parts = token.split(".");
+
+    if (parts.length !== 3) {
+      return defaultUser;
+    }
+
+    const base64 = parts[1]
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(
+        parts[1].length +
+          ((4 - (parts[1].length % 4)) % 4),
+        "="
+      );
+
+    const payload = JSON.parse(atob(base64));
+
+    const role = payload.role
+      ? payload.role.charAt(0).toUpperCase() +
+        payload.role.slice(1)
+      : defaultUser.role;
+
+    return {
+      role,
+      posyandu: "Posyandu Kliningan 04",
+      initials: role.slice(0, 2).toUpperCase(),
+    };
+  } catch (error) {
+    console.error("Gagal membaca JWT:", error);
+    return defaultUser;
+  }
 }
 
 export default function MainLayout({
@@ -46,40 +87,145 @@ export default function MainLayout({
   const router = useRouter();
 
   const [user, setUser] = useState<UserInfo>({
-    name: "Kader Posyandu",
-    role: "Posyandu Kliningan 04",
-    initials: "KP",
-  });
+  role: "Kader",
+  posyandu: "Posyandu Kliningan 04",
+  initials: "KA",
+});
+
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutCard, setShowLogoutCard] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setUser(getUserFromToken());
+ useEffect(() => {
+  let mounted = true;
 
-    const handleClickOutside = (event: MouseEvent) => {
+  const checkAuthentication = async () => {
+    try {
+      /*
+       * Endpoint ini sudah terbukti ada.
+       * Endpoint ini membutuhkan authentication.
+       *
+       * Kalau user belum login / session sudah tidak valid:
+       * response = 401
+       *
+       * apiFetch() akan otomatis mengarahkan ke:
+       *
+       * /login?redirect=/halaman-yang-diminta
+       */
+      await api.get("/api/dashboard/stats");
+
+      if (!mounted) return;
+
+      setUser(getUserFromToken());
+      setIsAuthChecking(false);
+
+      if (!mounted) return;
+
+      /*
+       * Karena endpoint profile tidak tersedia,
+       * sementara gunakan informasi default.
+       */
+      setUser({
+        role: "Admin",
+        posyandu: "Posyandu Kliningan 04",
+        initials: "AD",
+      });
+
+      setIsAuthChecking(false);
+    } catch (error) {
+      console.error("Auth check error:", error);
+
+      /*
+       * 401 = belum login / session expired.
+       *
+       * apiFetch() SUDAH melakukan redirect ke login,
+       * jadi di sini kita tidak perlu router.push lagi.
+       */
       if (
-        cardRef.current &&
-        !cardRef.current.contains(event.target as Node)
+        error instanceof ApiError &&
+        error.status === 401
       ) {
-        setShowLogoutCard(false);
+        return;
       }
-    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    setShowLogoutCard(false);
-    router.push("/login");
+      /*
+       * Kalau error bukan 401, misalnya:
+       * 404, 500, database error, dll.
+       *
+       * Jangan menganggap user logout.
+       */
+      if (mounted) {
+        setUser(getUserFromToken());
+        setIsAuthChecking(false);
+      }
+    }
   };
 
+  checkAuthentication();
+
+  /*
+   * Tutup popup profile kalau klik di luar area profile.
+   */
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      cardRef.current &&
+      !cardRef.current.contains(
+        event.target as Node
+      )
+    ) {
+      setShowLogoutCard(false);
+    }
+  };
+
+  document.addEventListener(
+    "mousedown",
+    handleClickOutside
+  );
+
+  return () => {
+    mounted = false;
+
+    document.removeEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+  };
+}, []);
+
+  const handleLogout = async () => {
+  try {
+    await apiFetch("/api/auth/logout", {
+      method: "POST",
+      skipAuthRedirect: true,
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+  } finally {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    setShowLogoutCard(false);
+
+    router.replace("/login");
+  }
+};
+
+  if (isAuthChecking) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+
+        <p className="text-sm font-medium text-gray-500">
+          Memeriksa sesi...
+        </p>
+      </div>
+    </div>
+  );
+}
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ================= SIDEBAR ================= */}
@@ -106,12 +252,7 @@ export default function MainLayout({
                 ${isCollapsed ? "justify-center" : ""}
               `}
             >
-              {/* Logo dengan Container Kotak (Glow lebih menonjol di bawah) */}
-              <div
-                className="
-                  flex h-13 w-13 shrink-0 items-center justify-center
-                "
-              >
+              <div className="flex h-13 w-13 shrink-0 items-center justify-center">
                 <Image
                   src="/pandulog.png"
                   alt="Logo SIPANDU"
@@ -121,7 +262,6 @@ export default function MainLayout({
                 />
               </div>
 
-              {/* Brand */}
               {!isCollapsed && (
                 <div className="min-w-0 flex-1 pt-0.5">
                   <p className="truncate text-[20px] font-bold leading-none tracking-tight text-blue-700">
@@ -134,7 +274,6 @@ export default function MainLayout({
               )}
             </Link>
 
-            {/* Collapse Button (Sejajar dengan teks SIPANDU) */}
             {!isCollapsed && (
               <button
                 type="button"
@@ -168,7 +307,6 @@ export default function MainLayout({
             )}
           </div>
 
-          {/* Divider */}
           <div className="mt-5 border-b border-gray-100" />
         </div>
 
@@ -234,7 +372,6 @@ export default function MainLayout({
           ref={cardRef}
           className="relative border-t border-gray-100 px-4 py-5"
         >
-          {/* Logout Card */}
           {showLogoutCard && (
             <div
               className={`
@@ -254,11 +391,10 @@ export default function MainLayout({
               {!isCollapsed && (
                 <div className="px-3 py-2.5">
                   <p className="truncate text-sm font-semibold text-gray-800">
-                    {user.name}
-                  </p>
-
-                  <p className="mt-0.5 truncate text-xs text-gray-400">
                     {user.role}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-gray-400">
+                    {user.posyandu}
                   </p>
                 </div>
               )}
@@ -278,7 +414,6 @@ export default function MainLayout({
                 "
               >
                 <FiLogOut size={18} />
-
                 <span>{isCollapsed ? "Logout" : "Keluar Aplikasi"}</span>
               </button>
 
@@ -290,7 +425,6 @@ export default function MainLayout({
             </div>
           )}
 
-          {/* Profile Button */}
           <button
             type="button"
             onClick={() => setShowLogoutCard((prev) => !prev)}
@@ -313,13 +447,13 @@ export default function MainLayout({
 
             {!isCollapsed && (
               <>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-gray-800">
-                    {user.name}
-                  </p>
-
-                  <p className="truncate text-xs text-gray-400">
+                {/* Bungkus teks di dalam div dengan flex-col agar menumpuk ke bawah */}
+                <div className="flex flex-col items-start min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-gray-800 leading-tight">
                     {user.role}
+                  </p>
+                  <p className="truncate text-xs text-gray-400 leading-tight mt-0.5">
+                    {user.posyandu}
                   </p>
                 </div>
 

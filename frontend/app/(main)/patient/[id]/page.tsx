@@ -303,7 +303,7 @@ export default function PatientDetailPage() {
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <p className="text-xs uppercase tracking-wider text-gray-400 font-medium">Status Terakhir</p>
+          <p className="text-xs uppercase tracking-wider text-gray-400 font-medium">Status Stunting Terakhir</p>
           <h2 className="mt-3 text-xl font-semibold text-gray-800">
             {latestExam?.stunting_result?.stunting_status || "-"}
           </h2>
@@ -327,8 +327,7 @@ export default function PatientDetailPage() {
               <th className="px-6 py-4">TB (Cm)</th>
               <th className="px-6 py-4">LILA (Cm)</th>
               <th className="px-6 py-4">Z-Score</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Pemeriksa</th>
+              <th className="px-6 py-4">Status Stunting</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">
@@ -370,16 +369,22 @@ export default function PatientDetailPage() {
 
                   <td className="px-6 py-4">
                     {exam.stunting_result?.stunting_status ? (
-                      <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                          exam.stunting_result.stunting_status === "High"
+                            ? "bg-red-50 text-red-700"
+                            : exam.stunting_result.stunting_status === "Normal"
+                            ? "bg-orange-50 text-orange-700"
+                            : exam.stunting_result.stunting_status === "Low"
+                            ? "bg-green-50 text-green-700"
+                            : "bg-gray-50 text-gray-600"
+                        }`}
+                      >
                         {exam.stunting_result.stunting_status}
                       </span>
                     ) : (
                       "-"
                     )}
-                  </td>
-
-                  <td className="px-6 py-4 text-gray-600">
-                    -
                   </td>
                 </tr>
               );

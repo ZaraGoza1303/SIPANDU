@@ -239,6 +239,26 @@ export default function DashboardPage() {
     p.name.toLowerCase().includes(localSearch.toLowerCase())
   );
 
+ const stuntingTrendPercent =
+  trendData.length >= 2 &&
+  trendData[trendData.length - 2].stunting > 0
+    ? ((trendData[trendData.length - 1].stunting -
+        trendData[trendData.length - 2].stunting) /
+        trendData[trendData.length - 2].stunting) *
+      100
+    : 0;
+
+    const stuntingTrend =
+  trendData.length >= 2
+    ? trendData[trendData.length - 1].stunting -
+      trendData[trendData.length - 2].stunting
+    : 0;
+
+    const stuntingPct =
+  stats.totalPasien > 0
+    ? (stats.kasusStunting / stats.totalPasien) * 100
+    : 0;
+
   // Fetch Trend Stunting Data
   useEffect(() => {
     fetch(`${BASE_URL}/api/dashboard/trend-stunting`, {
@@ -447,8 +467,17 @@ useEffect(() => {
           iconColor="#DC2626"
           label="Kasus Stunting Aktif"
           value={stats.kasusStunting}
-          trend="-2%" trendUp={false}
-          badge={stats.kasusStunting > 0 ? "PERLU INTERVENSI" : undefined}
+          trend={
+            trendData.length >= 2
+              ? `${stuntingTrendPercent > 0 ? "+" : ""}${stuntingTrendPercent.toFixed(1)}%`
+              : undefined
+          }
+          trendUp={stuntingTrend < 0}
+          badge={
+            stuntingPct > 14
+              ? "PERLU INTERVENSI"
+              : undefined
+          }
         />
 
         <StatCard

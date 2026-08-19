@@ -28,9 +28,28 @@ export class AuthController {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'none',
+                path: '/',
                 maxAge: 3 * 60 * 60 * 1000,
             });
             return res.status(200).json(sendSuccessfullResponse("Login Berhasil", response))
+        } catch (err: unknown) {
+            return res.status(400).json(sendErrorResponse("Login Gagal", (err as Error).message))
+        }
+    }
+
+    async logout(req: Request, res: Response) {
+        try {
+            if(!req.body){
+                return res.status(400).json(sendErrorResponse("Request body empty"))
+            };
+
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none',
+                path: '/',
+            });
+            return res.status(200).json(sendSuccessfullResponse("Logout Berhasil"))
         } catch (err: unknown) {
             return res.status(400).json(sendErrorResponse("Login Gagal", (err as Error).message))
         }

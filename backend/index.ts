@@ -46,7 +46,6 @@ const initRouter = () => {
     app.use('/api/auth', authRouter);
     app.use('/api/pasien', patientRouter);
     app.use('/api/pemeriksaan', examinationRouter);
-    app.use('/api/examination', examinationRouter);
     app.use('/api/dashboard', dashboardRouter);
 }
 

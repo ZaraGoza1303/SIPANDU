@@ -669,6 +669,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout user
+      description: "**Akses:** Semua role yang sudah login (admin, bidan, kader)\n\nLogout user dengan menghapus cookie token."
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   # ──────────────────────────────────────────────────────────────────
   # PASIEN
   # ──────────────────────────────────────────────────────────────────

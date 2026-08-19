@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import {
   User,
   Lock,
@@ -12,8 +12,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -23,44 +24,48 @@ export default function LoginPage() {
     useState("");
 
   const handleLogin = async () => {
-    try {
-      const response = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
-  {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email,
-      password,
-    }),
-  }
-);
-
-      const result =
-        await response.json();
-
-      console.log(result);
-
-      if (result.success) {
-        if (result.success) {
-  toast.success("Login berhasil");
-  router.push("/dashboard");
-}
-
-        toast.success("Login berhasil");
-
-        router.push("/dashboard");
-      } else {
-        toast.error(result.message);
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       }
-    } catch (error) {
-      console.error(error);
-      toast.error("Gagal terhubung ke server");
+    );
+
+    const result = await response.json();
+
+    console.log(result);
+
+    if (result.success) {
+      toast.success("Login berhasil");
+
+      const redirect = searchParams.get("redirect");
+
+      const destination =
+        redirect && redirect.startsWith("/")
+          ? redirect
+          : "/dashboard";
+
+      router.replace(destination);
+      return;
     }
-  };
+
+    toast.error(
+      result.message || "Email atau kata sandi salah."
+    );
+  } catch (error) {
+    console.error(error);
+    toast.error("Gagal terhubung ke server");
+  }
+};
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f5f6f8] px-4">
@@ -201,5 +206,20 @@ export default function LoginPage() {
         />
       </div>
     </main>
+  );
+}
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[#f5f6f8]">
+          <p className="text-sm text-gray-500">
+            Memuat halaman login...
+          </p>
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

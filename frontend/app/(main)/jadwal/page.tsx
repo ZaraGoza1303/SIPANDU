@@ -17,8 +17,7 @@ type ScheduleItem = {
   location: string;
   services: string[];
   notes?: string;
-  status: "akan_datang" | "berlangsung" | "dibatalkan" | "selesai" | "aktif" | string;
-  petugasPJ?: string;
+  status: "akan_datang" | "berlangsung" | "dibatalkan" | "selesai" | string;
 };
 
 export default function JadwalPage() {
@@ -27,6 +26,12 @@ export default function JadwalPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [confirmFinish, setConfirmFinish] =
+  useState<ScheduleItem | null>(null);
+
+const [updatingStatus, setUpdatingStatus] =
+  useState(false);
+
   // State untuk Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -34,29 +39,54 @@ export default function JadwalPage() {
   const limitPerPage = 5;
 
   // Fungsi untuk mengubah status jadwal
-  const handleUpdateStatus = async (id: string, newStatus: string) => {
-    try {
-      const endpoint = newStatus === "selesai" 
-        ? `/api/pemeriksaan/jadwal/${id}/selesai` 
+  const handleUpdateStatus = async (
+  id: string,
+  newStatus: string
+) => {
+  try {
+    const endpoint =
+      newStatus === "selesai"
+        ? `/api/pemeriksaan/jadwal/${id}/selesai`
         : `/api/pemeriksaan/update/schedule/${id}`;
 
-      const response = await apiFetch(endpoint, {
-        method: "PATCH",
-        body: JSON.stringify({ status: newStatus }),
-      });
+    const response = await apiFetch(endpoint, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status: newStatus,
+      }),
+    });
 
-      if (!response.ok) {
-        throw new Error("Gagal memperbarui status di server");
-      }
-
-      setSchedules((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
+    if (!response.ok) {
+      throw new Error(
+        "Gagal memperbarui status di server"
       );
-    } catch (err: any) {
-      console.error("Update Status Error:", err);
-      setError(err.message || "Terjadi kesalahan saat memperbarui status.");
     }
-  };
+
+    setSchedules((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              status: newStatus,
+            }
+          : item
+      )
+    );
+  } catch (err: any) {
+    console.error(
+      "Update Status Error:",
+      err
+    );
+
+    setError(
+      err.message ||
+        "Terjadi kesalahan saat memperbarui status."
+    );
+
+    // Lempar lagi supaya modal tahu request gagal
+    throw err;
+  }
+};
 
   const formatTime = (time?: string) => {
     if (!time) return "-";
@@ -191,7 +221,7 @@ export default function JadwalPage() {
                           {item.title}
                         </h3>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          📍 {item.location} &bull; 👤 PJ: {item.petugasPJ}
+                          📍 {item.location} 
                         </p>
                       </div>
 
@@ -200,7 +230,7 @@ export default function JadwalPage() {
                           className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                             item.status === "selesai"
                               ? "bg-green-100 text-green-700"
-                              : item.status === "berlangsung" || item.status === "aktif"
+                              : item.status === "berlangsung" 
                               ? "bg-amber-100 text-amber-700"
                               : item.status === "dibatalkan"
                               ? "bg-red-100 text-red-700"
@@ -231,7 +261,6 @@ export default function JadwalPage() {
                               : "bg-gray-50 text-gray-700 focus:border-blue-500 focus:bg-white"
                           }`}
                         >
-                          <option value="aktif">Aktif</option>
                           <option value="akan_datang">Akan Datang</option>
                           <option value="berlangsung">Berlangsung</option>
                           <option value="dibatalkan">Dibatalkan</option>
@@ -246,7 +275,8 @@ export default function JadwalPage() {
                           </div>
                         ) : (
                           <button
-                            onClick={() => handleUpdateStatus(item.id, "selesai")}
+                            type="button"
+                            onClick={() => setConfirmFinish(item)}
                             className="flex items-center gap-1.5 rounded-xl bg-green-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-green-700 transition"
                           >
                             <FiCheckCircle className="w-4 h-4" />
@@ -255,6 +285,117 @@ export default function JadwalPage() {
                         )}
                       </div>
                     </div>
+
+                        {confirmFinish && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
+    <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+      {/* Icon */}
+      <div className="px-6 pt-7 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+          <FiCheckCircle className="h-7 w-7 text-green-600" />
+        </div>
+
+        {/* Judul */}
+        <h2 className="mt-4 text-lg font-bold text-gray-900">
+          Tandai Jadwal Selesai?
+        </h2>
+
+        {/* Deskripsi */}
+        <p className="mt-2 text-sm leading-relaxed text-gray-500">
+          Jadwal{" "}
+          <span className="font-semibold text-gray-700">
+            "{confirmFinish.title}"
+          </span>{" "}
+          akan ditandai sebagai selesai.
+        </p>
+
+        <p className="mt-1 text-xs text-gray-400">
+          Setelah selesai, jadwal akan terkunci
+          dan tidak dapat diubah kembali.
+        </p>
+      </div>
+
+      {/* Tombol */}
+      <div className="flex gap-3 px-6 py-6">
+        {/* Batal */}
+        <button
+          type="button"
+          disabled={updatingStatus}
+          onClick={() => {
+            setConfirmFinish(null);
+            setError(null);
+          }}
+          className="
+            flex-1
+            rounded-xl
+            border border-gray-200
+            bg-white
+            px-4 py-2.5
+            text-sm font-semibold
+            text-gray-700
+            transition
+            hover:bg-gray-50
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+          "
+        >
+          Batal
+        </button>
+
+        {/* Ya, Selesai */}
+        <button
+          type="button"
+          disabled={updatingStatus}
+          onClick={async () => {
+            if (!confirmFinish) return;
+
+            try {
+              setUpdatingStatus(true);
+              setError(null);
+
+              await handleUpdateStatus(
+                confirmFinish.id,
+                "selesai"
+              );
+
+              setConfirmFinish(null);
+            } catch (err) {
+              // Error sudah ditangani handleUpdateStatus
+              console.error(
+                "Konfirmasi selesai gagal:",
+                err
+              );
+            } finally {
+              setUpdatingStatus(false);
+            }
+          }}
+          className="
+            flex-1
+            rounded-xl
+            bg-green-600
+            px-4 py-2.5
+            text-sm font-semibold
+            text-white
+            transition
+            hover:bg-green-700
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+          "
+        >
+          {updatingStatus ? (
+            <span className="flex items-center justify-center gap-2">
+              <FiLoader className="h-4 w-4 animate-spin" />
+              Menyimpan...
+            </span>
+          ) : (
+            "Ya, Selesai"
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
                   </div>
                 );
               })}

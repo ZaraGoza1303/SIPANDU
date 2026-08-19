@@ -10,6 +10,8 @@ import {
   FiAlertCircle,
   FiEye,
   FiEdit2,
+  FiTrash2,
+  FiX,
 } from "react-icons/fi";
 
 interface Patient {
@@ -31,7 +33,61 @@ export default function PatientPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Patient | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
+const handleDelete = (patient: Patient) => {
+  setDeleteTarget(patient);
+  setDeleteError(null);
+};
+
+const confirmDelete = async () => {
+  if (!deleteTarget) return;
+
+  try {
+    setDeleting(true);
+    setDeleteError(null);
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+
+    const response = await fetch(
+      `${baseUrl}/api/pasien/delete/${deleteTarget.id}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const result = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(
+        result?.message ||
+          `Gagal menghapus pasien (HTTP ${response.status})`
+      );
+    }
+
+    // Hapus pasien dari tabel setelah server berhasil
+    setPatients((prev) =>
+      prev.filter((item) => item.id !== deleteTarget.id)
+    );
+
+    // Tutup modal
+    setDeleteTarget(null);
+  } catch (err: any) {
+    console.error("Delete Patient Error:", err);
+
+    setDeleteError(
+      err.message || "Gagal menghapus data pasien."
+    );
+  } finally {
+    setDeleting(false);
+  }
+};
   useEffect(() => {
     async function fetchPatients() {
       try {
@@ -114,7 +170,7 @@ export default function PatientPage() {
             placeholder="Cari nama atau NIK..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none"
           />
         </div>
       </div>
@@ -134,130 +190,270 @@ export default function PatientPage() {
       )}
 
       {/* Main Table Container */}
-      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                <th className="px-6 py-4">Foto</th>
-                <th className="px-6 py-4">Nama Anak / NIK</th>
-                <th className="px-6 py-4">Tanggal Lahir</th>
-                <th className="px-6 py-4">Usia</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Nama Ibu</th>
-                <th className="px-6 py-4 text-center">Aksi</th>
+<div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+  <div className="overflow-x-auto">
+    <table className="w-full text-left border-collapse">
+      <thead>
+        <tr className="bg-gray-50 border-b border-gray-100 text-xs font-semibold uppercase tracking-wider text-gray-500">
+          <th className="px-6 py-4">Foto</th>
+          <th className="px-6 py-4">Nama Anak / NIK</th>
+          <th className="px-6 py-4">Tanggal Lahir</th>
+          <th className="px-6 py-4">Usia</th>
+          <th className="px-6 py-4">Status</th>
+          <th className="px-6 py-4">Nama Ibu</th>
+          <th className="px-6 py-4 text-center">Aksi</th>
+        </tr>
+      </thead>
+
+      <tbody className="divide-y divide-gray-100 text-sm">
+        {loading ? (
+          <tr>
+            <td colSpan={7} className="py-20 text-center text-gray-400">
+              <div className="flex flex-col items-center gap-2">
+                <FiLoader className="w-6 h-6 animate-spin text-blue-600" />
+                <span>Memuat data pasien dari server...</span>
+              </div>
+            </td>
+          </tr>
+        ) : filteredPatients.length === 0 ? (
+          <tr>
+            <td colSpan={7} className="py-20 text-center text-gray-400">
+              {error
+                ? "Gagal memuat data dari server."
+                : "Tidak ada data pasien yang ditemukan."}
+            </td>
+          </tr>
+        ) : (
+          filteredPatients.map((patient) => {
+            const ageMonths = patient.birth_date
+              ? dayjs().diff(dayjs(patient.birth_date), "month")
+              : null;
+
+            const years =
+              ageMonths !== null
+                ? Math.floor(ageMonths / 12)
+                : null;
+
+            const months =
+              ageMonths !== null
+                ? ageMonths % 12
+                : null;
+
+            return (
+              <tr
+                key={patient.id}
+                className="hover:bg-gray-50/50 transition"
+              >
+                {/* Foto */}
+                <td className="px-6 py-4">
+                  <img
+                    src={patient.picture || "/default-avatar.png"}
+                    alt={patient.name}
+                    className="h-10 w-10 rounded-full object-cover border border-gray-100 bg-gray-50"
+                  />
+                </td>
+
+                {/* Nama & NIK */}
+                <td className="px-6 py-4">
+                  <p className="font-semibold text-gray-900">
+                    {patient.name || "-"}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {patient.nik || "-"}
+                  </p>
+                </td>
+
+                {/* Tanggal Lahir */}
+                <td className="px-6 py-4 text-gray-600">
+                  {patient.birth_date
+                    ? dayjs(patient.birth_date).format("DD/MM/YYYY")
+                    : "-"}
+                </td>
+
+                {/* Usia */}
+                <td className="px-6 py-4 text-gray-600">
+                  {years !== null && months !== null
+                    ? years > 0
+                      ? `${years} Tahun`
+                      : `${months} Bulan`
+                    : "-"}
+                </td>
+
+                {/* Status */}
+                <td className="px-6 py-4">
+                  {patient.status ? (
+                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                      {patient.status}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </td>
+
+                {/* Nama Ibu */}
+                <td className="px-6 py-4 text-gray-600">
+                  {patient.mother_name || "-"}
+                </td>
+
+                {/* Aksi */}
+                <td className="px-6 py-4 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    {/* Lihat Detail */}
+                    <Link
+                      href={`/patient/${patient.id}`}
+                      className="rounded-lg p-2 text-gray-500 transition hover:bg-blue-50 hover:text-blue-600"
+                      title="Lihat Detail"
+                    >
+                      <FiEye className="h-4 w-4" />
+                    </Link>
+
+                    {/* Edit */}
+                    <Link
+                      href={`/patient/${patient.id}/edit`}
+                      className="rounded-lg p-2 text-gray-500 transition hover:bg-amber-50 hover:text-amber-600"
+                      title="Edit Data"
+                    >
+                      <FiEdit2 className="h-4 w-4" />
+                    </Link>
+
+                    {/* Hapus */}
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(patient)}
+                      disabled={
+                        deleting &&
+                        deleteTarget?.id === patient.id
+                      }
+                      className="rounded-lg p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      title="Hapus Data"
+                    >
+                      {deleting &&
+                      deleteTarget?.id === patient.id ? (
+                        <FiLoader className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <FiTrash2 className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </td>
               </tr>
-            </thead>
+            );
+          })
+        )}
+      </tbody>
+    </table>
+  </div>
 
-            <tbody className="divide-y divide-gray-100 text-sm">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-20 text-center text-gray-400">
-                    <div className="flex flex-col items-center gap-2">
-                      <FiLoader className="w-6 h-6 animate-spin text-blue-600" />
-                      <span>Memuat data pasien dari server...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : filteredPatients.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-20 text-center text-gray-400">
-                    {error
-                      ? "Gagal memuat data dari server."
-                      : "Tidak ada data pasien yang ditemukan."}
-                  </td>
-                </tr>
-              ) : (
-                filteredPatients.map((patient) => {
-                  const ageMonths = patient.birth_date
-                    ? dayjs().diff(dayjs(patient.birth_date), "month")
-                    : null;
-                  const years = ageMonths !== null ? Math.floor(ageMonths / 12) : null;
-                  const months = ageMonths !== null ? ageMonths % 12 : null;
+  {/* Footer */}
+  {!loading && (
+    <div className="border-t border-gray-100 px-6 py-4 text-xs text-gray-500">
+      Menampilkan {filteredPatients.length} dari{" "}
+      {patients.length} total data pasien
+    </div>
+  )}
+</div>
 
-                  return (
-                    <tr key={patient.id} className="hover:bg-gray-50/50 transition">
-                      {/* Foto */}
-                      <td className="px-6 py-4">
-                        <img
-                          src={patient.picture || "/default-avatar.png"}
-                          alt={patient.name}
-                          className="h-10 w-10 rounded-full object-cover border border-gray-100 bg-gray-50"
-                        />
-                      </td>
+{/* Modal Konfirmasi Hapus */}
+{deleteTarget && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
 
-                      {/* Nama & NIK */}
-                      <td className="px-6 py-4">
-                        <p className="font-semibold text-gray-900">{patient.name || "-"}</p>
-                        <p className="text-xs text-gray-400">{patient.nik || "-"}</p>
-                      </td>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+            <FiTrash2 className="h-5 w-5" />
+          </div>
 
-                      {/* Tanggal Lahir */}
-                      <td className="px-6 py-4 text-gray-600">
-                        {patient.birth_date
-                          ? dayjs(patient.birth_date).format("DD/MM/YYYY")
-                          : "-"}
-                      </td>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">
+              Hapus Data Pasien?
+            </h2>
 
-                      {/* Usia */}
-                      <td className="px-6 py-4 text-gray-600">
-                        {years !== null && months !== null
-                          ? years > 0
-                            ? `${years} Tahun`
-                            : `${months} Bulan`
-                          : "-"}
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-6 py-4">
-                        {patient.status ? (
-                          <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                            {patient.status}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-
-                      {/* Nama Ibu */}
-                      <td className="px-6 py-4 text-gray-600">
-                        {patient.mother_name || "-"}
-                      </td>
-
-                      {/* Aksi */}
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Link
-                            href={`/patient/${patient.id}`}
-                            className="rounded-lg p-2 text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition"
-                            title="Lihat Detail"
-                          >
-                            <FiEye className="w-4 h-4" />
-                          </Link>
-                          <Link
-                            href={`/patient/${patient.id}/edit`}
-                            className="rounded-lg p-2 text-gray-500 hover:bg-amber-50 hover:text-amber-600 transition"
-                            title="Edit Data"
-                          >
-                            <FiEdit2 className="w-4 h-4" />
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+            <p className="mt-1 text-sm text-gray-500">
+              Data yang dihapus tidak dapat dikembalikan.
+            </p>
+          </div>
         </div>
 
-        {/* Footer info */}
-        {!loading && (
-          <div className="border-t border-gray-100 px-6 py-4 text-xs text-gray-500">
-            Menampilkan {filteredPatients.length} dari {patients.length} total data pasien
-          </div>
-        )}
+        {/* Tombol X */}
+        <button
+          type="button"
+          onClick={() => {
+            if (!deleting) {
+              setDeleteTarget(null);
+              setDeleteError(null);
+            }
+          }}
+          disabled={deleting}
+          className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+          title="Tutup"
+        >
+          <FiX className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Data pasien */}
+      <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+          Pasien
+        </p>
+
+        <p className="mt-1 text-base font-semibold text-gray-900">
+          {deleteTarget.name}
+        </p>
+
+        <p className="mt-1 text-sm text-gray-500">
+          NIK: {deleteTarget.nik}
+        </p>
+      </div>
+
+      {/* Error */}
+      {deleteError && (
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700">
+          <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+
+          <p className="flex-1">
+            {deleteError}
+          </p>
+        </div>
+      )}
+
+      {/* Tombol Modal */}
+      <div className="mt-6 flex justify-end gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            if (!deleting) {
+              setDeleteTarget(null);
+              setDeleteError(null);
+            }
+          }}
+          disabled={deleting}
+          className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Batal
+        </button>
+
+        <button
+          type="button"
+          onClick={confirmDelete}
+          disabled={deleting}
+          className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {deleting ? (
+            <span className="flex items-center gap-2">
+              <FiLoader className="h-4 w-4 animate-spin" />
+              Menghapus...
+            </span>
+          ) : (
+            "Ya, Hapus"
+          )}
+        </button>
       </div>
     </div>
-  );
+  </div>
+)}
+  </div>
+);
 }

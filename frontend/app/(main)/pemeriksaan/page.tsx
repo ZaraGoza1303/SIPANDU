@@ -17,6 +17,7 @@ import {
   FiX,
   FiLoader,
   FiLock,
+  FiEdit2,
 } from "react-icons/fi";
 
 export default function PemeriksaanPage() {
@@ -29,9 +30,107 @@ export default function PemeriksaanPage() {
   const [printModal, setPrintModal] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    getExaminations();
-  }, []);
+  const [editingExam, setEditingExam] = useState<any | null>(null);
+const [editSaving, setEditSaving] = useState(false);
+const [editError, setEditError] = useState<string | null>(null);
+
+const [editForm, setEditForm] = useState({
+  exam_date: "",
+  weight: "",
+  height: "",
+  head_circumference: "",
+  arm_circumference: "",
+  notes: "",
+});
+
+function handleEditExam(item: any) {
+  console.log("=== DATA PEMERIKSAAN YANG DI-EDIT ===");
+  console.log(item);
+  console.log("exam id:", item.id);
+  console.log("patient id:", item.patient_id);
+
+  setEditingExam(item);
+  setEditError(null);
+
+  setEditForm({
+    exam_date: item.exam_date
+      ? item.exam_date.split("T")[0]
+      : "",
+    weight:
+      item.weight !== null && item.weight !== undefined
+        ? String(item.weight)
+        : "",
+    height:
+      item.height !== null && item.height !== undefined
+        ? String(item.height)
+        : "",
+    head_circumference:
+      item.head_circumference !== null &&
+      item.head_circumference !== undefined
+        ? String(item.head_circumference)
+        : "",
+    arm_circumference:
+      item.arm_circumference !== null &&
+      item.arm_circumference !== undefined
+        ? String(item.arm_circumference)
+        : "",
+    notes: item.notes ?? "",
+  });
+}
+
+useEffect(() => {
+  getExaminations();
+}, []);
+
+  async function handleUpdateExam() {
+  if (!editingExam) return;
+
+  try {
+    setEditSaving(true);
+    setEditError(null);
+
+    const payload = {
+      exam_date: editForm.exam_date,
+      weight: Number(editForm.weight),
+      height: Number(editForm.height),
+      head_circumference: Number(editForm.head_circumference),
+      arm_circumference: Number(editForm.arm_circumference),
+      notes: editForm.notes,
+    };
+
+    const result = await api.patch(
+  `/api/pemeriksaan/update/${editingExam.id}`,
+  payload
+);
+
+    const updatedExam = result.data ?? result;
+
+    setExaminations((prev) =>
+      prev.map((exam) =>
+        exam.id === editingExam.id
+          ? {
+              ...exam,
+              ...updatedExam,
+            }
+          : exam
+      )
+    );
+
+    setEditingExam(null);
+  } catch (err: any) {
+    console.error("Update Examination Error:", err);
+
+    if (err instanceof ApiError) {
+      setEditError(err.message);
+    } else {
+      setEditError(
+        "Gagal memperbarui data pemeriksaan."
+      );
+    }
+  } finally {
+    setEditSaving(false);
+  }
+}
 
   async function getExaminations(keyword = "") {
     try {
@@ -245,14 +344,28 @@ export default function PemeriksaanPage() {
                             {stuntingStatus}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-2">
+                          {/* Detail */}
                           <Link
                             href={`/patient/${patientId}`}
-                            className="font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                            className="rounded-lg p-2 text-gray-500 transition hover:bg-blue-50 hover:text-blue-600"
+                            title="Lihat Detail"
                           >
-                            Detail
+                            <FiSearch className="h-4 w-4" />
                           </Link>
-                        </td>
+
+                          {/* Edit */}
+                          <button
+                            type="button"
+                            onClick={() => handleEditExam(item)}
+                            className="rounded-lg p-2 text-gray-500 transition hover:bg-amber-50 hover:text-amber-600"
+                            title="Edit Pemeriksaan"
+                          >
+                            <FiEdit2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
                       </tr>
                     );
                   })
@@ -318,6 +431,207 @@ export default function PemeriksaanPage() {
 
         </div>
       </div>
+
+      {/* Modal Edit Pemeriksaan */}
+{editingExam && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+    <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+      
+      {/* Header */}
+      <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">
+            Edit Data Pemeriksaan
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Perbarui hasil pemeriksaan pasien.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (!editSaving) {
+              setEditingExam(null);
+              setEditError(null);
+            }
+          }}
+          disabled={editSaving}
+          className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
+        >
+          <FiX size={20} />
+        </button>
+      </div>
+
+      {/* Form */}
+      <div className="grid grid-cols-1 gap-5 px-6 py-6 sm:grid-cols-2">
+
+        {/* Tanggal */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Tanggal Pemeriksaan
+          </label>
+
+          <input
+            type="date"
+            value={editForm.exam_date}
+            onChange={(e) =>
+              setEditForm((prev) => ({
+                ...prev,
+                exam_date: e.target.value,
+              }))
+            }
+            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+
+        {/* Berat */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Berat Badan (Kg)
+          </label>
+
+          <input
+            type="number"
+            step="0.1"
+            value={editForm.weight}
+            onChange={(e) =>
+              setEditForm((prev) => ({
+                ...prev,
+                weight: e.target.value,
+              }))
+            }
+            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            placeholder="Contoh: 12.5"
+          />
+        </div>
+
+        {/* Tinggi */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Tinggi Badan (Cm)
+          </label>
+
+          <input
+            type="number"
+            step="0.1"
+            value={editForm.height}
+            onChange={(e) =>
+              setEditForm((prev) => ({
+                ...prev,
+                height: e.target.value,
+              }))
+            }
+            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            placeholder="Contoh: 85.5"
+          />
+        </div>
+
+        {/* Lingkar Kepala */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Lingkar Kepala (Cm)
+          </label>
+
+          <input
+            type="number"
+            step="0.1"
+            value={editForm.head_circumference}
+            onChange={(e) =>
+              setEditForm((prev) => ({
+                ...prev,
+                head_circumference: e.target.value,
+              }))
+            }
+            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            placeholder="Contoh: 45"
+          />
+        </div>
+
+        {/* LILA */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Lingkar Lengan / LILA (Cm)
+          </label>
+
+          <input
+            type="number"
+            step="0.1"
+            value={editForm.arm_circumference}
+            onChange={(e) =>
+              setEditForm((prev) => ({
+                ...prev,
+                arm_circumference: e.target.value,
+              }))
+            }
+            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            placeholder="Contoh: 14"
+          />
+        </div>
+
+        {/* Catatan */}
+        <div className="sm:col-span-2">
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Catatan
+          </label>
+
+          <textarea
+            rows={4}
+            value={editForm.notes}
+            onChange={(e) =>
+              setEditForm((prev) => ({
+                ...prev,
+                notes: e.target.value,
+              }))
+            }
+            className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            placeholder="Tambahkan catatan pemeriksaan..."
+          />
+        </div>
+
+        {/* Error */}
+        {editError && (
+          <div className="sm:col-span-2 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700">
+            <FiAlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>{editError}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+        <button
+          type="button"
+          onClick={() => {
+            if (!editSaving) {
+              setEditingExam(null);
+              setEditError(null);
+            }
+          }}
+          disabled={editSaving}
+          className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+        >
+          Batal
+        </button>
+
+        <button
+          type="button"
+          onClick={handleUpdateExam}
+          disabled={editSaving}
+          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {editSaving && (
+            <FiLoader className="h-4 w-4 animate-spin" />
+          )}
+
+          {editSaving
+            ? "Menyimpan..."
+            : "Simpan Perubahan"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Modal Cetak Nomor */}
       {printModal && (

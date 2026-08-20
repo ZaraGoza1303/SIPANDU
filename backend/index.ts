@@ -2,6 +2,7 @@ import connectDB from './src/databases/db.js';
 import express from 'express';
 import helmet from 'helmet';
 import authRouter from './src/routes/auth.js';
+import userRouter from './src/routes/user.js';
 import patientRouter from './src/routes/patient.js';
 import examinationRouter from './src/routes/examination.js';
 import dashboardRouter from './src/routes/dashboard.js';
@@ -44,6 +45,7 @@ app.set("trust proxy", 1);
 const initRouter = () => {
     app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     app.use('/api/auth', authRouter);
+    app.use('/api/user', userRouter);
     app.use('/api/pasien', patientRouter);
     app.use('/api/pemeriksaan', examinationRouter);
     app.use('/api/dashboard', dashboardRouter);

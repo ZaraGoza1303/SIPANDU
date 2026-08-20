@@ -14,6 +14,5 @@ const authController = new AuthController(authService);
 
 authRouter.post('/login', (req, res) => authController.login(req, res));
 authRouter.post('/logout', verifyJWTToken, (req, res) => authController.logout(req, res));
-authRouter.patch('/profile', verifyJWTToken, (req, res) => authController.updateProfile(req, res));
 
 export default authRouter;

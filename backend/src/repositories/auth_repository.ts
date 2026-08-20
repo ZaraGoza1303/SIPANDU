@@ -20,6 +20,7 @@ export class AuthRepository implements IAuthRepository {
                 email: true,
                 role: true,
                 password: true,
+                photo: true,
             }
         });
 

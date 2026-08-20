@@ -13,12 +13,15 @@ import swaggerUi from 'swagger-ui-express';
 import path from 'node:path';
 import YAML from 'yamljs';
 import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const swaggerDocument = YAML.load(path.join(__dirname, 'swagger.yaml'));
+const swaggerPath = path.resolve(__dirname, 'swagger.yaml');
+const fileContents = fs.readFileSync(swaggerPath, 'utf8');
+const swaggerDocument = YAML.parse(fileContents);
 
 const app = express();
 

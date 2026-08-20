@@ -11,15 +11,16 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import path from 'node:path';
 import YAML from 'yamljs';
+import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 
 dotenv.config();
 
 const app = express();
 
-const swaggerPath = path.join(process.cwd(), 'swagger.yaml');
-const fileContents = fs.readFileSync(swaggerPath, 'utf8');
-const swaggerDocument = YAML.parse(fileContents);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const swaggerPath = path.join(__dirname, 'swagger.yaml');
 
 const corsOptions = {
     origin: [
@@ -49,8 +50,12 @@ const initRouter = () => {
             res.setHeader('Expires', '0');
             next();
         },
-        swaggerUi.serve, 
-        swaggerUi.setup(swaggerDocument)
+        swaggerUi.serve,
+        (req: express.Request, res: express.Response, next: express.NextFunction) => {
+            const fileContents = fs.readFileSync(swaggerPath, 'utf8');
+            const dynamicSwaggerDoc = YAML.parse(fileContents);
+            swaggerUi.setup(dynamicSwaggerDoc)(req, res, next);
+        }
     );
     app.use('/api/auth', authRouter);
     app.use('/api/user', userRouter);

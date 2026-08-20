@@ -382,35 +382,98 @@ export default function DashboardPage() {
       
       {/* ─── CUSTOM HEADER DASHBOARD ─── */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard Ringkasan</h1>
-            <p className="text-sm text-gray-400 mt-1">Selamat datang kembali, berikut statistik kesehatan terkini.</p>
+        <div className="flex items-start gap-3 sm:items-center sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2 sm:block">
+              <h1 className="whitespace-nowrap text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">
+                Dashboard Ringkasan
+              </h1>
+
+              {/* Posyandu khusus mobile */}
+              <div className="flex shrink-0 items-center gap-1 text-gray-700 sm:hidden">
+                <FiHome
+                  size={13}
+                  className="shrink-0 text-gray-500"
+                />
+                <span className="whitespace-nowrap text-[9px] font-medium text-gray-500">
+                  Posyandu Kliningan
+                </span>
+              </div>
+            </div>
+
+            <p className="mt-1 whitespace-nowrap text-xs text-gray-400 sm:text-sm">
+              Selamat datang kembali, berikut statistik kesehatan terkini.
+            </p>
           </div>
-          
-          <div className="flex items-center gap-2 text-gray-700 font-medium text-sm">
-            <FiHome size={18} className="text-gray-500" />
-            <span>Posyandu Kliningan</span>
+
+          {/* Posyandu desktop */}
+          <div className="hidden shrink-0 items-center gap-1.5 text-sm font-medium text-gray-700 sm:flex">
+            <FiHome
+              size={16}
+              className="shrink-0 text-gray-500"
+            />
+            <span className="whitespace-nowrap">
+              Posyandu Kliningan
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-4">
+          <div className="relative flex-1 min-w-0">
+            <FiSearch
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
+
             <input
               type="text"
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
               placeholder="Cari data pasien atau jadwal..."
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm text-gray-600 outline-none focus:border-blue-500 shadow-sm"
+              className="
+                w-full
+                rounded-xl
+                border border-gray-200
+                bg-white
+                py-3
+                pl-11
+                pr-4
+                text-sm
+                text-gray-600
+                outline-none
+                shadow-sm
+                focus:border-blue-500
+              "
             />
           </div>
-          
+
           <button
             onClick={() => router.push("/pemeriksaan/add")}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-sm font-medium shadow-sm shadow-blue-200 transition cursor-pointer shrink-0"
+            className="
+              flex
+              w-full
+              shrink-0
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-blue-600
+              px-5
+              py-3
+              text-sm
+              font-medium
+              text-white
+              shadow-sm
+              shadow-blue-200
+              transition
+              hover:bg-blue-700
+              sm:w-auto
+            "
           >
-            <FiPlus className="w-4 h-4" /> Tambah Pemeriksaan
+            <FiPlus className="h-4 w-4" />
+            <span className="whitespace-nowrap">
+              Tambah Pemeriksaan
+            </span>
           </button>
         </div>
       </div>

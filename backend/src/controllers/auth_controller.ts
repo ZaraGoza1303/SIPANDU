@@ -39,10 +39,6 @@ export class AuthController {
 
     async logout(req: Request, res: Response) {
         try {
-            if(!req.body){
-                return res.status(400).json(sendErrorResponse("Request body empty"))
-            };
-
             res.clearCookie('token', {
                 httpOnly: true,
                 secure: true,
@@ -51,7 +47,7 @@ export class AuthController {
             });
             return res.status(200).json(sendSuccessfullResponse("Logout Berhasil"))
         } catch (err: unknown) {
-            return res.status(400).json(sendErrorResponse("Login Gagal", (err as Error).message))
+            return res.status(500).json(sendErrorResponse("Logout Gagal", (err as Error).message))
         }
     }
 

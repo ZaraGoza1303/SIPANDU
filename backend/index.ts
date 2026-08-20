@@ -12,7 +12,6 @@ import swaggerUi from 'swagger-ui-express';
 import path from 'node:path';
 import YAML from 'yamljs';
 import { fileURLToPath } from 'node:url';
-import fs from 'node:fs';
 
 dotenv.config();
 
@@ -20,7 +19,7 @@ const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const swaggerPath = path.join(__dirname, 'swagger.yaml');
+const swaggerDocument = YAML.load(path.join(__dirname, 'swagger.yaml'));
 
 const corsOptions = {
     origin: [
@@ -43,20 +42,7 @@ app.use(cookieParser());
 app.set("trust proxy", 1);
 
 const initRouter = () => {
-    app.use('/api/docs', 
-        (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-            res.setHeader('Pragma', 'no-cache');
-            res.setHeader('Expires', '0');
-            next();
-        },
-        swaggerUi.serve,
-        (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            const fileContents = fs.readFileSync(swaggerPath, 'utf8');
-            const dynamicSwaggerDoc = YAML.parse(fileContents);
-            swaggerUi.setup(dynamicSwaggerDoc)(req, res, next);
-        }
-    );
+    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     app.use('/api/auth', authRouter);
     app.use('/api/user', userRouter);
     app.use('/api/pasien', patientRouter);

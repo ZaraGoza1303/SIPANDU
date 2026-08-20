@@ -52,7 +52,7 @@ const initRouter = () => {
 const startApp = async () => {
     await connectDB();
     initRouter();
-    const PORT = process.env.PORT || process.env.APP_PORT || 8000;
+    const PORT = process.env.APP_PORT || process.env.PORT || 8000;
     app.listen(Number(PORT), '0.0.0.0', () => {
         console.log(`Server running on port ${PORT}`);
     });

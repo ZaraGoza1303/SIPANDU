@@ -144,7 +144,11 @@ const confirmDelete = async () => {
   });
 
   return (
-    <div className="space-y-6">
+       <div className="space-y-0">
+      <p className="text-sm text-gray-400">
+        Pasien /
+        <span className="ml-1 font-medium text-blue-600">Data Pasien</span>
+      </p>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

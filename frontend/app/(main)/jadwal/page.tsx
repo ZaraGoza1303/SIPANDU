@@ -149,14 +149,13 @@ const [updatingStatus, setUpdatingStatus] =
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-0">
       <p className="text-sm text-gray-400">
         Jadwal /
         <span className="ml-1 font-medium text-blue-600">Jadwal Posyandu</span>
       </p>
 
       <Header />
-
       {error && (
         <div className="flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-red-700 border border-red-100 text-sm">
           <FiAlertCircle className="w-5 h-5 shrink-0 text-red-500" />

@@ -46,7 +46,7 @@ function LoginForm() {
 
     console.log(result);
 
-    if (result.success) {
+   if (result.success) {
   const token = result.data?.jwt_token;
 
   if (!token) {
@@ -55,19 +55,47 @@ function LoginForm() {
     return;
   }
 
-  // Simpan JWT untuk dipakai FE
+  // Simpan JWT
   localStorage.setItem("token", token);
 
-  console.log("JWT berhasil disimpan:", token);
+  // Ambil role dari JWT
+  let role = "";
+
+  try {
+    const payload = JSON.parse(
+      atob(
+        token
+          .split(".")[1]
+          .replace(/-/g, "+")
+          .replace(/_/g, "/")
+      )
+    );
+
+    role = payload.role?.toLowerCase() || "";
+  } catch (error) {
+    console.error("Gagal membaca role dari JWT:", error);
+  }
 
   toast.success("Login berhasil");
 
+  // Cek apakah user sebelumnya mencoba membuka halaman tertentu
   const redirect = searchParams.get("redirect");
 
-  const destination =
-    redirect && redirect.startsWith("/")
-      ? redirect
-      : "/dashboard";
+  let destination = "/dashboard";
+
+  /*
+   * Kalau ada redirect dari auth guard,
+   * tetap arahkan ke halaman yang sebelumnya diminta.
+   *
+   * Kalau TIDAK ada redirect:
+   * - kader → /patient
+   * - admin/bidan → /dashboard
+   */
+  if (redirect && redirect.startsWith("/")) {
+    destination = redirect;
+  } else if (role === "kader") {
+    destination = "/patient";
+  }
 
   router.replace(destination);
   return;

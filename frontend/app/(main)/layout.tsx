@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Toaster } from "sonner";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { api, apiFetch, ApiError } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import {
   FiGrid,
   FiUsers,
@@ -14,8 +14,8 @@ import {
   FiBarChart2,
   FiLogOut,
   FiChevronUp,
+  FiUser,
 } from "react-icons/fi";
-
 
 const navItems = [
   { href: "/dashboard", icon: FiGrid, label: "Dashboard" },
@@ -31,24 +31,18 @@ interface UserInfo {
   initials: string;
 }
 
-function getUserFromToken(): UserInfo {
-  const defaultUser: UserInfo = {
-    role: "Kader",
-    posyandu: "Posyandu Kliningan 04",
-    initials: "KA",
-  };
-
+function getUserFromToken(): UserInfo | null {
   try {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      return defaultUser;
+      return null;
     }
 
     const parts = token.split(".");
 
     if (parts.length !== 3) {
-      return defaultUser;
+      return null;
     }
 
     const base64 = parts[1]
@@ -62,10 +56,19 @@ function getUserFromToken(): UserInfo {
 
     const payload = JSON.parse(atob(base64));
 
+    // Cek masa berlaku JWT
+    if (
+      payload.exp &&
+      Date.now() >= payload.exp * 1000
+    ) {
+      localStorage.removeItem("token");
+      return null;
+    }
+
     const role = payload.role
       ? payload.role.charAt(0).toUpperCase() +
         payload.role.slice(1)
-      : defaultUser.role;
+      : "Kader";
 
     return {
       role,
@@ -74,7 +77,7 @@ function getUserFromToken(): UserInfo {
     };
   } catch (error) {
     console.error("Gagal membaca JWT:", error);
-    return defaultUser;
+    return null;
   }
 }
 
@@ -87,88 +90,55 @@ export default function MainLayout({
   const router = useRouter();
 
   const [user, setUser] = useState<UserInfo>({
-  role: "Kader",
-  posyandu: "Posyandu Kliningan 04",
-  initials: "KA",
-});
+    role: "Kader",
+    posyandu: "Posyandu Kliningan 04",
+    initials: "KA",
+  });
 
   const [isAuthChecking, setIsAuthChecking] = useState(true);
-
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutCard, setShowLogoutCard] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
- useEffect(() => {
+  useEffect(() => {
   let mounted = true;
 
-  const checkAuthentication = async () => {
-    try {
-      /*
-       * Endpoint ini sudah terbukti ada.
-       * Endpoint ini membutuhkan authentication.
-       *
-       * Kalau user belum login / session sudah tidak valid:
-       * response = 401
-       *
-       * apiFetch() akan otomatis mengarahkan ke:
-       *
-       * /login?redirect=/halaman-yang-diminta
-       */
-      await api.get("/api/dashboard/stats");
+  const checkAuthentication = () => {
+    const currentUser = getUserFromToken();
 
-      if (!mounted) return;
+    // Token tidak ada / invalid / expired
+    if (!currentUser) {
+      const currentPath =
+        pathname + window.location.search;
 
-      setUser(getUserFromToken());
-      setIsAuthChecking(false);
+      router.replace(
+        `/login?redirect=${encodeURIComponent(currentPath)}`
+      );
 
-      if (!mounted) return;
-
-      /*
-       * Karena endpoint profile tidak tersedia,
-       * sementara gunakan informasi default.
-       */
-      setUser({
-        role: "Admin",
-        posyandu: "Posyandu Kliningan 04",
-        initials: "AD",
-      });
-
-      setIsAuthChecking(false);
-    } catch (error) {
-      console.error("Auth check error:", error);
-
-      /*
-       * 401 = belum login / session expired.
-       *
-       * apiFetch() SUDAH melakukan redirect ke login,
-       * jadi di sini kita tidak perlu router.push lagi.
-       */
-      if (
-        error instanceof ApiError &&
-        error.status === 401
-      ) {
-        return;
-      }
-
-      /*
-       * Kalau error bukan 401, misalnya:
-       * 404, 500, database error, dll.
-       *
-       * Jangan menganggap user logout.
-       */
-      if (mounted) {
-        setUser(getUserFromToken());
-        setIsAuthChecking(false);
-      }
+      return;
     }
+
+    if (!mounted) return;
+
+    setUser(currentUser);
+
+    /*
+     * Kader tidak boleh masuk dashboard.
+     */
+    if (
+      currentUser.role.toLowerCase() === "kader" &&
+      pathname === "/dashboard"
+    ) {
+      router.replace("/patient");
+      return;
+    }
+
+    setIsAuthChecking(false);
   };
 
   checkAuthentication();
 
-  /*
-   * Tutup popup profile kalau klik di luar area profile.
-   */
   const handleClickOutside = (event: MouseEvent) => {
     if (
       cardRef.current &&
@@ -193,39 +163,45 @@ export default function MainLayout({
       handleClickOutside
     );
   };
-}, []);
+}, [pathname, router]);
 
   const handleLogout = async () => {
-  try {
-    await apiFetch("/api/auth/logout", {
-      method: "POST",
-      skipAuthRedirect: true,
-    });
-  } catch (error) {
-    console.error("Logout error:", error);
-  } finally {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    try {
+      await apiFetch("/api/auth/logout", {
+        method: "POST",
+        skipAuthRedirect: true,
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setShowLogoutCard(false);
+      router.replace("/login");
+    }
+  };
 
-    setShowLogoutCard(false);
-
-    router.replace("/login");
-  }
-};
+  // Filter menu: Jika role adalah Kader, sembunyikan Dashboard & Laporan
+  const filteredNavItems = navItems.filter((item) => {
+    if (user.role.toLowerCase() === "kader") {
+      return item.label !== "Dashboard" && item.label !== "Laporan";
+    }
+    return true; // Admin atau role lain bisa melihat semua menu
+  });
 
   if (isAuthChecking) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
-
-        <p className="text-sm font-medium text-gray-500">
-          Memeriksa sesi...
-        </p>
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+          <p className="text-sm font-medium text-gray-500">
+            Memeriksa sesi...
+          </p>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ================= SIDEBAR ================= */}
@@ -246,7 +222,11 @@ export default function MainLayout({
             `}
           >
             <Link
-              href="/dashboard"
+              href={
+                user.role.toLowerCase() === "kader"
+                  ? "/patient"
+                  : "/dashboard"
+              }
               className={`
                 flex items-center gap-2 min-w-0 flex-1
                 ${isCollapsed ? "justify-center" : ""}
@@ -313,7 +293,7 @@ export default function MainLayout({
         {/* ================= NAVIGATION ================= */}
         <nav className="flex-1 overflow-y-auto px-4 py-6">
           <div className="space-y-2.5">
-            {navItems.map(({ href, icon: Icon, label }) => {
+            {filteredNavItems.map(({ href, icon: Icon, label }) => {
               const isActive =
                 pathname === href || pathname.startsWith(`${href}/`);
 
@@ -382,14 +362,14 @@ export default function MainLayout({
                     : "bottom-[88px] left-4 right-4"
                 }
                 rounded-2xl
-                border border-red-100
-                bg-red-50
+                border border-gray-100
+                bg-white
                 p-2
                 shadow-xl
               `}
             >
               {!isCollapsed && (
-                <div className="px-3 py-2.5">
+                <div className="px-3 py-2.5 border-b border-gray-100 mb-1">
                   <p className="truncate text-sm font-semibold text-gray-800">
                     {user.role}
                   </p>
@@ -399,6 +379,26 @@ export default function MainLayout({
                 </div>
               )}
 
+              {/* Menu Edit Profil */}
+              <Link
+                href="/profile"
+                onClick={() => setShowLogoutCard(false)}
+                className="
+                  flex w-full items-center gap-3
+                  rounded-xl
+                  px-3 py-2.5
+                  text-left
+                  text-sm font-medium
+                  text-gray-700
+                  transition
+                  hover:bg-gray-50
+                "
+              >
+                <FiUser size={18} className="text-gray-400" />
+                <span>Edit Profil</span>
+              </Link>
+
+              {/* Menu Logout */}
               <button
                 type="button"
                 onClick={handleLogout}
@@ -407,21 +407,15 @@ export default function MainLayout({
                   rounded-xl
                   px-3 py-2.5
                   text-left
-                  text-sm font-semibold
+                  text-sm font-medium
                   text-red-600
                   transition
-                  hover:bg-red-100
+                  hover:bg-red-50
                 "
               >
                 <FiLogOut size={18} />
                 <span>{isCollapsed ? "Logout" : "Keluar Aplikasi"}</span>
               </button>
-
-              {!isCollapsed && (
-                <p className="px-3 pb-2 text-[11px] text-red-400">
-                  Kembali ke halaman login.
-                </p>
-              )}
             </div>
           )}
 
@@ -447,7 +441,6 @@ export default function MainLayout({
 
             {!isCollapsed && (
               <>
-                {/* Bungkus teks di dalam div dengan flex-col agar menumpuk ke bawah */}
                 <div className="flex flex-col items-start min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-gray-800 leading-tight">
                     {user.role}

@@ -201,24 +201,11 @@ function DonutChart({ data, total }: { data: DistribusiItem[]; total: number }) 
   );
 }
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
-
-const statusMap: Record<string, { cls: string; label: string }> = {
-  Normal:          { cls: "bg-green-100 text-green-700",  label: "Normal"          },
-  Stunted:         { cls: "bg-red-100 text-red-600",      label: "Stunting"        },
-  SeverelyStunted: { cls: "bg-red-200 text-red-700",      label: "Severely Stunted" },
-  Stunting:        { cls: "bg-red-100 text-red-600",      label: "Stunting"        },
-  Risiko:          { cls: "bg-yellow-100 text-yellow-700", label: "Risiko"          },
-};
-function StatusBadge({ status }: { status: string }) {
-  const s = statusMap[status] ?? { cls: "bg-gray-100 text-gray-500", label: status };
-  return <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${s.cls}`}>{s.label}</span>;
-}
-  
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const router = useRouter();
+
   const [stats, setStats] = useState({ 
     totalPasien: 0, 
     pemeriksaanBulan: 0, 
@@ -239,25 +226,25 @@ export default function DashboardPage() {
     p.name.toLowerCase().includes(localSearch.toLowerCase())
   );
 
- const stuntingTrendPercent =
-  trendData.length >= 2 &&
-  trendData[trendData.length - 2].stunting > 0
-    ? ((trendData[trendData.length - 1].stunting -
-        trendData[trendData.length - 2].stunting) /
-        trendData[trendData.length - 2].stunting) *
-      100
-    : 0;
+  const stuntingTrendPercent =
+    trendData.length >= 2 &&
+    trendData[trendData.length - 2].stunting > 0
+      ? ((trendData[trendData.length - 1].stunting -
+          trendData[trendData.length - 2].stunting) /
+          trendData[trendData.length - 2].stunting) *
+        100
+      : 0;
 
-    const stuntingTrend =
-  trendData.length >= 2
-    ? trendData[trendData.length - 1].stunting -
-      trendData[trendData.length - 2].stunting
-    : 0;
+  const stuntingTrend =
+    trendData.length >= 2
+      ? trendData[trendData.length - 1].stunting -
+        trendData[trendData.length - 2].stunting
+      : 0;
 
-    const stuntingPct =
-  stats.totalPasien > 0
-    ? (stats.kasusStunting / stats.totalPasien) * 100
-    : 0;
+  const stuntingPct =
+    stats.totalPasien > 0
+      ? (stats.kasusStunting / stats.totalPasien) * 100
+      : 0;
 
   // Fetch Trend Stunting Data
   useEffect(() => {
@@ -304,89 +291,78 @@ export default function DashboardPage() {
   }, []);
 
   // Fetch Today's Scheduled Patients
-useEffect(() => {
-  async function fetchTodayExaminations() {
-    try {
-      setLoadingPatients(true);
+  useEffect(() => {
+    async function fetchTodayExaminations() {
+      try {
+        setLoadingPatients(true);
 
-      const response = await fetch(
-        `${BASE_URL}/api/pemeriksaan/all?page=1&limit=100`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          cache: "no-store",
-        }
-      );
-
-      const json = await response.json();
-
-      console.log("TODAY EXAM STATUS:", response.status);
-      console.log("TODAY EXAM RESPONSE:", json);
-
-      if (!response.ok || !json.success) {
-        throw new Error(
-          json?.message ||
-            `Gagal mengambil data pemeriksaan (HTTP ${response.status})`
+        const response = await fetch(
+          `${BASE_URL}/api/pemeriksaan/all?page=1&limit=100`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            cache: "no-store",
+          }
         );
-      }
 
-      const items = Array.isArray(json.data?.items)
-        ? json.data.items
-        : [];
+        const json = await response.json();
 
-      // Format tanggal lokal: YYYY-MM-DD
-      const today = new Date().toISOString().split("T")[0];
+        if (!response.ok || !json.success) {
+          throw new Error(
+            json?.message ||
+              `Gagal mengambil data pemeriksaan (HTTP ${response.status})`
+          );
+        }
 
-      const todayExaminations = items.filter((exam: any) => {
-        if (!exam.exam_date) return false;
+        const items = Array.isArray(json.data?.items)
+          ? json.data.items
+          : [];
 
-        return exam.exam_date.split("T")[0] === today;
-      });
+        const today = new Date().toISOString().split("T")[0];
 
-      console.log("TODAY:", today);
-      console.log("TODAY EXAMINATIONS:", todayExaminations);
+        const todayExaminations = items.filter((exam: any) => {
+          if (!exam.exam_date) return false;
+          return exam.exam_date.split("T")[0] === today;
+        });
 
-      // Mapping examination → format yang dipakai tabel dashboard
-      const patientsToday: Patient[] = todayExaminations
-        .filter((exam: any) => exam.patient)
-        .map((exam: any) => ({
-          id: exam.patient.id,
-          nik: exam.patient.nik,
-          name: exam.patient.name,
-          birth_date: exam.patient.birth_date,
-          gender: exam.patient.gender,
-          mother_name: exam.patient.mother_name,
-          phone_parent: exam.patient.phone_parent,
-          is_examined_today: true,
-          today_examination_count: 1,
-          service_type: "Pemeriksaan Rutin",
+        const patientsToday: Patient[] = todayExaminations
+          .filter((exam: any) => exam.patient)
+          .map((exam: any) => ({
+            id: exam.patient.id,
+            nik: exam.patient.nik,
+            name: exam.patient.name,
+            birth_date: exam.patient.birth_date,
+            gender: exam.patient.gender,
+            mother_name: exam.patient.mother_name,
+            phone_parent: exam.patient.phone_parent,
+            is_examined_today: true,
+            today_examination_count: 1,
+            service_type: "Pemeriksaan Rutin",
+          }));
+
+        setPatients(patientsToday);
+
+        setStats((prev) => ({
+          ...prev,
+          jadwalHariIni: patientsToday.length,
         }));
-
-      setPatients(patientsToday);
-
-      setStats((prev) => ({
-        ...prev,
-        jadwalHariIni: patientsToday.length,
-      }));
-    } catch (err) {
-      console.error("Fetch Today Examinations Error:", err);
-
-      setPatients([]);
-
-      setStats((prev) => ({
-        ...prev,
-        jadwalHariIni: 0,
-      }));
-    } finally {
-      setLoadingPatients(false);
+      } catch (err) {
+        console.error("Fetch Today Examinations Error:", err);
+        setPatients([]);
+        setStats((prev) => ({
+          ...prev,
+          jadwalHariIni: 0,
+        }));
+      } finally {
+        setLoadingPatients(false);
+      }
     }
-  }
 
-  fetchTodayExaminations();
-}, []);
+    fetchTodayExaminations();
+  }, []);
 
   // Fetch All Patients (Master list)
   useEffect(() => {
@@ -406,7 +382,6 @@ useEffect(() => {
       
       {/* ─── CUSTOM HEADER DASHBOARD ─── */}
       <div className="space-y-4">
-        {/* Baris Atas: Judul Dashboard & Info Posyandu (Tanpa Background) */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Dashboard Ringkasan</h1>
@@ -419,7 +394,6 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Baris Bawah: Search Bar & Tombol Tambah Pemeriksaan */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
             <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -493,7 +467,6 @@ useEffect(() => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Trend */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-semibold text-gray-900">Tren Stunting Bulanan</h2>
@@ -529,7 +502,6 @@ useEffect(() => {
           </ResponsiveContainer>
         </div>
 
-        {/* Donut */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h2 className="font-semibold text-gray-900 mb-5">Distribusi Kelompok Umur</h2>
           <div className="flex flex-col items-center gap-5">
@@ -589,7 +561,6 @@ useEffect(() => {
             ) : (
               filteredPatients.map(row => {
                 const isChecked = row.is_examined_today === true;
-                const examStatus = isChecked ? "Sudah Diperiksa" : "Belum Diperiksa";
                 const initials   = row.name ? row.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() : "PS";
                 const colors     = ["bg-blue-500", "bg-purple-500", "bg-green-500", "bg-orange-500", "bg-pink-500"];
                 const colorCls   = colors[row.name.charCodeAt(0) % colors.length];

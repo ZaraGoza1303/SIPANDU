@@ -1,6 +1,5 @@
 import connectDB from './src/databases/db.js';
 import express from 'express';
-import helmet from 'helmet';
 import authRouter from './src/routes/auth.js';
 import userRouter from './src/routes/user.js';
 import patientRouter from './src/routes/patient.js';
@@ -12,18 +11,15 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import path from 'node:path';
 import YAML from 'yamljs';
-import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const swaggerPath = path.resolve(__dirname, 'swagger.yaml');
+const app = express();
+
+const swaggerPath = path.join(process.cwd(), 'swagger.yaml');
 const fileContents = fs.readFileSync(swaggerPath, 'utf8');
 const swaggerDocument = YAML.parse(fileContents);
-
-const app = express();
 
 const corsOptions = {
     origin: [
@@ -46,7 +42,16 @@ app.use(cookieParser());
 app.set("trust proxy", 1);
 
 const initRouter = () => {
-    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+    app.use('/api/docs', 
+        (req: express.Request, res: express.Response, next: express.NextFunction) => {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            next();
+        },
+        swaggerUi.serve, 
+        swaggerUi.setup(swaggerDocument)
+    );
     app.use('/api/auth', authRouter);
     app.use('/api/user', userRouter);
     app.use('/api/pasien', patientRouter);

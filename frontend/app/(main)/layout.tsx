@@ -248,8 +248,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       ====================================================== */}
       <aside
         className={`
-          fixed left-0 top-0 z-50 flex h-[100dvh] /* <--- UBAH h-screen MENJADI h-[100dvh] */
-          flex-col border-r border-gray-100
+          fixed inset-y-0 left-0 z-50 flex flex-col /* <--- GANTI h-screen / h-[100dvh] MENJADI inset-y-0 */
+          border-r border-gray-100
           bg-white shadow-sm
           transition-all duration-300
           w-[260px] 
@@ -346,7 +346,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </nav>
 
         {/* ================= PROFILE ================= */}
-        <div ref={cardRef} className="relative border-t border-gray-100 px-4 py-5">
+        <div ref={cardRef} className="relative border-t border-gray-100 px-4 pt-5 pb-8"> 
           {showLogoutCard && (
             <div
               className={`

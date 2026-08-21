@@ -8,7 +8,8 @@ export interface ApiEnvelope<T> {
 
 export interface DashboardStats {
   totalPatients: number;
-  totalExaminationsThisMonth: number;
+  totalExaminations: number;
+  totalExaminationsThisMonth?: number;
   stuntingCount: number;
   normalCount: number;
   ageGroupDistribution: AgeGroupDistributionItem[];

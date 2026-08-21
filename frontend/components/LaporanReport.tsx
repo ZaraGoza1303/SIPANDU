@@ -675,23 +675,7 @@ export default function LaporanReport() {
     };
   }, [trend]);
 
-  const coverageRate =
-    stats &&
-    stats.totalPatients
-      ? Math.min(
-          100,
-          (stats.totalExaminationsThisMonth /
-            stats.totalPatients) *
-            100
-        )
-      : 0;
 
-  const coverageLabel =
-    coverageRate >= 90
-      ? "Excellent"
-      : coverageRate >= 75
-      ? "Baik"
-      : "Perlu Ditingkatkan";
 
   const trendDirection =
     useMemo(() => {
@@ -918,35 +902,26 @@ export default function LaporanReport() {
 
       <div className="mb-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Total Pemeriksaan"
-          value={
-            statsLoading
-              ? "…"
-              : stats?.totalExaminationsThisMonth ??
-                0
-          }
-          icon={
-            <ClipboardList className="h-4 w-4" />
-          }
-          accent="blue"
-          badge={
-            deltas
-              ? {
-                  text: `${
-                    deltas.totalDeltaPct >=
-                    0
-                      ? "+"
-                      : ""
-                  }${deltas.totalDeltaPct.toFixed(
-                    0
-                  )}%`,
-                  positive:
-                    deltas.totalDeltaPct >=
-                    0,
-                }
-              : undefined
-          }
-        />
+  label="Total Pemeriksaan Bulan Ini"
+value={statsLoading ? "…" : stats?.totalExaminations ?? 0}
+  icon={
+    <ClipboardList className="h-4 w-4" />
+  }
+  accent="blue"
+  badge={
+    deltas
+      ? {
+          text: `${
+            deltas.totalDeltaPct >= 0
+              ? "+"
+              : ""
+          }${deltas.totalDeltaPct.toFixed(0)}%`,
+          positive:
+            deltas.totalDeltaPct >= 0,
+        }
+      : undefined
+  }
+/>
 
         <StatCard
           label="Prevalensi Stunting (%)"

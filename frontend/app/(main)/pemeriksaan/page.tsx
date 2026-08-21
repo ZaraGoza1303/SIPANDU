@@ -117,6 +117,7 @@ useEffect(() => {
     );
 
     setEditingExam(null);
+    await getExaminations(search);
   } catch (err: any) {
     console.error("Update Examination Error:", err);
 
@@ -304,71 +305,109 @@ useEffect(() => {
                     </td>
                   </tr>
                 ) : (
-                  examinations.map((item: any, index: number) => {
-                    const patientName = item.patient?.name ?? item.nama_anak ?? "-";
-                    const patientNik = item.patient?.nik ?? item.nik ?? "-";
-                    const motherName = item.patient?.mother_name ?? item.nama_ibu ?? "-";
-                    const serviceType = item.service_type ?? item.jenis_layanan ?? "Pemeriksaan Rutin";
-                    const stuntingStatus = item.stunting_status ?? item.status ?? "-";
-                    const patientId = item.patient_id ?? item.patient?.id ?? item.id;
+                 examinations.map((item: any, index: number) => {
+  const patientName =
+    item.patient?.name ??
+    item.nama_anak ??
+    "-";
 
-                    return (
-                      <tr key={item.id || index} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-6 py-4">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">
-                            {index + 1}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div>
-                            <p className="font-semibold text-slate-900">{patientName}</p>
-                            <p className="text-xs text-slate-500 font-mono mt-0.5">{patientNik}</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-slate-700 font-medium">
-                          {motherName}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-200/60">
-                            {serviceType}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border ${
-                              stuntingStatus === "Normal"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
-                                : "bg-rose-50 text-rose-700 border-rose-200/80"
-                            }`}
-                          >
-                            {stuntingStatus}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          {/* Detail */}
-                          <Link
-                            href={`/patient/${patientId}`}
-                            className="rounded-lg p-2 text-gray-500 transition hover:bg-blue-50 hover:text-blue-600"
-                            title="Lihat Detail"
-                          >
-                            <FiSearch className="h-4 w-4" />
-                          </Link>
+  const patientNik =
+    item.patient?.nik ??
+    item.nik ??
+    "-";
 
-                          {/* Edit */}
-                          <button
-                            type="button"
-                            onClick={() => handleEditExam(item)}
-                            className="rounded-lg p-2 text-gray-500 transition hover:bg-amber-50 hover:text-amber-600"
-                            title="Edit Pemeriksaan"
-                          >
-                            <FiEdit2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                      </tr>
-                    );
-                  })
+  const motherName =
+    item.patient?.mother_name ??
+    item.nama_ibu ??
+    "-";
+
+  const serviceType =
+    item.service_type ??
+    item.jenis_layanan ??
+    "Pemeriksaan Rutin";
+
+  const stuntingStatus =
+    item.stunting_result?.stunting_status ??
+    item.stunting_status ??
+    item.status ??
+    "-";
+
+  const patientId =
+    item.patient_id ??
+    item.patient?.id ??
+    item.id;
+
+  return (
+    <tr
+      key={item.id || index}
+      className="hover:bg-slate-50/80 transition-colors"
+    >
+      <td className="px-6 py-4">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">
+          {index + 1}
+        </span>
+      </td>
+
+      <td className="px-6 py-4">
+        <div>
+          <p className="font-semibold text-slate-900">
+            {patientName}
+          </p>
+          <p className="text-xs text-slate-500 font-mono mt-0.5">
+            {patientNik}
+          </p>
+        </div>
+      </td>
+
+      <td className="px-6 py-4 text-slate-700 font-medium">
+        {motherName}
+      </td>
+
+      <td className="px-6 py-4">
+        <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-200/60">
+          {serviceType}
+        </span>
+      </td>
+
+      <td className="px-6 py-4">
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border ${
+            stuntingStatus === "High"
+              ? "bg-red-50 text-red-700 border-red-200"
+              : stuntingStatus === "Normal"
+              ? "bg-orange-50 text-orange-700 border-orange-200"
+              : stuntingStatus === "Low"
+              ? "bg-green-50 text-green-700 border-green-200"
+              : "bg-gray-50 text-gray-500 border-gray-200"
+          }`}
+        >
+          {stuntingStatus}
+        </span>
+      </td>
+
+      <td className="px-6 py-4">
+        <div className="flex items-center justify-center gap-2">
+          <Link
+            href={`/patient/${patientId}`}
+            className="rounded-lg p-2 text-gray-500 transition hover:bg-blue-50 hover:text-blue-600"
+            title="Lihat Detail"
+          >
+            <FiSearch className="h-4 w-4" />
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => handleEditExam(item)}
+            className="rounded-lg p-2 text-gray-500 transition hover:bg-amber-50 hover:text-amber-600"
+            title="Edit Pemeriksaan"
+          >
+            <FiEdit2 className="h-4 w-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+})
                 )}
               </tbody>
             </table>

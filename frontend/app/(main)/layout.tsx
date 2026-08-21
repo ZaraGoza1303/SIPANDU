@@ -248,7 +248,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       ====================================================== */}
       <aside
         className={`
-          fixed left-0 top-0 z-50 flex h-screen
+          fixed left-0 top-0 z-50 flex h-[100dvh] /* <--- UBAH h-screen MENJADI h-[100dvh] */
           flex-col border-r border-gray-100
           bg-white shadow-sm
           transition-all duration-300

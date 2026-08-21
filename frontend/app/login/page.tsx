@@ -242,7 +242,7 @@ function LoginForm() {
 
       <div className="pointer-events-none absolute right-5 bottom-5 opacity-5">
         <Image
-          src="/IconSipandu.png"
+          src="/pandulog.png"
           alt="Logo SIPANDU"
           width={130}
           height={130}

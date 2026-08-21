@@ -29,6 +29,7 @@ export type LoginUserData = {
     email: string;
     role: string;
     password: string;
+    photo: string | null;
 }
 
 export type LoginReq = z.infer<typeof LoginSchema>;

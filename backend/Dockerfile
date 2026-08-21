@@ -20,7 +20,6 @@ WORKDIR /app
 
 COPY package*.json ./
 
-# Salin node_modules hasil install dari builder (di dalam container Railway)
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/src/generated /app/src/generated
 COPY --from=builder /app/dist ./dist

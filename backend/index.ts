@@ -1,7 +1,7 @@
 import connectDB from './src/databases/db.js';
 import express from 'express';
-import helmet from 'helmet';
 import authRouter from './src/routes/auth.js';
+import userRouter from './src/routes/user.js';
 import patientRouter from './src/routes/patient.js';
 import examinationRouter from './src/routes/examination.js';
 import dashboardRouter from './src/routes/dashboard.js';
@@ -15,11 +15,11 @@ import { fileURLToPath } from 'node:url';
 
 dotenv.config();
 
+const app = express();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const swaggerDocument = YAML.load(path.join(__dirname, 'swagger.yaml'));
-
-const app = express();
 
 const corsOptions = {
     origin: [
@@ -44,6 +44,7 @@ app.set("trust proxy", 1);
 const initRouter = () => {
     app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     app.use('/api/auth', authRouter);
+    app.use('/api/user', userRouter);
     app.use('/api/pasien', patientRouter);
     app.use('/api/pemeriksaan', examinationRouter);
     app.use('/api/dashboard', dashboardRouter);
@@ -52,7 +53,7 @@ const initRouter = () => {
 const startApp = async () => {
     await connectDB();
     initRouter();
-    const PORT = process.env.PORT || process.env.APP_PORT || 8000;
+    const PORT = process.env.APP_PORT || process.env.PORT || 8000;
     app.listen(Number(PORT), '0.0.0.0', () => {
         console.log(`Server running on port ${PORT}`);
     });

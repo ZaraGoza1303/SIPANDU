@@ -243,12 +243,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         />
       )}
 
-      {/* =====================================================
+     {/* =====================================================
           SIDEBAR
       ====================================================== */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 flex flex-col /* <--- GANTI h-screen / h-[100dvh] MENJADI inset-y-0 */
+          fixed inset-y-0 left-0 z-50 flex flex-col
+          h-[100dvh] /* <--- TAMBAHKAN INI SEBAGAI KUNCIAN GANDA */
           border-r border-gray-100
           bg-white shadow-sm
           transition-all duration-300
@@ -308,7 +309,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* ================= NAVIGATION ================= */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-4 py-6"> 
           <div className="space-y-2.5">
             {filteredNavItems.map(({ href, icon: Icon, label }) => {
               const isActive = pathname === href || pathname.startsWith(`${href}/`);

@@ -898,61 +898,26 @@ export default function LaporanReport() {
         </div>
       )}
 
-      {/* ================= STAT CARDS ================= */}
+     {/* ================= STAT CARDS ================= */}
 
       <div className="mb-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-  label="Total Pemeriksaan Bulan Ini"
-value={statsLoading ? "…" : stats?.totalExaminations ?? 0}
-  icon={
-    <ClipboardList className="h-4 w-4" />
-  }
-  accent="blue"
-  badge={
-    deltas
-      ? {
-          text: `${
-            deltas.totalDeltaPct >= 0
-              ? "+"
-              : ""
-          }${deltas.totalDeltaPct.toFixed(0)}%`,
-          positive:
-            deltas.totalDeltaPct >= 0,
-        }
-      : undefined
-  }
-/>
+          label="Total Pemeriksaan Bulan Ini"
+          value={statsLoading ? "…" : stats?.totalExaminations ?? 0}
+          icon={<ClipboardList className="h-4 w-4" />}
+          accent="blue"
+        />
 
         <StatCard
           label="Prevalensi Stunting (%)"
           value={
             statsLoading
               ? "…"
-              : `${stuntingPct.toFixed(
-                  1
-                )}%`
+              : `${stuntingPct.toFixed(1)}%`
           }
-          icon={
-            <TrendingDown className="h-4 w-4" />
-          }
+          icon={<TrendingDown className="h-4 w-4" />}
           accent="red"
-          badge={
-            deltas
-              ? {
-                  text: `${
-                    deltas.rateDeltaPts >=
-                    0
-                      ? "+"
-                      : ""
-                  }${deltas.rateDeltaPts.toFixed(
-                    1
-                  )}%`,
-                  positive:
-                    deltas.rateDeltaPts <=
-                    0,
-                }
-              : undefined
-          }
+          /* prop badge dihapus di sini */
           footnote="Target Nasional: 14%"
         />
 
@@ -961,25 +926,15 @@ value={statsLoading ? "…" : stats?.totalExaminations ?? 0}
           value={
             statsLoading
               ? "…"
-              : `${
-                  stats?.stuntingCount ??
-                  0
-                } Anak`
+              : `${stats?.stuntingCount ?? 0} Anak`
           }
-          icon={
-            <AlertTriangle className="h-4 w-4" />
-          }
+          icon={<AlertTriangle className="h-4 w-4" />}
           accent="amber"
           footnote={
             deltas
               ? `${
-                  deltas.newCasesDelta >=
-                  0
-                    ? "+"
-                    : ""
-                }${
-                  deltas.newCasesDelta
-                } dr bulan lalu`
+                  deltas.newCasesDelta >= 0 ? "+" : ""
+                }${deltas.newCasesDelta} dr bulan lalu`
               : undefined
           }
         />
@@ -1000,7 +955,6 @@ value={statsLoading ? "…" : stats?.totalExaminations ?? 0}
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <div className="mb-4 flex items-center gap-1.5 text-lg font-semibold">
             Ringkasan Status Gizi
-
             <span
               title="Data berasal dari dashboard/stats."
               className="text-sm text-slate-400"
@@ -1009,58 +963,19 @@ value={statsLoading ? "…" : stats?.totalExaminations ?? 0}
             </span>
           </div>
 
-          <ResponsiveContainer
-            width="100%"
-            height={220}
-          >
-            <BarChart
-              data={giziSummary}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="#eef2f7"
-              />
-
-              <XAxis
-                dataKey="name"
-                tick={{
-                  fontSize: 12,
-                }}
-              />
-
-              <YAxis
-                tick={{
-                  fontSize: 12,
-                }}
-                allowDecimals={false}
-              />
-
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={giziSummary}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
               <Tooltip />
-
-              <Bar
-                dataKey="value"
-                radius={[
-                  6,
-                  6,
-                  0,
-                  0,
-                ]}
-              >
-                {giziSummary.map(
-                  (entry) => (
-                    <Cell
-                      key={
-                        entry.name
-                      }
-                      fill={
-                        entry.name ===
-                        "Stunting"
-                          ? "#dc2626"
-                          : "#2563eb"
-                      }
-                    />
-                  )
-                )}
+              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                {giziSummary.map((entry) => (
+                  <Cell
+                    key={entry.name}
+                    fill={entry.name === "Stunting" ? "#dc2626" : "#2563eb"}
+                  />
+                ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -1073,52 +988,24 @@ value={statsLoading ? "…" : stats?.totalExaminations ?? 0}
           </div>
 
           <div className="mt-3 flex flex-col gap-3">
-            {(
-              stats?.ageGroupDistribution ||
-              []
-            ).map((group) => {
-              const max =
-                Math.max(
-                  1,
-                  ...(
-                    stats?.ageGroupDistribution ||
-                    []
-                  ).map(
-                    (item) =>
-                      item.count
-                  )
-                );
+            {(stats?.ageGroupDistribution || []).map((group) => {
+              const max = Math.max(
+                1,
+                ...(stats?.ageGroupDistribution || []).map((item) => item.count)
+              );
 
               return (
-                <div
-                  key={
-                    group.range
-                  }
-                >
+                <div key={group.range}>
                   <div className="flex justify-between text-xs text-slate-600">
-                    <span>
-                      {
-                        group.range
-                      }
-                    </span>
-
-                    <span>
-                      {
-                        group.count
-                      }{" "}
-                      Anak
-                    </span>
+                    <span>{group.range}</span>
+                    <span>{group.count} Anak</span>
                   </div>
 
                   <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
                     <div
                       className="h-full rounded-full bg-blue-600"
                       style={{
-                        width: `${
-                          (group.count /
-                            max) *
-                          100
-                        }%`,
+                        width: `${(group.count / max) * 100}%`,
                       }}
                     />
                   </div>
@@ -1127,9 +1014,7 @@ value={statsLoading ? "…" : stats?.totalExaminations ?? 0}
             })}
 
             {statsLoading && (
-              <div className="text-sm text-slate-400">
-                Memuat…
-              </div>
+              <div className="text-sm text-slate-400">Memuat…</div>
             )}
           </div>
         </div>

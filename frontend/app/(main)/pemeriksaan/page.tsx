@@ -10,7 +10,7 @@ import {
   FiClock,
   FiCheckCircle,
   FiAlertCircle,
-  FiSearch,
+  FiEye,
   FiPrinter,
   FiVolume2,
   FiPlus,
@@ -271,7 +271,7 @@ console.log("payload:", payload);
           {/* Search */}
           <div className="p-6 pb-4">
             <div className="relative">
-              <FiSearch className="absolute left-4 top-3.5 text-slate-400 text-lg" />
+              <FiEye className="absolute left-4 top-3.5 text-slate-400 text-lg" />
               <input
                 placeholder="Cari nama anak, NIK, atau jenis layanan..."
                 className="w-full rounded-xl border border-slate-200 pl-11 pr-4 py-2.5 text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm"
@@ -401,7 +401,7 @@ console.log("payload:", payload);
             className="rounded-lg p-2 text-gray-500 transition hover:bg-blue-50 hover:text-blue-600"
             title="Lihat Detail"
           >
-            <FiSearch className="h-4 w-4" />
+            <FiEye className="h-4 w-4" />
           </Link>
 
           <button

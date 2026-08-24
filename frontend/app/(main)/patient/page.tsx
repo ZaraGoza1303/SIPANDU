@@ -203,7 +203,6 @@ const confirmDelete = async () => {
           <th className="px-6 py-4">Nama Anak / NIK</th>
           <th className="px-6 py-4">Tanggal Lahir</th>
           <th className="px-6 py-4">Usia</th>
-          <th className="px-6 py-4">Status</th>
           <th className="px-6 py-4">Nama Ibu</th>
           <th className="px-6 py-4 text-center">Aksi</th>
         </tr>
@@ -281,17 +280,6 @@ const confirmDelete = async () => {
                       ? `${years} Tahun`
                       : `${months} Bulan`
                     : "-"}
-                </td>
-
-                {/* Status */}
-                <td className="px-6 py-4">
-                  {patient.status ? (
-                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                      {patient.status}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
                 </td>
 
                 {/* Nama Ibu */}

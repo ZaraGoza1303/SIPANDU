@@ -98,6 +98,15 @@ useEffect(() => {
       notes: editForm.notes,
     };
 
+    console.log("=== UPDATE PEMERIKSAAN ===");
+console.log("exam_id:", editingExam.id);
+console.log("patient_id:", editingExam.patient_id);
+console.log(
+  "URL:",
+  `/api/pemeriksaan/update/${editingExam.id}`
+);
+console.log("payload:", payload);
+
     const result = await api.patch(
   `/api/pemeriksaan/update/${editingExam.id}`,
   payload

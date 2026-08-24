@@ -218,9 +218,14 @@ export default function DashboardPage() {
   const [, setAllPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(false);
   const [trendData, setTrendData] = useState<TrendStuntingItem[]>([]);
-  const [trendFilter, setTrendFilter] = useState("6 Bulan Terakhir");
+  const [trendFilter, setTrendFilter] = useState("Bulan Ini");
   const [showPeriodMenu, setShowPeriodMenu] = useState(false);
-  const [localSearch, setLocalSearch] = useState("");
+  const [localSearch, setLocalSearch] = useState(""); 
+  const trendPeriodMap: Record<string, string> = {
+  "Bulan Ini": "bulan_ini",
+  "Bulan Lalu": "bulan_lalu",
+  "3 Bulan Terakhir": "",
+};
 
   const filteredPatients = patients.filter(p =>
     p.name.toLowerCase().includes(localSearch.toLowerCase())
@@ -248,14 +253,29 @@ export default function DashboardPage() {
 
   // Fetch Trend Stunting Data
   useEffect(() => {
-    fetch(`${BASE_URL}/api/dashboard/trend-stunting`, {
-      credentials: "include",
-      headers: authHeaders(),
+  const period = trendPeriodMap[trendFilter];
+
+  const url = period
+    ? `${BASE_URL}/api/dashboard/trend-stunting?periode=${period}`
+    : `${BASE_URL}/api/dashboard/trend-stunting`;
+
+  fetch(url, {
+    credentials: "include",
+    headers: authHeaders(),
+  })
+    .then((r) => r.json())
+    .then((json) => {
+      if (json.success) {
+        setTrendData(json.data ?? []);
+      } else {
+        setTrendData([]);
+      }
     })
-      .then(r => r.json())
-      .then(json => { if (json.success) setTrendData(json.data ?? []); })
-      .catch(console.error);
-  }, []);
+    .catch((error) => {
+      console.error("Fetch Trend Error:", error);
+      setTrendData([]);
+    });
+}, [trendFilter]);
 
   // Fetch Dashboard Stats
   useEffect(() => {
@@ -542,9 +562,23 @@ export default function DashboardPage() {
               </button>
               {showPeriodMenu && (
                 <div className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-gray-100 bg-white p-2 shadow-lg">
-                  {["Bulan Ini","1 Bulan Sebelumnya","3 Bulan Terakhir","6 Bulan Terakhir","Tahun Ini"].map(item => (
-                    <button key={item} onClick={() => { setTrendFilter(item); setShowPeriodMenu(false); }}
-                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${trendFilter === item ? "bg-blue-50 text-blue-600 font-medium" : "text-gray-600 hover:bg-gray-50"}`}>
+                  {[
+                    "Bulan Ini",
+                    "Bulan Lalu",
+                    "3 Bulan Terakhir",
+                  ].map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => {
+                        setTrendFilter(item);
+                        setShowPeriodMenu(false);
+                      }}
+                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
+                        trendFilter === item
+                          ? "bg-blue-50 text-blue-600 font-medium"
+                          : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
                       {item}
                     </button>
                   ))}

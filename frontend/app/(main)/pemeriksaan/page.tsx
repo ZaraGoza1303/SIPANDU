@@ -23,6 +23,8 @@ import {
 export default function PemeriksaanPage() {
   const router = useRouter();
 
+  const [patients, setPatients] = useState<any[]>([]);
+  const [patientsLoading, setPatientsLoading] = useState(false);
   const [examinations, setExaminations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +44,36 @@ const [editForm, setEditForm] = useState({
   arm_circumference: "",
   notes: "",
 });
+
+async function getPatients() {
+  try {
+    setPatientsLoading(true);
+
+    const result = await api.get(
+      `/api/pasien/all?page=1&limit=100`
+    );
+
+    const items =
+      result.data?.items ??
+      result.data ??
+      result;
+
+    setPatients(
+      Array.isArray(items)
+        ? items
+        : []
+    );
+  } catch (error) {
+    console.error(
+      "Fetch Patient Error:",
+      error
+    );
+
+    setPatients([]);
+  } finally {
+    setPatientsLoading(false);
+  }
+}
 
 function handleEditExam(item: any) {
   console.log("=== DATA PEMERIKSAAN YANG DI-EDIT ===");
@@ -80,6 +112,7 @@ function handleEditExam(item: any) {
 
 useEffect(() => {
   getExaminations();
+  getPatients();
 }, []);
 
   async function handleUpdateExam() {
@@ -697,54 +730,118 @@ console.log("payload:", payload);
             <p className="text-sm text-slate-500 mb-4">Pilih pasien untuk dicetak nomornya.</p>
 
             <div className="max-h-60 overflow-y-auto space-y-2 mb-5 pr-1">
-              {examinations.length === 0 ? (
-                <p className="text-center text-sm text-slate-400 py-6">Belum ada data antrian.</p>
-              ) : (
-                examinations.map((item, index) => {
-                  const pName = item.patient?.name ?? item.nama_anak ?? "-";
-                  const pNik = item.patient?.nik ?? item.nik ?? "-";
-                  const sType = item.service_type ?? item.jenis_layanan ?? "Pemeriksaan Rutin";
+  {patientsLoading ? (
+    <div className="flex items-center justify-center gap-2 py-6 text-sm text-slate-400">
+      <FiLoader className="h-4 w-4 animate-spin" />
+      Memuat daftar pasien...
+    </div>
+  ) : patients.length === 0 ? (
+    <p className="text-center text-sm text-slate-400 py-6">
+      Belum ada data pasien.
+    </p>
+  ) : (
+    patients.map((patient, index) => {
+      const pName =
+        patient.name ?? "-";
 
-                  return (
-                    <button
-                      key={item.id || index}
-                      onClick={() => {
-                        const ticketEl = document.getElementById("ticket-content");
-                        if (ticketEl) {
-                          ticketEl.innerHTML = `
-                            <div class="ticket">
-                              <p class="header">Sistem Informasi Posyandu</p>
-                              <p class="posyandu">SIPANDU</p>
-                              <hr class="divider"/>
-                              <p class="label">Nomor Antrian</p>
-                              <p class="nomor">${String(index + 1).padStart(3, "0")}</p>
-                              <p class="nama">${pName}</p>
-                              <p class="nik">NIK: ${pNik}</p>
-                              <span class="layanan">${sType}</span>
-                              <hr class="divider"/>
-                              <p class="waktu">${tanggal}</p>
-                              <p class="waktu">Dicetak pukul ${jam} WIB</p>
-                              <p class="footer">Harap menunggu hingga nomor Anda dipanggil</p>
-                            </div>
-                          `;
-                        }
-                        handlePrint();
-                      }}
-                      className="w-full flex items-center gap-3.5 rounded-xl border border-slate-200 p-3 text-left hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
-                        {String(index + 1).padStart(3, "0")}
-                      </span>
-                      <div className="overflow-hidden">
-                        <p className="text-sm font-semibold text-slate-900 truncate">{pName}</p>
-                        <p className="text-xs text-slate-500">{sType}</p>
-                      </div>
-                      <FiPrinter className="ml-auto text-blue-600 shrink-0" />
-                    </button>
-                  );
-                })
-              )}
-            </div>
+      const pNik =
+        patient.nik ?? "-";
+
+      return (
+        <button
+          key={patient.id || index}
+          onClick={() => {
+            const ticketEl =
+              document.getElementById(
+                "ticket-content"
+              );
+
+            if (ticketEl) {
+              ticketEl.innerHTML = `
+                <div class="ticket">
+                  <p class="header">
+                    Sistem Informasi Posyandu
+                  </p>
+
+                  <p class="posyandu">
+                    SIPANDU
+                  </p>
+
+                  <hr class="divider"/>
+
+                  <p class="label">
+                    Nomor Antrian
+                  </p>
+
+                  <p class="nomor">
+                    ${String(index + 1).padStart(3, "0")}
+                  </p>
+
+                  <p class="nama">
+                    ${pName}
+                  </p>
+
+                  <p class="nik">
+                    NIK: ${pNik}
+                  </p>
+
+                  <hr class="divider"/>
+
+                  <p class="waktu">
+                    ${tanggal}
+                  </p>
+
+                  <p class="waktu">
+                    Dicetak pukul ${jam} WIB
+                  </p>
+
+                  <p class="footer">
+                    Harap menunggu hingga nomor Anda dipanggil
+                  </p>
+                </div>
+              `;
+            }
+
+            handlePrint();
+          }}
+          className="
+            w-full
+            flex items-center gap-3.5
+            rounded-xl
+            border border-slate-200
+            p-3
+            text-left
+            hover:border-blue-400
+            hover:bg-blue-50/50
+            transition-colors
+          "
+        >
+          <span className="
+            flex h-8 w-8 shrink-0
+            items-center justify-center
+            rounded-full
+            bg-blue-600
+            text-xs font-bold text-white
+          ">
+            {String(index + 1).padStart(3, "0")}
+          </span>
+
+          <div className="overflow-hidden">
+            <p className="truncate text-sm font-semibold text-slate-900">
+              {pName}
+            </p>
+
+            <p className="text-xs text-slate-500">
+              NIK: {pNik}
+            </p>
+          </div>
+
+          <FiPrinter className="ml-auto shrink-0 text-blue-600" />
+        </button>
+      );
+    })
+  )}
+</div>
 
             <div id="ticket-content" ref={printRef} className="hidden" />
 

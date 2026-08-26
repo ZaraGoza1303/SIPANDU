@@ -23,7 +23,7 @@ export class StuntingResultsRepository implements IStuntingResultsRepository {
 
         const result = await client.stuntingResult.update({
             where: {
-                id: exam_id,
+                examination_id: exam_id,
             },
 
             data: newStuntingResult
